@@ -11,11 +11,11 @@ val copyWeb by tasks.registering(Copy::class) {
 }
 
 android {
-    namespace = "br.com.vsa.gradetv"
+    namespace = "br.com.vsa.horadodesenho"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "br.com.vsa.gradetv"
+        applicationId = "br.com.vsa.horadodesenho"
         minSdk = 21
         targetSdk = 34
         versionCode = 1

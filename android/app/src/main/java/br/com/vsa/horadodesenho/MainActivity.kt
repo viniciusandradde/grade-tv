@@ -1,4 +1,4 @@
-package br.com.vsa.gradetv
+package br.com.vsa.horadodesenho
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -18,7 +18,7 @@ import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 
 /**
- * Grade TV para Android / Android TV.
+ * Hora do Desenho para Android / Android TV.
  *
  * A interface inteira é o index.html do repositório, servido ao WebView por
  * https://appassets.androidplatform.net/ (origem https de verdade, exigida pelo
@@ -49,7 +49,7 @@ class MainActivity : Activity() {
             loadWithOverviewMode = true
             setSupportZoom(false)
             builtInZoomControls = false
-            userAgentString = "$userAgentString GradeTV/${BuildConfig.VERSION_NAME}"
+            userAgentString = "$userAgentString HoraDoDesenho/${BuildConfig.VERSION_NAME}"
         }
         web.isFocusable = true
         web.isFocusableInTouchMode = true
@@ -80,11 +80,11 @@ class MainActivity : Activity() {
         }
         web.webChromeClient = chrome
 
-        web.addJavascriptInterface(Bridge(), "GradeTV")
+        web.addJavascriptInterface(Bridge(), "HoraDoDesenho")
 
         // Por padrão abre a interface embutida no APK. Para apontar para outra versão
         // (ex.: GitHub Pages) sem reinstalar:
-        //   adb shell am start -n br.com.vsa.gradetv/.MainActivity --es url https://SEU-USUARIO.github.io/grade-tv/
+        //   adb shell am start -n br.com.vsa.horadodesenho/.MainActivity --es url https://SEU-USUARIO.github.io/grade-tv/
         intent?.getStringExtra("url")?.let { salvarUrl(it) }
         web.loadUrl(urlAtual())
     }
@@ -95,11 +95,11 @@ class MainActivity : Activity() {
     }
 
     private fun urlAtual(): String =
-        getSharedPreferences("gradetv", MODE_PRIVATE).getString("url", null)
+        getSharedPreferences("horadodesenho", MODE_PRIVATE).getString("url", null)
             ?: "https://appassets.androidplatform.net/assets/index.html"
 
     private fun salvarUrl(url: String) {
-        getSharedPreferences("gradetv", MODE_PRIVATE).edit().putString("url", url).apply()
+        getSharedPreferences("horadodesenho", MODE_PRIVATE).edit().putString("url", url).apply()
     }
 
     override fun onResume() {
@@ -152,7 +152,7 @@ class MainActivity : Activity() {
         web.evaluateJavascript("document.dispatchEvent(new KeyboardEvent('keydown',{key:'$key',bubbles:true}))", null)
     }
 
-    /** Pequena ponte lida pelo index.html: window.GradeTV */
+    /** Pequena ponte lida pelo index.html: window.HoraDoDesenho */
     inner class Bridge {
         @JavascriptInterface fun version(): String = BuildConfig.VERSION_NAME
         @JavascriptInterface fun isTv(): Boolean =

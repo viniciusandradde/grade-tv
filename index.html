@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Grade TV</title>
-<meta name="description" content="Canais do YouTube com horário marcado, do jeito que a criança entende.">
+<title>Hora do Desenho</title>
+<meta name="description" content="Hora do Desenho — canais do YouTube com hora marcada, do jeito que a criança entende.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -30,7 +30,7 @@
   /* ---------- Barra superior ---------- */
   .topo{position:sticky; top:0; z-index:20; background:var(--bg); display:flex; align-items:center; gap:14px; padding:10px 28px; box-shadow:0 2px 0 var(--linha)}
   @media (max-width:700px){ .topo{padding:8px 14px} }
-  .logo{display:flex; align-items:center; gap:10px; font-family:"Fredoka",sans-serif; font-weight:700; font-size:28px; letter-spacing:.01em}
+  .logo{display:flex; align-items:center; gap:10px; font-family:"Fredoka",sans-serif; font-weight:700; font-size:24px; letter-spacing:.01em}
   .logo svg{width:40px; height:40px}
   .logo b{color:var(--vermelho)}
   .espaco{flex:1}
@@ -212,7 +212,7 @@
 <!-- ===== Ligar ===== -->
 <section id="tela-ligar" class="tela ativa">
   <div class="centro">
-    <div class="logo" style="font-size:40px"><svg viewBox="0 0 48 48" width="64" height="64" aria-hidden="true"><rect x="4" y="10" width="40" height="28" rx="8" fill="#FF4F5E"/><rect x="9" y="15" width="30" height="18" rx="5" fill="#fff"/><polygon points="21,19 21,29 30,24" fill="#3D8BFF"/><rect x="16" y="38" width="16" height="4" rx="2" fill="#1F2340"/><circle cx="14" cy="6" r="3" fill="#FFC53D"/><circle cx="34" cy="6" r="3" fill="#FFC53D"/><path d="M14 6 L20 11 M34 6 L28 11" stroke="#1F2340" stroke-width="2.5" stroke-linecap="round"/></svg>Grade <b>TV</b></div>
+    <div class="logo" style="font-size:40px"><svg viewBox="0 0 48 48" width="64" height="64" aria-hidden="true"><rect x="4" y="10" width="40" height="28" rx="8" fill="#FF4F5E"/><rect x="9" y="15" width="30" height="18" rx="5" fill="#fff"/><polygon points="21,19 21,29 30,24" fill="#3D8BFF"/><rect x="16" y="38" width="16" height="4" rx="2" fill="#1F2340"/><circle cx="14" cy="6" r="3" fill="#FFC53D"/><circle cx="34" cy="6" r="3" fill="#FFC53D"/><path d="M14 6 L20 11 M34 6 L28 11" stroke="#1F2340" stroke-width="2.5" stroke-linecap="round"/></svg>Hora do <b>Desenho</b></div>
     <button class="poder" id="btn-ligar" aria-label="Ligar a TV">ligar</button>
     <p>Toque ou pressione Enter para ligar</p>
   </div>
@@ -224,7 +224,7 @@
 <!-- ===== Primeiro acesso ===== -->
 <section id="tela-setup" class="tela">
   <div class="centro" style="gap:14px">
-    <div class="logo" style="font-size:34px">👋 Bem-vindo à Grade TV</div>
+    <div class="logo" style="font-size:34px">👋 Bem-vindo à Hora do Desenho</div>
     <div class="painel setup" id="setup-1">
       <h2>1 de 2 · Crie o PIN dos pais</h2>
       <p>Quatro números. Ele protege as configurações e a liberação de tempo extra.</p>
@@ -262,7 +262,7 @@
 <!-- ===== Início ===== -->
 <section id="tela-inicio" class="tela">
   <div class="topo">
-    <div class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="10" width="40" height="28" rx="8" fill="#FF4F5E"/><rect x="9" y="15" width="30" height="18" rx="5" fill="#fff"/><polygon points="21,19 21,29 30,24" fill="#3D8BFF"/><rect x="16" y="38" width="16" height="4" rx="2" fill="#1F2340"/><circle cx="14" cy="6" r="3" fill="#FFC53D"/><circle cx="34" cy="6" r="3" fill="#FFC53D"/><path d="M14 6 L20 11 M34 6 L28 11" stroke="#1F2340" stroke-width="2.5" stroke-linecap="round"/></svg>Grade <b>TV</b></div>
+    <div class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="10" width="40" height="28" rx="8" fill="#FF4F5E"/><rect x="9" y="15" width="30" height="18" rx="5" fill="#fff"/><polygon points="21,19 21,29 30,24" fill="#3D8BFF"/><rect x="16" y="38" width="16" height="4" rx="2" fill="#1F2340"/><circle cx="14" cy="6" r="3" fill="#FFC53D"/><circle cx="34" cy="6" r="3" fill="#FFC53D"/><path d="M14 6 L20 11 M34 6 L28 11" stroke="#1F2340" stroke-width="2.5" stroke-linecap="round"/></svg>Hora do <b>Desenho</b></div>
     <div class="espaco"></div>
     <button class="perfil-chip" id="chip-perfil" title="Trocar perfil"><span class="avatar" id="chip-avatar">🙂</span><span id="chip-nome"></span></button>
     <div class="relogio" id="relogio">--:--</div>
@@ -388,7 +388,7 @@
     <p class="ajuda">A chave é gratuita e fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
     <div class="painel">
       <ol class="passos">
-        <li>Entre no Google Cloud com sua conta Google e crie um projeto (qualquer nome, ex. <em>grade-tv</em>).</li>
+        <li>Entre no Google Cloud com sua conta Google e crie um projeto (qualquer nome, ex. <em>hora-do-desenho</em>).</li>
         <li>Ative a API no projeto: <a class="btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Ativar YouTube Data API v3</a></li>
         <li>Crie a chave em <strong>Criar credenciais → Chave de API</strong>: <a class="btn" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Abrir página de credenciais</a></li>
         <li>Copie a chave (começa com <em>AIza</em>), cole abaixo e clique em <strong>Testar</strong>. Depois, em "Restringir chave", limite ao YouTube Data API v3 e ao seu domínio.</li>
@@ -449,7 +449,7 @@
 
 <script>
 /* =========================================================
-   Grade TV — fase 1 (HTML único + localStorage), interface lúdica
+   Hora do Desenho — fase 1 (HTML único + localStorage), interface lúdica
    ========================================================= */
 'use strict';
 
@@ -941,7 +941,7 @@ $('#add-slot').onclick = ()=>{
 $('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
 $('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
 $('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
-$('#exportar').onclick = ()=>{ const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'}); const a=el('a',{href:URL.createObjectURL(b), download:'grade-tv.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok'); };
+$('#exportar').onclick = ()=>{ const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'}); const a=el('a',{href:URL.createObjectURL(b), download:'hora-do-desenho.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok'); };
 $('#importar').onclick = ()=>$('#arquivo').click();
 $('#arquivo').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const j=JSON.parse(await f.text()); if(!Array.isArray(j.channels)) throw new Error('Arquivo inválido.'); DB=Object.assign(carregar(), j, {cache:DB.cache}); salvar(); garantirPerfil(); renderAjustes(); msg('#msg-dados','Configuração importada.','ok'); }catch(err){ msg('#msg-dados', err.message, 'erro'); } };
 $('#zerar-hist').onclick = ()=>{ if(confirm('Zerar o histórico de vídeos assistidos de todos os canais?')){ DB.watched={}; DB.occ={}; salvar(); msg('#msg-dados','Histórico zerado.','ok'); } };
@@ -972,7 +972,7 @@ document.addEventListener('keydown', e=>{
 // ----- Ligar -----
 $('#btn-ligar').onclick = entrar; $('#btn-ligar').focus();
 // Dentro do app Android a TV "liga" sozinha (o WebView não exige gesto para tocar com som)
-if(window.GradeTV) entrar();
+if(window.HoraDoDesenho) entrar();
 setInterval(()=>{ if(telaAtual==='inicio') renderInicio(); }, 30000);
 </script>
 </body>

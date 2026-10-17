@@ -15,7 +15,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.GradeTV"
+        android:theme="@style/Theme.HoraDoDesenho"
         android:usesCleartextTraffic="false">
 
         <activity
@@ -47,7 +47,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Abre a Grade TV sozinha quando a TV liga, mesmo quando o sistema não deixa trocar o launcher -->
+        <!-- Abre a Hora do Desenho sozinha quando a TV liga, mesmo quando o sistema não deixa trocar o launcher -->
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

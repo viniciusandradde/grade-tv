@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="android/app/src/main/res/drawable-xhdpi/banner.png" alt="Grade TV" width="320">
+  <img src="android/app/src/main/res/drawable-xhdpi/banner.png" alt="Hora do Desenho" width="320">
 </p>
 
-<h1 align="center">Grade TV</h1>
+<h1 align="center">Hora do Desenho</h1>
 
-<p align="center"><strong>Canais do YouTube com hora marcada — do jeito que a TV era quando a gente era criança.</strong></p>
+<p align="center"><strong>Canais do YouTube com hora marcada — do jeito que a TV era quando a gente era criança. <em>(antes chamada Grade TV)</em></strong></p>
 
 <p align="center">
   Gratuito · Código aberto · Sem cadastro · Sem anúncios próprios · Feito para pais e mães
@@ -20,11 +20,11 @@
 
 A gente lembra. O programa tinha hora, o dia tinha ritmo, e quando acabava… acabava. Hoje o YouTube entrega tudo, o tempo todo, com rolagem infinita e um "próximo vídeo" que nunca termina.
 
-A **Grade TV** devolve a hora marcada. Você escolhe os canais que confia, monta uma grade de programação (quais dias, que horas) e pronto: quando a criança "liga a TV", só aparece o que está **no ar agora**. O canal preferido fora do horário? Está **dormindo**, com uma contagem regressiva mostrando quando acorda. Sem briga, sem negociação — a TV tem hora, e é a TV que diz.
+A **Hora do Desenho** devolve a hora marcada. Você escolhe os canais que confia, monta uma grade de programação (quais dias, que horas) e pronto: quando a criança "liga a TV", só aparece o que está **no ar agora**. O canal preferido fora do horário? Está **dormindo**, com uma contagem regressiva mostrando quando acorda. Sem briga, sem negociação — a TV tem hora, e é a TV que diz.
 
 No modo **linear**, o vídeo já está em andamento quando a criança sintoniza, como um canal de verdade: sem pausar, sem adiantar, sem escolher. Quando a faixa acaba, acabou. Amanhã tem mais.
 
-## O que a Grade TV faz
+## O que a Hora do Desenho faz
 
 | Para a criança | Para os pais |
 |---|---|
@@ -36,22 +36,22 @@ No modo **linear**, o vídeo já está em andamento quando a criança sintoniza,
 | Funciona com controle remoto: setas, OK, números 1–9, Voltar | Canais sugeridos verificados, adicionados com um toque |
 | Nada de Shorts, lives nem "próximo vídeo" automático | Exportar/importar a configuração em JSON |
 
-Tudo roda com o player oficial do YouTube e a API oficial do YouTube. A Grade TV não hospeda, não baixa e não reencoda nada: ela apenas decide **quando** cada canal pode aparecer.
+Tudo roda com o player oficial do YouTube e a API oficial do YouTube. A Hora do Desenho não hospeda, não baixa e não reencoda nada: ela apenas decide **quando** cada canal pode aparecer.
 
 ## Como instalar
 
 ### Na TV (Android TV, Google TV, Fire TV, TV Box)
 
-1. Baixe o `grade-tv.apk` na página de [**Releases**](../../releases) (ou no artefato da última build em [**Actions**](../../actions)).
-2. Instale na TV como qualquer APK (Downloader, envio por rede local, pendrive ou `adb install grade-tv.apk`). Ative "Instalar de fontes desconhecidas" se a TV pedir.
-3. Abra a Grade TV. No primeiro acesso ela pede o **PIN dos pais** e cria o **perfil da criança**.
+1. Baixe o `hora-do-desenho.apk` na página de [**Releases**](../../releases) (ou no artefato da última build em [**Actions**](../../actions)).
+2. Instale na TV como qualquer APK (Downloader, envio por rede local, pendrive ou `adb install hora-do-desenho.apk`). Ative "Instalar de fontes desconhecidas" se a TV pedir.
+3. Abra a Hora do Desenho. No primeiro acesso ela pede o **PIN dos pais** e cria o **perfil da criança**.
 4. Na área dos pais, cole a chave da YouTube Data API (passo a passo logo abaixo) e adicione canais e horários.
 
-**Para ser a tela inicial da TV** (a criança liga a TV e já cai na Grade TV):
+**Para ser a tela inicial da TV** (a criança liga a TV e já cai na Hora do Desenho):
 
-- **Android TV** (Sony, TCL, Philips, Mi Box, TV Box em geral): aperte **HOME**; o sistema pergunta qual tela inicial usar. Escolha Grade TV e marque "Sempre".
-- **Google TV** (Chromecast, TVs novas da Sony/TCL/Hisense) e **Fire TV**: o sistema não deixa trocar a tela inicial. A Grade TV então abre sozinha quando a TV termina de ligar e fica fixada entre os apps. Em alguns modelos é preciso autorizar o app a "iniciar automaticamente".
-- Para voltar ao launcher original a qualquer momento: Configurações → Apps → Grade TV → "Limpar padrões".
+- **Android TV** (Sony, TCL, Philips, Mi Box, TV Box em geral): aperte **HOME**; o sistema pergunta qual tela inicial usar. Escolha Hora do Desenho e marque "Sempre".
+- **Google TV** (Chromecast, TVs novas da Sony/TCL/Hisense) e **Fire TV**: o sistema não deixa trocar a tela inicial. A Hora do Desenho então abre sozinha quando a TV termina de ligar e fica fixada entre os apps. Em alguns modelos é preciso autorizar o app a "iniciar automaticamente".
+- Para voltar ao launcher original a qualquer momento: Configurações → Apps → Hora do Desenho → "Limpar padrões".
 
 O botão **Voltar** do controle nunca fecha o app (ele volta de tela). O botão **Menu** abre a área dos pais.
 
@@ -61,7 +61,7 @@ Abra o `index.html` direto no Chrome, ou use a versão hospedada (GitHub Pages).
 
 ## A chave da YouTube Data API (5 minutos, gratuita)
 
-A Grade TV precisa de uma chave para listar os vídeos dos canais. Ela é sua, fica salva só no seu aparelho, e a cota gratuita (10.000 unidades por dia) dá para dezenas de canais.
+A Hora do Desenho precisa de uma chave para listar os vídeos dos canais. Ela é sua, fica salva só no seu aparelho, e a cota gratuita (10.000 unidades por dia) dá para dezenas de canais.
 
 1. Entre no [Google Cloud](https://console.cloud.google.com/) com sua conta Google e crie um projeto (qualquer nome, ex. `grade-tv`).
 2. [Ative a YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) nesse projeto.
@@ -86,7 +86,7 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 
 ## Privacidade, de verdade
 
-- Nenhum dado sai do seu aparelho. Não existe servidor da Grade TV, conta, cadastro ou rastreamento.
+- Nenhum dado sai do seu aparelho. Não existe servidor da Hora do Desenho, conta, cadastro ou rastreamento.
 - A chave da API e as configurações ficam no armazenamento local do navegador ou do app.
 - O YouTube continua sendo o YouTube: anúncios e restrições de incorporação dos canais valem normalmente (uma conta Premium logada no aparelho remove os anúncios).
 
@@ -107,7 +107,7 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 
 ## Quem faz
 
-A Grade TV é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Grade TV nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com o mesmo cuidado profissional dos nossos produtos: código aberto, sem coleta de dados e com suporte pelas issues do repositório.
+A Hora do Desenho é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Hora do Desenho nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com o mesmo cuidado profissional dos nossos produtos: código aberto, sem coleta de dados e com suporte pelas issues do repositório.
 
 ## Contribuir
 
@@ -117,4 +117,4 @@ Achou um bug, quer sugerir um canal ou uma função? Abra uma [issue](../../issu
 
 MIT, © VSA Tecnologia. Use, copie, adapte e compartilhe com outros pais.
 
-<p align="center"><sub>Grade TV não é afiliada ao YouTube ou ao Google. YouTube é marca do Google LLC. Os canais pertencem aos seus criadores.</sub></p>
+<p align="center"><sub>Hora do Desenho não é afiliada ao YouTube ou ao Google. YouTube é marca do Google LLC. Os canais pertencem aos seus criadores.</sub></p>
