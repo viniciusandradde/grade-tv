@@ -971,6 +971,8 @@ document.addEventListener('keydown', e=>{
 
 // ----- Ligar -----
 $('#btn-ligar').onclick = entrar; $('#btn-ligar').focus();
+// Dentro do app Android a TV "liga" sozinha (o WebView não exige gesto para tocar com som)
+if(window.GradeTV) entrar();
 setInterval(()=>{ if(telaAtual==='inicio') renderInicio(); }, 30000);
 </script>
 </body>
