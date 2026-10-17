@@ -10,6 +10,10 @@
   Gratuito · Código aberto · Sem cadastro · Sem anúncios próprios · Feito para pais e mães
 </p>
 
+<p align="center">
+  Um produto <strong>VSA Tecnologia</strong> para a comunidade — de Dourados, MS, para todas as famílias.
+</p>
+
 ---
 
 ## Lembra de esperar o desenho de sábado?
@@ -101,12 +105,16 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 - [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
 - [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
 
+## Quem faz
+
+A Grade TV é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Grade TV nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com o mesmo cuidado profissional dos nossos produtos: código aberto, sem coleta de dados e com suporte pelas issues do repositório.
+
 ## Contribuir
 
 Achou um bug, quer sugerir um canal ou uma função? Abra uma [issue](../../issues). Pull requests são bem-vindos — o projeto é propositalmente simples para qualquer pessoa conseguir mexer.
 
 ## Licença
 
-MIT. Use, copie, adapte e compartilhe com outros pais.
+MIT, © VSA Tecnologia. Use, copie, adapte e compartilhe com outros pais.
 
 <p align="center"><sub>Grade TV não é afiliada ao YouTube ou ao Google. YouTube é marca do Google LLC. Os canais pertencem aos seus criadores.</sub></p>
