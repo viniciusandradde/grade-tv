@@ -1,51 +1,112 @@
-# Grade TV
+<p align="center">
+  <img src="android/app/src/main/res/drawable-xhdpi/banner.png" alt="Grade TV" width="320">
+</p>
 
-Canais do YouTube com horário marcado, como a TV de antigamente.
+<h1 align="center">Grade TV</h1>
 
-Você cadastra canais e define uma grade (dias e faixas de horário). Ao "ligar a TV", só aparece o que está no ar naquele momento. Fora da faixa, o canal mostra chuvisco e a contagem regressiva para o próximo horário. No modo **linear**, o vídeo já está em andamento quando você sintoniza — sem pausar, sem adiantar, sem escolher — exatamente como era esperar o programa de sábado.
+<p align="center"><strong>Canais do YouTube com hora marcada — do jeito que a TV era quando a gente era criança.</strong></p>
 
-## Fase 1 — MVP (este repositório)
+<p align="center">
+  Gratuito · Código aberto · Sem cadastro · Sem anúncios próprios · Feito para pais e mães
+</p>
 
-Um único `index.html`, sem backend. Tudo fica no `localStorage` do navegador. Interface clara, redonda e colorida, pensada para criança (estilo app infantil de vídeos), com área dos pais separada.
+---
 
-- **Primeiro acesso** guiado: PIN dos pais → perfil da criança (nome, avatar, limite diário) → chave e canais
-- **Perfis** de criança: avatar, canais liberados, limite de tempo por dia e favoritos próprios
-- **PIN dos pais** protege a área de configuração e a liberação de tempo extra; engrenagem fixa no canto (aparece ao passar o mouse ou tocar, inclusive durante o vídeo)
-- **Limite diário**: ao estourar, tela "Hora de descansar"; os pais liberam +15 min com o PIN
-- **Favoritos** (coração durante o vídeo), reproduzíveis só quando o canal está no ar
-- **Canais sugeridos** verificados, adicionados com um toque
-- Cadastro de canais por link (`youtube.com/@canal`), ID (`UC…`) ou playlist
-- Grade de horários por canal: dias da semana, início, fim e modo (linear ou livre)
-- Tela de canais com o que está **no ar agora** e quando cada canal **volta**
-- Tela **fora do ar** lúdica ("o canal está dormindo") com contagem regressiva (sintoniza sozinho quando o horário chega)
-- Início com bolhas dos canais, **No ar agora** (com a capa do vídeo que está passando e barra de progresso), **Daqui a pouco** e **Dormindo**
-- Modo **linear**: calcula qual vídeo está passando e em que segundo, bloqueia pausa/avanço, segue a fila e marca os vídeos assistidos (sem repetir até esgotar a fila)
-- Modo **livre**: dentro do horário você escolhe o vídeo e usa os controles normais
-- Guia de programação (EPG) por dia, com a linha do "agora"
-- Navegação por teclado / controle remoto: setas, Enter, 1–9, G (guia), A (ajustes), Esc, F (tela cheia)
-- Exportar / importar a configuração em JSON
+## Lembra de esperar o desenho de sábado?
 
-## Como usar
+A gente lembra. O programa tinha hora, o dia tinha ritmo, e quando acabava… acabava. Hoje o YouTube entrega tudo, o tempo todo, com rolagem infinita e um "próximo vídeo" que nunca termina.
 
-1. Crie uma chave gratuita da **YouTube Data API v3**: crie um projeto no Google Cloud, [ative a API](https://console.cloud.google.com/apis/library/youtube.googleapis.com) e gere a chave na [página de credenciais](https://console.cloud.google.com/apis/credentials) (Criar credenciais → Chave de API). Guia oficial: [Obtaining authorization credentials](https://developers.google.com/youtube/registering_an_application). Restrinja a chave à API do YouTube e ao domínio onde a página vai rodar.
-2. Abra o `index.html` no Chrome (localmente ou pelo GitHub Pages). No primeiro acesso, crie o PIN dos pais e o perfil da criança; em seguida, na área dos pais (engrenagem no canto), cole a chave e clique em **Testar**.
-3. Adicione os canais e as faixas de horário.
-4. Volte para a tela de canais e sintonize.
+A **Grade TV** devolve a hora marcada. Você escolhe os canais que confia, monta uma grade de programação (quais dias, que horas) e pronto: quando a criança "liga a TV", só aparece o que está **no ar agora**. O canal preferido fora do horário? Está **dormindo**, com uma contagem regressiva mostrando quando acorda. Sem briga, sem negociação — a TV tem hora, e é a TV que diz.
 
-Para usar na TV: abra a página no navegador de um mini PC, Chromebox, Fire TV (Silk) ou Smart TV ligado por HDMI, pressione `F` para tela cheia e navegue com o teclado ou controle remoto.
+No modo **linear**, o vídeo já está em andamento quando a criança sintoniza, como um canal de verdade: sem pausar, sem adiantar, sem escolher. Quando a faixa acaba, acabou. Amanhã tem mais.
 
-## Limitações conhecidas
+## O que a Grade TV faz
 
-- Os vídeos tocam pelo player oficial do YouTube: anúncios e restrições de incorporação continuam valendo (canais com embed desativado não tocam).
-- O bloqueio de pausa/avanço é uma convenção de interface, não uma trava técnica.
-- A cota gratuita da Data API é de 10.000 unidades/dia; cada atualização de canal gasta cerca de 3 a 5 unidades (cache de 6 h).
-- Vídeos ao vivo e Shorts (menos de 2 min, configurável) são ignorados.
+| Para a criança | Para os pais |
+|---|---|
+| Interface clara, redonda e colorida, com bolhas dos canais | Área protegida por **PIN** (engrenagem no canto, 4 números) |
+| **No ar agora**, **Daqui a pouco** e **Dormindo** — ela entende o que pode ver e quando | **Perfis** por criança: avatar, canais liberados, limite por dia, favoritos próprios |
+| Canal fora do horário = TV dormindo com contagem regressiva, e liga sozinha na hora | **Limite diário** de tempo; estourou, aparece "Hora de descansar" (+15 min só com PIN) |
+| Modo **linear**: o vídeo está passando, como na TV | Modo **livre** para faixas em que ela pode escolher o vídeo |
+| **Favoritos** com o coração, que só tocam quando o canal está no ar | **Guia de programação** da semana, com a linha do "agora" |
+| Funciona com controle remoto: setas, OK, números 1–9, Voltar | Canais sugeridos verificados, adicionados com um toque |
+| Nada de Shorts, lives nem "próximo vídeo" automático | Exportar/importar a configuração em JSON |
+
+Tudo roda com o player oficial do YouTube e a API oficial do YouTube. A Grade TV não hospeda, não baixa e não reencoda nada: ela apenas decide **quando** cada canal pode aparecer.
+
+## Como instalar
+
+### Na TV (Android TV, Google TV, Fire TV, TV Box)
+
+1. Baixe o `grade-tv.apk` na página de [**Releases**](../../releases) (ou no artefato da última build em [**Actions**](../../actions)).
+2. Instale na TV como qualquer APK (Downloader, envio por rede local, pendrive ou `adb install grade-tv.apk`). Ative "Instalar de fontes desconhecidas" se a TV pedir.
+3. Abra a Grade TV. No primeiro acesso ela pede o **PIN dos pais** e cria o **perfil da criança**.
+4. Na área dos pais, cole a chave da YouTube Data API (passo a passo logo abaixo) e adicione canais e horários.
+
+**Para ser a tela inicial da TV** (a criança liga a TV e já cai na Grade TV):
+
+- **Android TV** (Sony, TCL, Philips, Mi Box, TV Box em geral): aperte **HOME**; o sistema pergunta qual tela inicial usar. Escolha Grade TV e marque "Sempre".
+- **Google TV** (Chromecast, TVs novas da Sony/TCL/Hisense) e **Fire TV**: o sistema não deixa trocar a tela inicial. A Grade TV então abre sozinha quando a TV termina de ligar e fica fixada entre os apps. Em alguns modelos é preciso autorizar o app a "iniciar automaticamente".
+- Para voltar ao launcher original a qualquer momento: Configurações → Apps → Grade TV → "Limpar padrões".
+
+O botão **Voltar** do controle nunca fecha o app (ele volta de tela). O botão **Menu** abre a área dos pais.
+
+### No navegador (PC, Chromebox, tablet ou celular ligado na TV)
+
+Abra o `index.html` direto no Chrome, ou use a versão hospedada (GitHub Pages). Pressione `F` para tela cheia. Teclas: setas, Enter, 1–9, `G` (guia), `A` (pais), `Esc` (voltar), `C` (favoritar), `L` (lista no modo livre).
+
+## A chave da YouTube Data API (5 minutos, gratuita)
+
+A Grade TV precisa de uma chave para listar os vídeos dos canais. Ela é sua, fica salva só no seu aparelho, e a cota gratuita (10.000 unidades por dia) dá para dezenas de canais.
+
+1. Entre no [Google Cloud](https://console.cloud.google.com/) com sua conta Google e crie um projeto (qualquer nome, ex. `grade-tv`).
+2. [Ative a YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) nesse projeto.
+3. Em [Credenciais](https://console.cloud.google.com/apis/credentials), clique em **Criar credenciais → Chave de API**.
+4. Copie a chave (começa com `AIza`), cole na área dos pais e clique em **Testar**.
+5. Recomendado: em "Restringir chave", limite à YouTube Data API v3.
+
+Guia oficial do Google: [Obtaining authorization credentials](https://developers.google.com/youtube/registering_an_application).
+
+## Canais para começar (verificados)
+
+| Canal | Para quem | Dica de grade |
+|---|---|---|
+| [Detetive Labrador](https://www.youtube.com/@SheriffLabradorPT) | 3 a 7 anos | Episódios de ~30 min: faixas de 30 ou 60 min |
+| [As Histórias do Om Nom](https://www.youtube.com/@OmNomPT) | 3 a 7 anos | Compilações de ~20 min |
+| [Mundo Bita](https://www.youtube.com/@MundoBita) | 2 a 5 anos | Música brasileira; ótimo para o fim de tarde |
+| [Bluey Português Brasil](https://www.youtube.com/@blueyportuguesbrasil-canal) | 3 a 6 anos | Blocos de 40 min a 1 h |
+| [Galinha Pintadinha](https://www.youtube.com/@GalinhaPintadinha) | 1 a 4 anos | Clipes curtos: desative o filtro de 2 min |
+| [Pokémon Kids TV](https://www.youtube.com/@pokemonkidstv) | 3 a 6 anos | Músicas e rimas, quase sem fala |
+
+Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
+
+## Privacidade, de verdade
+
+- Nenhum dado sai do seu aparelho. Não existe servidor da Grade TV, conta, cadastro ou rastreamento.
+- A chave da API e as configurações ficam no armazenamento local do navegador ou do app.
+- O YouTube continua sendo o YouTube: anúncios e restrições de incorporação dos canais valem normalmente (uma conta Premium logada no aparelho remove os anúncios).
+
+## Como funciona por dentro
+
+- **Um único `index.html`** com toda a interface e a lógica (HTML, CSS e JavaScript puros, sem framework). Roda em qualquer navegador moderno.
+- **App Android** (`android/`): um WebView que serve esse mesmo `index.html` como origem `https://` (exigência do player do YouTube), registra-se como tela inicial (`HOME` + `LEANBACK_LAUNCHER`) e abre sozinho no boot.
+- **YouTube Data API v3** lista os vídeos e as durações; **YouTube IFrame Player API** toca. A programação linear calcula qual vídeo está "no ar" pelo horário de início da faixa e pelas durações, em loop (reprise) quando a fila acaba.
+- O APK é gerado automaticamente pelo GitHub Actions a cada push; tags `v*` publicam uma Release.
 
 ## Roteiro
 
-- **Fase 2** — backend (FastAPI + SQLite), admin pelo celular, sincronização entre dispositivos, histórico.
-- **Fase 3** — app Android TV, perfis (família), bloqueio parental por horário, "boletim" de vídeos novos.
+- [x] Fase 1 — MVP no navegador, grade de horários, modo linear e livre
+- [x] Fase 1.5 — interface lúdica, perfis, PIN, limite diário, favoritos
+- [x] Fase 2 — app Android TV como tela inicial, APK automático
+- [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
+- [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
+
+## Contribuir
+
+Achou um bug, quer sugerir um canal ou uma função? Abra uma [issue](../../issues). Pull requests são bem-vindos — o projeto é propositalmente simples para qualquer pessoa conseguir mexer.
 
 ## Licença
 
-MIT
+MIT. Use, copie, adapte e compartilhe com outros pais.
+
+<p align="center"><sub>Grade TV não é afiliada ao YouTube ou ao Google. YouTube é marca do Google LLC. Os canais pertencem aos seus criadores.</sub></p>
