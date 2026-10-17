@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6FB">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Hora do Desenho</title>
 <meta name="description" content="Hora do Desenho — canais do YouTube com hora marcada, do jeito que a criança entende.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -204,6 +206,39 @@
   .sugestoes button{display:flex; align-items:center; gap:10px; background:var(--bg2); border-radius:16px; padding:10px 12px; text-align:left; font-weight:800}
   .sugestoes button small{display:block; color:var(--dim); font-weight:600}
   .sugestoes button .ok{margin-left:auto; color:var(--verde); font-size:20px}
+  /* ---------- Celular (retrato) ---------- */
+  html{-webkit-text-size-adjust:100%}
+  @media (max-width:700px){
+    .topo .logo{font-size:20px} .topo .logo svg{width:30px; height:30px}
+    .relogio{font-size:18px; padding:3px 10px}
+    .perfil-chip{padding:3px}
+    .perfil-chip #chip-nome{display:none}
+    .bolha{width:82px} .bolha .anel{width:66px; height:66px} .bolha .num{width:24px; height:24px; font-size:13px}
+    .secao h2{font-size:21px}
+    .card .info{padding:10px 12px 12px} .card .t1{font-size:14px} .card .t2{font-size:12px}
+    .form{flex-direction:column; align-items:stretch}
+    .form label{width:100%}
+    .form input,.form select,input[type=text],input[type=password],input[type=number],input[type=time]{min-width:0!important; width:100%}
+    .form .btn{justify-content:center}
+    .passos a.btn{display:flex; justify-content:center; margin:8px 0 0}
+    .painel{padding:14px}
+    .lista li{gap:8px} .lista li .cresce{min-width:0; flex-basis:100%}
+    .sugestoes{grid-template-columns:1fr}
+    .chip{max-width:62vw} .chip .c2{max-width:42vw}
+    .centro h2{font-size:28px} .soneca{width:62vw} .balao .conta{font-size:40px} .balao .volta{font-size:22px}
+    .poder{width:170px; height:170px; font-size:36px}
+    .perfil-card{width:130px} .perfil-card .avatar{width:72px; height:72px; font-size:40px}
+    .pin-caixa{padding:20px} .teclado button{height:54px}
+    .livre-lista{width:100vw; max-width:100vw; border-radius:0}
+    .nav button{min-width:0; padding:6px 12px}
+    .ajustes h2{font-size:22px}
+    .canto{right:12px; top:10px}
+    .setup{width:100%}
+  }
+  @media (max-width:700px) and (orientation:landscape){
+    .conteudo{padding-bottom:80px}
+    .centro{gap:8px} .soneca{width:34vh}
+  }
   @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
 </style>
 </head>
@@ -435,6 +470,15 @@
       <label class="chk"><input type="checkbox" id="cfg-auto"> Ligar o canal sozinho quando o horário começar</label>
     </div>
 
+    <div id="sec-aparelho" hidden>
+      <h2>Este aparelho</h2>
+      <p class="ajuda">Na TV, a Hora do Desenho pode ser a tela inicial: a criança liga a TV e já cai nela. No celular, deixe desligado.</p>
+      <div class="painel">
+        <label class="chk"><input type="checkbox" id="cfg-launcher"> Usar como tela inicial (launcher) deste aparelho</label>
+        <p class="ajuda" style="margin:6px 0 0">Depois de ligar, aperte o botão HOME do controle e escolha "Hora do Desenho" → "Sempre". Para desfazer, desligue aqui ou use Configurações → Apps → Hora do Desenho → Limpar padrões.</p>
+      </div>
+    </div>
+
     <h2>Dados</h2>
     <div class="painel form">
       <button class="btn" id="exportar">Exportar configuração</button>
@@ -625,6 +669,7 @@ function ir(nome){
   if(nome==='setup') renderSetup();
   $('#gear').hidden = ['ligar','setup','ajustes'].includes(nome);
   $('#gear').classList.toggle('visivel', nome!=='player');
+  if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(nome==='player'); }catch(e){} }
   const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
 }
 document.querySelectorAll('[data-ir]').forEach(b=>b.addEventListener('click', ()=>ir(b.dataset.ir)));
@@ -874,6 +919,7 @@ let avatarSel = AVATARES[0];
 function renderAjustes(){
   $('#apikey').value = DB.apiKey;
   $('#cfg-strict').checked = DB.cfg.strict; $('#cfg-shorts').checked = DB.cfg.shorts; $('#cfg-auto').checked = DB.cfg.auto;
+  if(window.HoraDoDesenho){ $('#sec-aparelho').hidden=false; try{ $('#cfg-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){} }
   // avatares
   const av=$('#perfil-avatares'); av.innerHTML=''; for(const a of AVATARES) av.append(el('button',{type:'button','aria-pressed':String(a===avatarSel), onclick:()=>{avatarSel=a; renderAjustes();}}, a));
   // perfis
@@ -941,6 +987,7 @@ $('#add-slot').onclick = ()=>{
 $('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
 $('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
 $('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
+$('#cfg-launcher').onchange = e=>{ try{ HoraDoDesenho.definirLauncher(e.target.checked); }catch(err){ alert('Não foi possível alterar: '+err); } };
 $('#exportar').onclick = ()=>{ const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'}); const a=el('a',{href:URL.createObjectURL(b), download:'hora-do-desenho.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok'); };
 $('#importar').onclick = ()=>$('#arquivo').click();
 $('#arquivo').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const j=JSON.parse(await f.text()); if(!Array.isArray(j.channels)) throw new Error('Arquivo inválido.'); DB=Object.assign(carregar(), j, {cache:DB.cache}); salvar(); garantirPerfil(); renderAjustes(); msg('#msg-dados','Configuração importada.','ok'); }catch(err){ msg('#msg-dados', err.message, 'erro'); } };

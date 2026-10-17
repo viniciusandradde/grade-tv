@@ -2,7 +2,10 @@ package br.com.vsa.horadodesenho
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -86,8 +89,33 @@ class MainActivity : Activity() {
         // (ex.: GitHub Pages) sem reinstalar:
         //   adb shell am start -n br.com.vsa.horadodesenho/.MainActivity --es url https://SEU-USUARIO.github.io/grade-tv/
         intent?.getStringExtra("url")?.let { salvarUrl(it) }
+
+        // Na primeira abertura: TV vira tela inicial; celular e tablet ficam como app comum.
+        val prefs = getSharedPreferences("horadodesenho", MODE_PRIVATE)
+        if (!prefs.contains("launcher")) {
+            val tv = ehTv()
+            definirLauncher(tv)
+            prefs.edit().putBoolean("launcher", tv).apply()
+        }
+
         web.loadUrl(urlAtual())
     }
+
+    private fun ehTv(): Boolean = packageManager.hasSystemFeature("android.software.leanback")
+
+    private val aliasInicial get() = ComponentName(this, "$packageName.Inicial")
+
+    private fun definirLauncher(ativo: Boolean) {
+        packageManager.setComponentEnabledSetting(
+            aliasInicial,
+            if (ativo) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.DONT_KILL_APP
+        )
+        getSharedPreferences("horadodesenho", MODE_PRIVATE).edit().putBoolean("launcher", ativo).apply()
+    }
+
+    private fun launcherAtivo(): Boolean =
+        packageManager.getComponentEnabledSetting(aliasInicial) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -155,8 +183,19 @@ class MainActivity : Activity() {
     /** Pequena ponte lida pelo index.html: window.HoraDoDesenho */
     inner class Bridge {
         @JavascriptInterface fun version(): String = BuildConfig.VERSION_NAME
-        @JavascriptInterface fun isTv(): Boolean =
-            packageManager.hasSystemFeature("android.software.leanback")
+        @JavascriptInterface fun isTv(): Boolean = ehTv()
         @JavascriptInterface fun sdk(): Int = Build.VERSION.SDK_INT
+
+        /** Tela inicial (launcher) ligada/desligada — controlado na área dos pais. */
+        @JavascriptInterface fun launcherAtivo(): Boolean = this@MainActivity.launcherAtivo()
+        @JavascriptInterface fun definirLauncher(ativo: Boolean) = this@MainActivity.definirLauncher(ativo)
+
+        /** Celular: trava em paisagem só enquanto o vídeo está aberto. */
+        @JavascriptInterface fun travarPaisagem(travar: Boolean) {
+            runOnUiThread {
+                requestedOrientation = if (travar && !ehTv()) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        }
     }
 }

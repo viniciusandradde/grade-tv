@@ -23,7 +23,6 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
-            android:screenOrientation="sensorLandscape"
             android:stateNotNeeded="true"
             android:excludeFromRecents="true">
 
@@ -39,13 +38,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Candidato a tela inicial (launcher): o sistema pergunta qual usar ao apertar HOME -->
+        </activity>
+
+        <!-- Candidato a tela inicial (launcher). Fica desligado em celulares e tablets e
+             ligado em TVs; o responsável pode mudar na área dos pais. -->
+        <activity-alias
+            android:name=".Inicial"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <!-- Abre a Hora do Desenho sozinha quando a TV liga, mesmo quando o sistema não deixa trocar o launcher -->
         <receiver
