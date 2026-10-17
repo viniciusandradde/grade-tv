@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade TV</title>
+<meta name="description" content="Canais do YouTube com horário marcado, como a TV de antigamente.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07100C; --panel:#0F1A15; --panel2:#15231C; --line:#223229;
+    --ink:#ECE6D3; --dim:#8E9C90; --amber:#F0B23A; --onair:#E24B2E; --ok:#5DBB7A;
+    --radius:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Barlow",system-ui,sans-serif; font-size:18px; line-height:1.4;
+    overflow:hidden;
+  }
+  body::after{ /* scanlines */
+    content:""; pointer-events:none; position:fixed; inset:0; z-index:50;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
+    mix-blend-mode:multiply;
+  }
+  button{font:inherit; color:inherit; cursor:pointer}
+  input,select{font:inherit}
+  a{color:var(--amber)}
+  h1,h2,h3{font-family:"Barlow Condensed",sans-serif; font-weight:800; margin:0; line-height:1}
+  .tela{display:none; position:fixed; inset:0; padding:28px 36px; overflow:auto}
+  .tela.ativa{display:block}
+  .osd{ /* clock & status, like a VCR on-screen display */
+    position:fixed; top:22px; right:36px; z-index:40; text-align:right;
+    font-family:"Barlow Condensed",sans-serif; color:var(--amber);
+    text-shadow:0 0 12px rgba(240,178,58,.45);
+  }
+  .osd .hora{font-size:58px; font-weight:800; letter-spacing:.02em; font-variant-numeric:tabular-nums}
+  .osd .data{font-size:20px; font-weight:600; color:var(--ink); opacity:.85; text-transform:capitalize}
+  body.sem-osd .osd{display:none}
+
+  /* ---------- Ligar ---------- */
+  #ligar{display:none; position:fixed; inset:0; background:#000; z-index:60; align-items:center; justify-content:center}
+  #ligar.ativa{display:flex}
+  #ligar button{
+    background:none; border:3px solid var(--ink); color:var(--ink); border-radius:50%;
+    width:220px; height:220px; font-family:"Barlow Condensed",sans-serif; font-size:40px; font-weight:800;
+    letter-spacing:.04em; box-shadow:0 0 0 12px rgba(236,230,211,.06), 0 0 60px rgba(240,178,58,.15);
+  }
+  #ligar button:focus-visible{outline:none; border-color:var(--amber); color:var(--amber)}
+  #ligar p{position:absolute; bottom:48px; color:var(--dim); font-size:16px}
+
+  /* ---------- Home: canais ---------- */
+  .topo{display:flex; align-items:flex-end; gap:24px; margin-bottom:28px; padding-right:280px}
+  .topo h1{font-size:64px; letter-spacing:.01em}
+  .topo h1 span{color:var(--amber)}
+  .topo p{margin:0 0 6px; color:var(--dim)}
+  .secao{margin-bottom:34px}
+  .secao h2{font-size:26px; font-weight:600; color:var(--dim); margin-bottom:12px; letter-spacing:.01em}
+  .grade-canais{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px}
+  .canal{
+    position:relative; display:grid; grid-template-columns:64px 1fr; gap:14px; align-items:center;
+    background:var(--panel); border:2px solid var(--line); border-radius:var(--radius); padding:14px; text-align:left;
+  }
+  .canal:focus-visible,.canal:hover{outline:none; border-color:var(--amber); background:var(--panel2)}
+  .canal .num{
+    font-family:"Barlow Condensed",sans-serif; font-size:44px; font-weight:800; color:var(--amber); text-align:center;
+    font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .canal img{width:56px; height:56px; border-radius:50%; object-fit:cover; background:#000; display:block; margin:6px auto 0}
+  .canal .nome{font-weight:600; font-size:20px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .canal .status{color:var(--dim); font-size:15px}
+  .canal.noar .status{color:var(--ok)}
+  .canal.noar::before{
+    content:""; position:absolute; top:12px; right:12px; width:10px; height:10px; border-radius:50%;
+    background:var(--onair); box-shadow:0 0 10px var(--onair);
+  }
+  .vazio{color:var(--dim); border:2px dashed var(--line); border-radius:var(--radius); padding:28px; max-width:720px}
+  .vazio strong{color:var(--ink)}
+  .rodape{position:fixed; left:36px; right:36px; bottom:16px; color:var(--dim); font-size:15px; display:flex; gap:28px; flex-wrap:wrap}
+  .rodape b{color:var(--ink); font-weight:600; border:1px solid var(--line); border-radius:4px; padding:0 7px; margin-right:6px}
+
+  /* ---------- Player ---------- */
+  #tela-player{padding:0; background:#000}
+  #player-wrap{position:absolute; inset:0}
+  #player-wrap iframe,#player{position:absolute; inset:0; width:100%; height:100%}
+  #blindagem{position:absolute; inset:0; z-index:5} /* blocks clicks in strict mode */
+  .bug{ /* channel bug, like TV logos in the corner */
+    position:absolute; left:28px; bottom:28px; z-index:10; display:flex; align-items:center; gap:12px;
+    background:rgba(0,0,0,.55); border-left:4px solid var(--amber); padding:8px 14px 8px 12px; border-radius:0 var(--radius) var(--radius) 0;
+    opacity:1; transition:opacity .4s;
+  }
+  .bug.oculto{opacity:0}
+  .bug img{width:36px; height:36px; border-radius:50%}
+  .bug .b1{font-weight:600; font-size:17px}
+  .bug .b2{color:var(--dim); font-size:14px; max-width:60vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .livre-lista{
+    position:absolute; right:0; top:0; bottom:0; width:340px; z-index:10; background:rgba(7,16,12,.94); border-left:2px solid var(--line);
+    overflow:auto; padding:16px; transform:translateX(100%); transition:transform .25s;
+  }
+  .livre-lista.aberta{transform:none}
+  .livre-lista h3{font-size:22px; font-weight:600; color:var(--dim); margin-bottom:10px}
+  .livre-lista button{display:block; width:100%; text-align:left; background:none; border:0; border-bottom:1px solid var(--line); padding:10px 4px; font-size:15px}
+  .livre-lista button:focus-visible,.livre-lista button:hover{outline:none; color:var(--amber)}
+  .livre-lista button small{display:block; color:var(--dim)}
+
+  /* ---------- Fora do ar ---------- */
+  #tela-foradoar{padding:0; background:#000}
+  #ruido{position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; opacity:.55}
+  .foradoar-info{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px;
+    text-shadow:0 2px 10px rgba(0,0,0,.9);
+  }
+  .foradoar-info h2{font-size:96px; letter-spacing:.02em}
+  .foradoar-info .volta{font-family:"Barlow Condensed",sans-serif; font-size:36px; font-weight:600; color:var(--amber)}
+  .foradoar-info .conta{font-family:"Barlow Condensed",sans-serif; font-size:72px; font-weight:800; font-variant-numeric:tabular-nums}
+  .foradoar-info .dica{color:var(--dim); margin-top:18px}
+
+  /* ---------- Guia ---------- */
+  .dias{display:flex; gap:8px; margin:0 0 18px}
+  .dias button{background:var(--panel); border:2px solid var(--line); border-radius:var(--radius); padding:6px 16px; font-family:"Barlow Condensed",sans-serif; font-size:22px; font-weight:600}
+  .dias button[aria-pressed="true"]{border-color:var(--amber); color:var(--amber)}
+  .dias button:focus-visible{outline:none; background:var(--panel2); border-color:var(--ink)}
+  .epg{display:grid; grid-template-columns:220px 1fr; border:2px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .epg .cab{background:var(--panel); border-bottom:2px solid var(--line); padding:8px 12px; color:var(--dim); font-size:14px}
+  .epg .horas{position:relative; height:34px; background:var(--panel); border-bottom:2px solid var(--line)}
+  .epg .horas span{position:absolute; top:8px; transform:translateX(-50%); font-size:13px; color:var(--dim); font-variant-numeric:tabular-nums}
+  .epg .lin{display:contents}
+  .epg .rot{padding:10px 12px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .epg .rot img{width:28px; height:28px; border-radius:50%}
+  .epg .faixa{position:relative; border-bottom:1px solid var(--line); min-height:52px;
+    background:repeating-linear-gradient(90deg, transparent 0 calc(100%/24 - 1px), var(--line) calc(100%/24 - 1px) calc(100%/24))}
+  .epg .bloco{
+    position:absolute; top:7px; bottom:7px; background:#2A4432; border:1px solid #4E7A5C; border-radius:4px; padding:2px 8px;
+    font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink);
+  }
+  .epg .bloco.livre{background:#3C3A2A; border-color:#7A7149}
+  .epg .bloco:focus-visible,.epg .bloco:hover{outline:none; border-color:var(--amber)}
+  .epg .agora{position:absolute; top:0; bottom:0; width:2px; background:var(--onair); box-shadow:0 0 8px var(--onair); z-index:2; pointer-events:none}
+  .legenda{color:var(--dim); font-size:15px; margin-top:12px; display:flex; gap:22px}
+  .legenda i{display:inline-block; width:14px; height:14px; border-radius:3px; vertical-align:-2px; margin-right:6px; background:#2A4432; border:1px solid #4E7A5C}
+  .legenda i.livre{background:#3C3A2A; border-color:#7A7149}
+
+  /* ---------- Ajustes ---------- */
+  .ajustes{max-width:980px; padding-right:0}
+  .ajustes h1{font-size:48px; margin-bottom:6px}
+  .ajustes h2{font-size:28px; margin:34px 0 12px; color:var(--amber); font-weight:600}
+  .ajustes p.ajuda{color:var(--dim); margin:0 0 14px; max-width:70ch}
+  .form{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .form label{display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--dim)}
+  input[type=text],input[type=password],input[type=time],select{
+    background:var(--panel); border:2px solid var(--line); color:var(--ink); border-radius:var(--radius); padding:8px 12px; min-width:160px;
+  }
+  input:focus-visible,select:focus-visible{outline:none; border-color:var(--amber)}
+  .btn{background:var(--panel2); border:2px solid var(--line); border-radius:var(--radius); padding:8px 16px; font-weight:600}
+  .btn:focus-visible,.btn:hover{outline:none; border-color:var(--amber)}
+  .btn.primario{background:var(--amber); color:#1a1205; border-color:var(--amber)}
+  .btn.primario:focus-visible,.btn.primario:hover{background:#ffc54f}
+  .btn.perigo:hover,.btn.perigo:focus-visible{border-color:var(--onair); color:var(--onair)}
+  .lista{list-style:none; padding:0; margin:12px 0 0}
+  .lista li{display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); flex-wrap:wrap}
+  .lista li .cresce{flex:1; min-width:200px}
+  .lista li small{color:var(--dim); display:block}
+  .dias-check{display:flex; gap:6px}
+  .dias-check label{flex-direction:row; align-items:center; gap:4px; background:var(--panel); border:2px solid var(--line); border-radius:4px; padding:4px 8px; cursor:pointer; color:var(--ink)}
+  .dias-check label:has(input:checked){border-color:var(--amber); color:var(--amber)}
+  .dias-check input{display:none}
+  .msg{margin-top:10px; color:var(--dim); min-height:1.4em}
+  .msg.erro{color:var(--onair)}
+  .msg.ok{color:var(--ok)}
+  .chk{display:flex; align-items:center; gap:10px; margin:8px 0; cursor:pointer}
+  .chk input{width:20px; height:20px; accent-color:var(--amber)}
+  .voltar{position:fixed; left:36px; top:22px; z-index:40}
+  @media (max-width:800px){
+    body{font-size:16px}
+    .tela{padding:18px}
+    .osd{right:18px; top:12px}
+    .osd .hora{font-size:40px}
+    .topo{padding-right:150px; flex-direction:column; align-items:flex-start; gap:4px}
+    .topo h1{font-size:44px}
+    .foradoar-info h2{font-size:56px}
+    .foradoar-info .conta{font-size:48px}
+    .epg{grid-template-columns:120px 1fr}
+    .livre-lista{width:80vw}
+    .rodape{display:none}
+    .voltar{left:18px; top:12px}
+  }
+  @media (prefers-reduced-motion:reduce){ .bug,.livre-lista{transition:none} }
+</style>
+</head>
+<body>
+
+<!-- Botão de ligar: o gesto do usuário libera o autoplay com som -->
+<div id="ligar" class="tela ativa">
+  <button id="btn-ligar" aria-label="Ligar a TV">ligar</button>
+  <p>Pressione Enter ou toque para ligar</p>
+</div>
+
+<div class="osd" aria-live="off"><div class="hora" id="osd-hora">--:--</div><div class="data" id="osd-data"></div></div>
+
+<!-- ===== Canais (home) ===== -->
+<section id="tela-canais" class="tela">
+  <div class="topo">
+    <h1>Grade <span>TV</span></h1>
+    <p>Seus canais do YouTube, cada um no seu horário.</p>
+  </div>
+  <div class="secao">
+    <h2>No ar agora</h2>
+    <div class="grade-canais" id="noar"></div>
+  </div>
+  <div class="secao">
+    <h2>Fora do ar</h2>
+    <div class="grade-canais" id="foradoar"></div>
+  </div>
+  <div class="rodape">
+    <span><b>↑↓←→</b>navegar</span><span><b>Enter</b>sintonizar</span><span><b>1–9</b>canal</span>
+    <span><b>G</b>guia</span><span><b>A</b>ajustes</span><span><b>Esc</b>voltar</span>
+  </div>
+</section>
+
+<!-- ===== Player ===== -->
+<section id="tela-player" class="tela">
+  <div id="player-wrap"><div id="player"></div><div id="blindagem" hidden></div></div>
+  <div class="bug" id="bug"><img id="bug-img" alt=""><div><div class="b1" id="bug-canal"></div><div class="b2" id="bug-info"></div></div></div>
+  <aside class="livre-lista" id="livre-lista"><h3>Vídeos deste canal</h3><div id="livre-itens"></div></aside>
+</section>
+
+<!-- ===== Fora do ar ===== -->
+<section id="tela-foradoar" class="tela">
+  <canvas id="ruido" width="160" height="90"></canvas>
+  <div class="foradoar-info">
+    <h2 id="fda-titulo">Fora do ar</h2>
+    <div class="volta" id="fda-volta"></div>
+    <div class="conta" id="fda-conta"></div>
+    <div class="dica" id="fda-dica">Esc para voltar aos canais</div>
+  </div>
+</section>
+
+<!-- ===== Guia ===== -->
+<section id="tela-guia" class="tela">
+  <button class="btn voltar" data-ir="canais">← Canais</button>
+  <div class="topo"><h1>Guia de <span>programação</span></h1></div>
+  <div class="dias" id="dias" role="tablist"></div>
+  <div class="epg" id="epg"></div>
+  <div class="legenda"><span><i></i>Linear (sem pausa, no horário)</span><span><i class="livre"></i>Livre (escolhe o vídeo)</span></div>
+</section>
+
+<!-- ===== Ajustes ===== -->
+<section id="tela-ajustes" class="tela ajustes">
+  <button class="btn voltar" data-ir="canais">← Canais</button>
+  <div class="topo" style="padding-right:0;margin-top:50px"><h1>Ajustes</h1></div>
+
+  <h2>Chave da YouTube Data API</h2>
+  <p class="ajuda">Crie uma chave gratuita no Google Cloud (YouTube Data API v3). Ela fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
+  <div class="form">
+    <input type="password" id="apikey" placeholder="AIza…" autocomplete="off" style="min-width:320px">
+    <button class="btn primario" id="salvar-key">Salvar chave</button>
+    <button class="btn" id="testar-key">Testar</button>
+  </div>
+  <div class="msg" id="msg-key"></div>
+
+  <h2>Canais</h2>
+  <p class="ajuda">Cole o link do canal (youtube.com/@nome), o ID (UC…) ou o link de uma playlist para usar como fonte.</p>
+  <div class="form">
+    <input type="text" id="novo-canal" placeholder="https://www.youtube.com/@canal" style="min-width:380px">
+    <button class="btn primario" id="add-canal">Adicionar canal</button>
+  </div>
+  <div class="msg" id="msg-canal"></div>
+  <ul class="lista" id="lista-canais"></ul>
+
+  <h2>Grade de horários</h2>
+  <p class="ajuda">Cada faixa diz quando um canal pode ser assistido. Fora dela, o canal fica fora do ar.</p>
+  <div class="form" id="form-slot">
+    <label>Canal<select id="slot-canal"></select></label>
+    <label>Início<input type="time" id="slot-ini" value="20:00"></label>
+    <label>Fim<input type="time" id="slot-fim" value="22:00"></label>
+    <label>Modo<select id="slot-modo"><option value="linear">Linear (sem pausa)</option><option value="livre">Livre</option></select></label>
+    <label>Dias<div class="dias-check" id="slot-dias"></div></label>
+    <button class="btn primario" id="add-slot">Adicionar faixa</button>
+  </div>
+  <div class="msg" id="msg-slot"></div>
+  <ul class="lista" id="lista-slots"></ul>
+
+  <h2>Comportamento</h2>
+  <label class="chk"><input type="checkbox" id="cfg-strict"> No modo linear, bloquear pausa, avanço e cliques no player</label>
+  <label class="chk"><input type="checkbox" id="cfg-shorts"> Ignorar vídeos com menos de 2 minutos (Shorts)</label>
+  <label class="chk"><input type="checkbox" id="cfg-auto"> Sintonizar automaticamente o canal quando o horário começar</label>
+
+  <h2>Dados</h2>
+  <div class="form">
+    <button class="btn" id="exportar">Exportar configuração</button>
+    <button class="btn" id="importar">Importar configuração</button>
+    <input type="file" id="arquivo" accept="application/json" hidden>
+    <button class="btn perigo" id="zerar-hist">Zerar histórico de assistidos</button>
+  </div>
+  <div class="msg" id="msg-dados"></div>
+  <p class="ajuda" style="margin-top:30px">Grade TV é um projeto pessoal. Os vídeos tocam pelo player oficial do YouTube; anúncios e restrições de incorporação continuam valendo.</p>
+</section>
+
+<script>
+/* =========================================================
+   Grade TV — MVP (fase 1): HTML único + localStorage
+   ========================================================= */
+'use strict';
+
+// ---------- Estado ----------
+const CHAVE_DB = 'gradetv.v1';
+const DIAS_CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
+const DIAS_LONGO = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const TTL_CACHE = 6*60*60*1000; // 6 h
+
+let DB = carregar();
+function carregar(){
+  const base = { apiKey:'', channels:[], slots:[], watched:{}, cache:{}, occ:{}, cfg:{strict:true, shorts:true, auto:true} };
+  try{ const s = JSON.parse(localStorage.getItem(CHAVE_DB)||'null'); return s ? Object.assign(base, s, {cfg:Object.assign(base.cfg, s.cfg||{})}) : base; }
+  catch(e){ return base; }
+}
+function salvar(){ try{ localStorage.setItem(CHAVE_DB, JSON.stringify(DB)); }catch(e){ console.warn('localStorage indisponível', e); } }
+const uid = () => Math.random().toString(36).slice(2,10);
+const $ = s => document.querySelector(s);
+const el = (tag, attrs={}, ...kids) => { const n=document.createElement(tag); for(const [k,v] of Object.entries(attrs)){ if(k==='class') n.className=v; else if(k.startsWith('on')) n.addEventListener(k.slice(2),v); else if(v!==false&&v!=null) n.setAttribute(k,v);} for(const k of kids){ if(k==null) continue; n.append(k.nodeType?k:document.createTextNode(k)); } return n; };
+
+// ---------- Tempo / grade ----------
+const hm = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
+const pad = n => String(n).padStart(2,'0');
+const fmtHora = d => pad(d.getHours())+':'+pad(d.getMinutes());
+
+// Gera as ocorrências de uma faixa entre -1 e +7 dias (lida com faixas que viram a meia-noite)
+function ocorrencias(slot, agora=new Date()){
+  const out = [];
+  const ini = hm(slot.start), fim = hm(slot.end);
+  const dur = (fim > ini ? fim - ini : 24*60 - ini + fim) * 60000;
+  for(let d=-1; d<=7; d++){
+    const dia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()+d);
+    if(!slot.days.includes(dia.getDay())) continue;
+    const start = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), Math.floor(ini/60), ini%60);
+    out.push({ slot, start, end:new Date(start.getTime()+dur) });
+  }
+  return out.sort((a,b)=>a.start-b.start);
+}
+function exibicaoAtual(channelId, agora=new Date()){
+  for(const s of DB.slots.filter(s=>s.channelId===channelId))
+    for(const o of ocorrencias(s, agora)) if(o.start<=agora && agora<o.end) return o;
+  return null;
+}
+function proximaExibicao(channelId, agora=new Date()){
+  let best=null;
+  for(const s of DB.slots.filter(s=>s.channelId===channelId))
+    for(const o of ocorrencias(s, agora)) if(o.start>agora && (!best || o.start<best.start)) best=o;
+  return best;
+}
+function chaveOcc(o){ return o.slot.id+'|'+o.start.getTime(); }
+function quandoVolta(o, agora=new Date()){
+  if(!o) return 'sem horário na grade';
+  const mesmoDia = o.start.toDateString()===agora.toDateString();
+  const amanha = new Date(agora); amanha.setDate(amanha.getDate()+1);
+  const pref = mesmoDia ? 'hoje' : (o.start.toDateString()===amanha.toDateString() ? 'amanhã' : DIAS_LONGO[o.start.getDay()]);
+  return `${pref} às ${fmtHora(o.start)}`;
+}
+
+// ---------- Vídeos (YouTube Data API v3) ----------
+const API = 'https://www.googleapis.com/youtube/v3/';
+async function yt(recurso, params){
+  if(!DB.apiKey) throw new Error('Informe a chave da YouTube Data API em Ajustes.');
+  const u = new URL(API+recurso); for(const [k,v] of Object.entries(params)) u.searchParams.set(k,v); u.searchParams.set('key', DB.apiKey);
+  const r = await fetch(u); const j = await r.json();
+  if(!r.ok) throw new Error(j.error?.message || ('Erro '+r.status)); return j;
+}
+function parseISODur(s){ const m=/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s||''); return m ? (+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0) : 0; }
+
+async function resolverCanal(entrada){
+  entrada = entrada.trim();
+  let pl = /[?&]list=([\w-]+)/.exec(entrada);
+  if(pl){
+    const j = await yt('playlists', {part:'snippet', id:pl[1]});
+    const p = j.items?.[0]; if(!p) throw new Error('Playlist não encontrada.');
+    return { id:'PL:'+p.id, title:p.snippet.title, thumb:p.snippet.thumbnails?.default?.url||'', uploads:p.id, order:'antigos' };
+  }
+  let params;
+  const mId = /(UC[\w-]{22})/.exec(entrada);
+  const mHandle = /@([\w.-]+)/.exec(entrada);
+  if(mId) params={id:mId[1]}; else if(mHandle) params={forHandle:mHandle[1]}; else params={forHandle:entrada.replace(/^.*\//,'')};
+  const j = await yt('channels', Object.assign({part:'snippet,contentDetails'}, params));
+  const c = j.items?.[0]; if(!c) throw new Error('Canal não encontrado. Use o link com @nome ou o ID UC….');
+  return { id:c.id, title:c.snippet.title, thumb:c.snippet.thumbnails?.default?.url||'', uploads:c.contentDetails.relatedPlaylists.uploads, order:'recentes' };
+}
+
+async function atualizarVideos(ch, forcar=false){
+  const c = DB.cache[ch.id];
+  if(!forcar && c && Date.now()-c.ts < TTL_CACHE) return c.videos;
+  let ids=[], token=null;
+  for(let pag=0; pag<2; pag++){
+    const j = await yt('playlistItems', Object.assign({part:'contentDetails', playlistId:ch.uploads, maxResults:50}, token?{pageToken:token}:{}));
+    ids.push(...j.items.map(i=>i.contentDetails.videoId)); token=j.nextPageToken; if(!token) break;
+  }
+  let videos=[];
+  for(let i=0;i<ids.length;i+=50){
+    const j = await yt('videos', {part:'snippet,contentDetails,status', id:ids.slice(i,i+50).join(',')});
+    for(const v of j.items){
+      const dur = parseISODur(v.contentDetails.duration);
+      if(v.status?.embeddable===false || v.status?.privacyStatus==='private' || dur===0) continue;
+      if(v.snippet.liveBroadcastContent && v.snippet.liveBroadcastContent!=='none') continue;
+      videos.push({ id:v.id, title:v.snippet.title, dur, pub:v.snippet.publishedAt, thumb:v.snippet.thumbnails?.medium?.url||'' });
+    }
+  }
+  DB.cache[ch.id] = { ts:Date.now(), videos }; salvar();
+  return videos;
+}
+function videosDoCanal(ch){
+  let v = (DB.cache[ch.id]?.videos||[]).slice();
+  if(DB.cfg.shorts) v = v.filter(x=>x.dur>=120);
+  if(ch.order==='antigos') v.sort((a,b)=>a.pub.localeCompare(b.pub));
+  else if(ch.order==='recentes') v.sort((a,b)=>b.pub.localeCompare(a.pub));
+  return v;
+}
+// embaralhamento determinístico (mesma fila durante toda a exibição)
+function embaralhar(arr, seed){ let s=0; for(const ch of seed) s=(s*31+ch.charCodeAt(0))>>>0; const a=arr.slice(); for(let i=a.length-1;i>0;i--){ s=(s*1664525+1013904223)>>>0; const j=s%(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+// ---------- Programação linear ----------
+// Fecha exibições passadas: marca como assistidos os vídeos que tocaram por inteiro
+function fecharExibicoes(channelId, agora=new Date()){
+  for(const [k,o] of Object.entries(DB.occ)){
+    if(o.ch!==channelId || o.final || o.end>agora.getTime()) continue;
+    const dur = id => DB.cache[channelId]?.videos.find(v=>v.id===id)?.dur || 600;
+    let t=0; const w = DB.watched[channelId] ||= {};
+    for(const id of o.queue){ t += dur(id); if(t <= (o.end-o.start)/1000) w[id]=1; else break; }
+    o.final = true;
+  }
+  const lim = Date.now()-14*86400000;
+  for(const k of Object.keys(DB.occ)) if(DB.occ[k].end<lim) delete DB.occ[k];
+}
+function filaDaExibicao(ch, o){
+  const k = chaveOcc(o);
+  if(DB.occ[k]) return DB.occ[k];
+  fecharExibicoes(ch.id, o.start);
+  let v = videosDoCanal(ch); const w = DB.watched[ch.id]||{};
+  let fila = v.filter(x=>!w[x.id]);
+  if(!fila.length && v.length){ DB.watched[ch.id]={}; fila=v; } // reprise: tudo visto, começa de novo
+  if(ch.order==='aleatorio') fila = embaralhar(fila, k);
+  DB.occ[k] = { ch:ch.id, queue:fila.map(x=>x.id), start:o.start.getTime(), end:o.end.getTime() };
+  salvar(); return DB.occ[k];
+}
+// Dado o instante, qual vídeo da fila está "no ar" e em que segundo
+function posicaoLinear(ch, o, agora=new Date()){
+  const occ = filaDaExibicao(ch, o); if(!occ.queue.length) return null;
+  const vids = occ.queue.map(id => DB.cache[ch.id]?.videos.find(v=>v.id===id) || {id, title:'', dur:600});
+  const total = vids.reduce((s,v)=>s+v.dur,0);
+  let off = Math.floor((agora - o.start)/1000) % total; // passou da fila: reprise em loop
+  for(let i=0;i<vids.length;i++){ if(off < vids[i].dur) return { video:vids[i], seek:off, idx:i, total:vids.length }; off -= vids[i].dur; }
+  return { video:vids[0], seek:0, idx:0, total:vids.length };
+}
+
+// ---------- Telas ----------
+let telaAtual = 'canais';
+function ir(nome){
+  document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));
+  $('#tela-'+nome).classList.add('ativa'); telaAtual = nome;
+  document.body.classList.toggle('sem-osd', nome==='player');
+  if(nome!=='player') pararPlayer();
+  if(nome!=='foradoar') pararRuido();
+  if(nome==='canais') renderCanais();
+  if(nome==='guia') renderGuia();
+  if(nome==='ajustes') renderAjustes();
+  const f = $('#tela-'+nome).querySelector('button,[tabindex]'); if(f && nome!=='player') f.focus({preventScroll:true});
+}
+document.querySelectorAll('[data-ir]').forEach(b=>b.addEventListener('click', ()=>ir(b.dataset.ir)));
+
+// Relógio OSD
+function tickRelogio(){
+  const d=new Date(); $('#osd-hora').textContent=fmtHora(d);
+  $('#osd-data').textContent = d.toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'});
+}
+setInterval(tickRelogio, 1000); tickRelogio();
+
+// ----- Home -----
+function renderCanais(){
+  const focado = document.activeElement?.dataset?.num;
+  const agora=new Date(), noar=$('#noar'), fora=$('#foradoar'); noar.innerHTML=''; fora.innerHTML='';
+  if(!DB.channels.length){
+    noar.append(el('div',{class:'vazio'}, 'Nenhum canal cadastrado. Pressione ', el('strong',{},'A'), ' ou abra os ajustes para informar a chave da API e adicionar canais e horários.'));
+    noar.append(el('button',{class:'btn primario', onclick:()=>ir('ajustes'), style:'margin-top:12px'},'Abrir ajustes'));
+    fora.append(el('div',{class:'vazio'},'A grade fica aqui.')); return;
+  }
+  DB.channels.forEach((ch,i)=>{
+    const atual = exibicaoAtual(ch.id, agora);
+    const card = el('button',{class:'canal'+(atual?' noar':''), tabindex:'0', 'data-num':i+1, onclick:()=>sintonizar(ch)},
+      el('div',{}, el('div',{class:'num'}, String(i+1)), el('img',{src:ch.thumb, alt:''})),
+      el('div',{}, el('div',{class:'nome'}, ch.title),
+        el('div',{class:'status'}, atual ? `No ar até ${fmtHora(atual.end)}` + (atual.slot.mode==='livre'?' (livre)':'') : 'Volta ' + quandoVolta(proximaExibicao(ch.id, agora), agora))));
+    (atual?noar:fora).append(card);
+  });
+  if(!noar.children.length) noar.append(el('div',{class:'vazio'},'Nada no ar neste momento. Espere o próximo horário ou veja o guia.'));
+  if(!fora.children.length) fora.append(el('div',{class:'vazio'},'Todos os canais estão no ar.'));
+  if(focado){ const b=document.querySelector(`.canal[data-num="${focado}"]`); if(b) b.focus({preventScroll:true}); }
+}
+
+// ----- Sintonizar -----
+let canalSintonizado = null;
+async function sintonizar(ch){
+  canalSintonizado = ch;
+  const o = exibicaoAtual(ch.id);
+  if(!o){ mostrarForaDoAr(ch); return; }
+  try{
+    if(!DB.cache[ch.id] || !DB.cache[ch.id].videos.length) await atualizarVideos(ch);
+    else if(Date.now()-DB.cache[ch.id].ts > TTL_CACHE) atualizarVideos(ch).catch(()=>{}); // atualiza em segundo plano
+  }catch(e){ alert('Não foi possível carregar os vídeos: '+e.message); return; }
+  if(!videosDoCanal(ch).length){ alert('Este canal não tem vídeos incorporáveis para exibir.'); return; }
+  abrirPlayer(ch, o);
+}
+
+// ----- Fora do ar -----
+let ruidoRAF=null, ruidoTimer=null;
+function mostrarForaDoAr(ch){
+  pararRuido(); ir('foradoar');
+  $('#fda-titulo').textContent = ch.title;
+  const atualiza = () => {
+    const prox = proximaExibicao(ch.id);
+    if(!prox){ $('#fda-volta').textContent='Sem horário na grade'; $('#fda-conta').textContent=''; return; }
+    $('#fda-volta').textContent = 'Volta ' + quandoVolta(prox);
+    const s = Math.max(0, Math.floor((prox.start - Date.now())/1000));
+    const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
+    $('#fda-conta').textContent = (h>=24 ? Math.floor(h/24)+'d ' : '') + pad(h%24)+':'+pad(m)+':'+pad(ss);
+    if(s===0 && DB.cfg.auto){ sintonizar(ch); }
+  };
+  atualiza(); ruidoTimer = setInterval(atualiza, 1000);
+  const cv=$('#ruido'), ctx=cv.getContext('2d'), img=ctx.createImageData(cv.width, cv.height), d=img.data;
+  const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const frame = () => { for(let i=0;i<d.length;i+=4){ const v=Math.random()*255|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; } ctx.putImageData(img,0,0); if(!reduz) ruidoRAF=requestAnimationFrame(frame); };
+  frame();
+}
+function pararRuido(){ if(ruidoRAF) cancelAnimationFrame(ruidoRAF); ruidoRAF=null; if(ruidoTimer) clearInterval(ruidoTimer); ruidoTimer=null; }
+
+// ----- Player (YouTube IFrame API) -----
+let YT_PRONTO=false, player=null, ctxPlayer=null, tickPlayer=null, bugTimer=null;
+window.onYouTubeIframeAPIReady = () => { YT_PRONTO=true; };
+(function(){ const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.append(s); })();
+function esperarYT(){ return new Promise(r=>{ const i=setInterval(()=>{ if(YT_PRONTO){clearInterval(i); r();} },100); }); }
+
+async function abrirPlayer(ch, o){
+  ir('player'); await esperarYT();
+  const linear = o.slot.mode==='linear', strict = linear && DB.cfg.strict;
+  ctxPlayer = { ch, o, linear, strict, videoAtual:null };
+  $('#blindagem').hidden = !strict;
+  $('#livre-lista').classList.remove('aberta');
+  $('#bug-img').src = ch.thumb; $('#bug-canal').textContent = ch.title;
+  if(player){ player.destroy(); player=null; $('#player-wrap').prepend(el('div',{id:'player'})); }
+  player = new YT.Player('player', {
+    width:'100%', height:'100%',
+    playerVars:{ autoplay:1, controls: strict?0:1, disablekb: strict?1:0, rel:0, iv_load_policy:3, playsinline:1, modestbranding:1 },
+    events:{ onReady:()=>{ if(linear) sincronizar(true); else iniciarLivre(); }, onStateChange:e=>{
+      if(!ctxPlayer) return;
+      if(e.data===YT.PlayerState.ENDED){ if(ctxPlayer.linear) sincronizar(true, true); else proximoLivre(); }
+      if(e.data===YT.PlayerState.PAUSED && ctxPlayer.strict) setTimeout(()=>{ if(ctxPlayer && player.getPlayerState()===YT.PlayerState.PAUSED) player.playVideo(); }, 400);
+    }}
+  });
+  tickPlayer = setInterval(()=>{
+    if(!ctxPlayer) return;
+    if(Date.now() >= ctxPlayer.o.end.getTime()){ encerrarTransmissao(); return; }
+    if(ctxPlayer.linear) sincronizar(false);
+  }, 2000);
+  mostrarBug();
+}
+function tocar(video, seek){
+  ctxPlayer.videoAtual = video.id;
+  player.loadVideoById({videoId:video.id, startSeconds:seek||0});
+  $('#bug-info').textContent = `${video.title}  —  até ${fmtHora(ctxPlayer.o.end)}`; mostrarBug();
+}
+function sincronizar(forcar, acabou){
+  const {ch,o} = ctxPlayer; const p = posicaoLinear(ch, o); if(!p) return;
+  const trocou = p.video.id !== ctxPlayer.videoAtual;
+  if(acabou && !trocou){ // o vídeo acabou um pouco antes do previsto: segue para o próximo da fila
+    const occ = filaDaExibicao(ch, o); const id = occ.queue[(p.idx+1)%occ.queue.length];
+    const v = DB.cache[ch.id]?.videos.find(x=>x.id===id) || {id, title:''}; return tocar(v, 0);
+  }
+  if(trocou || forcar) return tocar(p.video, p.seek);
+  if(ctxPlayer.strict && typeof player.getCurrentTime==='function'){
+    const cur = player.getCurrentTime(); if(Math.abs(cur - p.seek) > 6) player.seekTo(p.seek, true);
+  }
+}
+function iniciarLivre(){
+  const {ch} = ctxPlayer; const w = DB.watched[ch.id]||{};
+  const box=$('#livre-itens'); box.innerHTML='';
+  const vs = videosDoCanal(ch);
+  for(const v of vs){
+    box.append(el('button',{onclick:()=>{ tocar(v, 0); $('#livre-lista').classList.remove('aberta'); }},
+      v.title, el('small',{}, Math.round(v.dur/60)+' min' + (w[v.id]?' · visto':''))));
+  }
+  const primeiro = vs.find(v=>!w[v.id]) || vs[0];
+  if(primeiro) tocar(primeiro, 0);
+  $('#livre-lista').classList.add('aberta');
+  const b=box.querySelector('button'); if(b) b.focus();
+}
+function proximoLivre(){
+  const {ch} = ctxPlayer; const vs=videosDoCanal(ch); const i=vs.findIndex(v=>v.id===ctxPlayer.videoAtual);
+  (DB.watched[ch.id] ||= {})[ctxPlayer.videoAtual]=1; salvar();
+  const n = vs[(i+1)%vs.length]; if(n) tocar(n, 0);
+}
+function mostrarBug(){ const b=$('#bug'); b.classList.remove('oculto'); clearTimeout(bugTimer); bugTimer=setTimeout(()=>b.classList.add('oculto'), 6000); }
+function encerrarTransmissao(){ const ch = ctxPlayer?.ch; pararPlayer(); if(ch){ fecharExibicoes(ch.id); salvar(); mostrarForaDoAr(ch); } else ir('canais'); }
+function pararPlayer(){ clearInterval(tickPlayer); tickPlayer=null; ctxPlayer=null; if(player){ try{ player.stopVideo(); }catch(e){} } }
+
+// ----- Guia (EPG) -----
+let diaGuia = new Date().getDay();
+function renderGuia(){
+  const dias=$('#dias'); dias.innerHTML='';
+  for(let d=0; d<7; d++) dias.append(el('button',{role:'tab','aria-pressed':String(d===diaGuia), onclick:()=>{diaGuia=d; renderGuia();}}, DIAS_CURTO[d]));
+  const epg=$('#epg'); epg.innerHTML='';
+  epg.append(el('div',{class:'cab'},'Canal'));
+  const horas=el('div',{class:'horas'}); for(let h=0;h<24;h+=2) horas.append(el('span',{style:`left:${h/24*100}%`}, pad(h)+'h')); epg.append(horas);
+  const hoje=new Date().getDay();
+  DB.channels.forEach(ch=>{
+    epg.append(el('div',{class:'rot'}, el('img',{src:ch.thumb,alt:''}), ch.title));
+    const faixa=el('div',{class:'faixa'});
+    for(const s of DB.slots.filter(s=>s.channelId===ch.id && s.days.includes(diaGuia))){
+      const a=hm(s.start), b=hm(s.end);
+      const segs = b>a ? [[a,b]] : [[a,24*60],[0,b]];
+      for(const [x,y] of segs) faixa.append(el('button',{class:'bloco'+(s.mode==='livre'?' livre':''), style:`left:${x/1440*100}%; width:${(y-x)/1440*100}%`, title:`${s.start}–${s.end}`, onclick:()=>sintonizar(ch)}, `${s.start}–${s.end}`));
+    }
+    if(diaGuia===hoje){ const n=new Date(); faixa.append(el('div',{class:'agora', style:`left:${(n.getHours()*60+n.getMinutes())/1440*100}%`})); }
+    epg.append(faixa);
+  });
+  if(!DB.channels.length) epg.append(el('div',{class:'rot'},'—'), el('div',{class:'faixa'}));
+}
+
+// ----- Ajustes -----
+function msg(id, texto, tipo=''){ const m=$(id); m.textContent=texto; m.className='msg '+tipo; }
+function renderAjustes(){
+  $('#apikey').value = DB.apiKey;
+  $('#cfg-strict').checked = DB.cfg.strict; $('#cfg-shorts').checked = DB.cfg.shorts; $('#cfg-auto').checked = DB.cfg.auto;
+  const lc=$('#lista-canais'); lc.innerHTML='';
+  DB.channels.forEach((ch,i)=>{
+    const sel = el('select',{onchange:e=>{ch.order=e.target.value; salvar();}},
+      ...[['recentes','Mais recentes primeiro'],['antigos','Mais antigos primeiro'],['aleatorio','Aleatório']].map(([v,t])=>{ const o=el('option',{value:v},t); if(ch.order===v) o.selected=true; return o; }));
+    const cache=DB.cache[ch.id];
+    lc.append(el('li',{}, el('img',{src:ch.thumb,alt:'',width:36,height:36,style:'border-radius:50%'}),
+      el('div',{class:'cresce'}, `${i+1}. ${ch.title}`, el('small',{}, cache ? `${cache.videos.length} vídeos · atualizado ${new Date(cache.ts).toLocaleString('pt-BR')}` : 'vídeos ainda não carregados')),
+      sel,
+      el('button',{class:'btn', onclick:async e=>{ e.target.disabled=true; try{ await atualizarVideos(ch,true); msg('#msg-canal',`${ch.title}: vídeos atualizados.`,'ok'); }catch(err){ msg('#msg-canal',err.message,'erro'); } renderAjustes(); }},'Atualizar vídeos'),
+      el('button',{class:'btn perigo', onclick:()=>{ if(confirm(`Remover ${ch.title} e suas faixas?`)){ DB.channels=DB.channels.filter(c=>c!==ch); DB.slots=DB.slots.filter(s=>s.channelId!==ch.id); delete DB.cache[ch.id]; salvar(); renderAjustes(); } }},'Remover')));
+  });
+  const sc=$('#slot-canal'); sc.innerHTML=''; DB.channels.forEach(ch=>sc.append(el('option',{value:ch.id},ch.title)));
+  const sd=$('#slot-dias'); if(!sd.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); if(d>=1&&d<=5) cb.checked=true; sd.append(el('label',{},cb,DIAS_CURTO[d])); }
+  const ls=$('#lista-slots'); ls.innerHTML='';
+  DB.slots.forEach(s=>{
+    const ch=DB.channels.find(c=>c.id===s.channelId);
+    ls.append(el('li',{}, el('div',{class:'cresce'}, ch?.title||'(canal removido)', el('small',{}, `${s.days.map(d=>DIAS_CURTO[d]).join(', ')} · ${s.start}–${s.end} · ${s.mode==='livre'?'livre':'linear'}`)),
+      el('button',{class:'btn perigo', onclick:()=>{ DB.slots=DB.slots.filter(x=>x!==s); salvar(); renderAjustes(); }},'Remover')));
+  });
+}
+$('#salvar-key').onclick = ()=>{ DB.apiKey=$('#apikey').value.trim(); salvar(); msg('#msg-key','Chave salva.','ok'); };
+$('#testar-key').onclick = async ()=>{ DB.apiKey=$('#apikey').value.trim(); salvar(); try{ const j=await yt('channels',{part:'id', forHandle:'YouTube'}); msg('#msg-key', j.items?.length?'Chave válida.':'Resposta inesperada.', j.items?.length?'ok':'erro'); }catch(e){ msg('#msg-key', e.message,'erro'); } };
+$('#add-canal').onclick = async ()=>{
+  const inp=$('#novo-canal'); if(!inp.value.trim()) return; msg('#msg-canal','Buscando canal…');
+  try{
+    const ch = await resolverCanal(inp.value);
+    if(DB.channels.some(c=>c.id===ch.id)) throw new Error('Esse canal já está na lista.');
+    DB.channels.push(ch); salvar(); inp.value=''; renderAjustes();
+    msg('#msg-canal',`${ch.title} adicionado. Carregando vídeos…`);
+    await atualizarVideos(ch, true); renderAjustes(); msg('#msg-canal',`${ch.title} pronto: ${DB.cache[ch.id].videos.length} vídeos.`,'ok');
+  }catch(e){ msg('#msg-canal', e.message, 'erro'); }
+};
+$('#add-slot').onclick = ()=>{
+  const channelId=$('#slot-canal').value, start=$('#slot-ini').value, end=$('#slot-fim').value, mode=$('#slot-modo').value;
+  const days=[...$('#slot-dias').querySelectorAll('input:checked')].map(i=>+i.value);
+  if(!channelId) return msg('#msg-slot','Adicione um canal primeiro.','erro');
+  if(!start||!end||start===end) return msg('#msg-slot','Informe início e fim diferentes.','erro');
+  if(!days.length) return msg('#msg-slot','Marque pelo menos um dia.','erro');
+  DB.slots.push({id:uid(), channelId, days, start, end, mode}); salvar(); renderAjustes(); msg('#msg-slot','Faixa adicionada.','ok');
+};
+$('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
+$('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
+$('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
+$('#exportar').onclick = ()=>{
+  const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'});
+  const a=el('a',{href:URL.createObjectURL(b), download:'grade-tv.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok');
+};
+$('#importar').onclick = ()=>$('#arquivo').click();
+$('#arquivo').onchange = async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{ const j=JSON.parse(await f.text()); if(!Array.isArray(j.channels)) throw new Error('Arquivo inválido.'); DB=Object.assign(carregar(), j, {cache:DB.cache}); salvar(); renderAjustes(); msg('#msg-dados','Configuração importada.','ok'); }
+  catch(err){ msg('#msg-dados', err.message, 'erro'); }
+};
+$('#zerar-hist').onclick = ()=>{ if(confirm('Zerar o histórico de vídeos assistidos de todos os canais?')){ DB.watched={}; DB.occ={}; salvar(); msg('#msg-dados','Histórico zerado.','ok'); } };
+
+// ----- Teclado (controle remoto) -----
+document.addEventListener('keydown', e=>{
+  if($('#ligar').classList.contains('ativa')) return;
+  const emCampo = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName);
+  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else ir('canais'); return; }
+  if(emCampo) return;
+  const k=e.key.toLowerCase();
+  if(k==='g') return ir('guia');
+  if(k==='a') return ir('ajustes');
+  if(/^[1-9]$/.test(k) && telaAtual!=='ajustes'){ const ch=DB.channels[+k-1]; if(ch) sintonizar(ch); return; }
+  if(telaAtual==='player'){
+    if(k==='l' && ctxPlayer && !ctxPlayer.linear) $('#livre-lista').classList.toggle('aberta');
+    if(k==='i') mostrarBug();
+    if(k==='f') document.documentElement.requestFullscreen?.();
+    return;
+  }
+  if(['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key)){
+    const foc=[...document.querySelectorAll('.tela.ativa button:not([hidden])')].filter(b=>b.offsetParent);
+    const i=foc.indexOf(document.activeElement); const dir=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;
+    const n=foc[(i+dir+foc.length)%foc.length]; if(n){ n.focus(); e.preventDefault(); }
+  }
+});
+
+// ----- Ligar -----
+$('#btn-ligar').onclick = ()=>{ $('#ligar').classList.remove('ativa'); ir('canais'); };
+$('#btn-ligar').focus();
+// Sintonia automática: quando um canal entra no ar e a TV está na tela de canais, mostra o novo estado
+setInterval(()=>{ if(telaAtual==='canais') renderCanais(); }, 30000);
+</script>
+</body>
+</html>
