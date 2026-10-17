@@ -4,342 +4,497 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grade TV</title>
-<meta name="description" content="Canais do YouTube com horário marcado, como a TV de antigamente.">
+<meta name="description" content="Canais do YouTube com horário marcado, do jeito que a criança entende.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#07100C; --panel:#0F1A15; --panel2:#15231C; --line:#223229;
-    --ink:#ECE6D3; --dim:#8E9C90; --amber:#F0B23A; --onair:#E24B2E; --ok:#5DBB7A;
-    --radius:6px;
+    --bg:#FFFFFF; --bg2:#F4F6FB; --card:#FFFFFF; --linha:#E6E9F2;
+    --ink:#1F2340; --dim:#6B7190;
+    --vermelho:#FF4F5E; --laranja:#FF8A3D; --amarelo:#FFC53D; --verde:#35C77B; --azul:#3D8BFF; --roxo:#9B5CFF; --rosa:#FF6FB5; --ciano:#2EC4D6;
+    --raio:22px; --sombra:0 8px 24px rgba(31,35,64,.08);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:"Barlow",system-ui,sans-serif; font-size:18px; line-height:1.4;
-    overflow:hidden;
-  }
-  body::after{ /* scanlines */
-    content:""; pointer-events:none; position:fixed; inset:0; z-index:50;
-    background:repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
-    mix-blend-mode:multiply;
-  }
-  button{font:inherit; color:inherit; cursor:pointer}
-  input,select{font:inherit}
-  a{color:var(--amber)}
-  h1,h2,h3{font-family:"Barlow Condensed",sans-serif; font-weight:800; margin:0; line-height:1}
-  .tela{display:none; position:fixed; inset:0; padding:28px 36px; overflow:auto}
+  body{margin:0; background:var(--bg2); color:var(--ink); font-family:"Nunito",system-ui,sans-serif; font-size:18px; line-height:1.4; overflow:hidden}
+  button{font:inherit; color:inherit; cursor:pointer; border:0; background:none}
+  input,select{font:inherit; color:inherit}
+  a{color:var(--azul)}
+  h1,h2,h3{font-family:"Fredoka",sans-serif; font-weight:600; margin:0; line-height:1.1}
+  :focus-visible{outline:4px solid var(--azul); outline-offset:3px; border-radius:var(--raio)}
+  .tela{display:none; position:fixed; inset:0; overflow:auto; background:var(--bg2)}
   .tela.ativa{display:block}
-  .osd{ /* clock & status, like a VCR on-screen display */
-    position:fixed; top:22px; right:36px; z-index:40; text-align:right;
-    font-family:"Barlow Condensed",sans-serif; color:var(--amber);
-    text-shadow:0 0 12px rgba(240,178,58,.45);
-  }
-  .osd .hora{font-size:58px; font-weight:800; letter-spacing:.02em; font-variant-numeric:tabular-nums}
-  .osd .data{font-size:20px; font-weight:600; color:var(--ink); opacity:.85; text-transform:capitalize}
-  body.sem-osd .osd{display:none}
+  .conteudo{padding:16px 28px 110px}
+  @media (max-width:700px){ .conteudo{padding:12px 14px 100px} body{font-size:16px} }
 
-  /* ---------- Ligar ---------- */
-  #ligar{display:none; position:fixed; inset:0; background:#000; z-index:60; align-items:center; justify-content:center}
-  #ligar.ativa{display:flex}
-  #ligar button{
-    background:none; border:3px solid var(--ink); color:var(--ink); border-radius:50%;
-    width:220px; height:220px; font-family:"Barlow Condensed",sans-serif; font-size:40px; font-weight:800;
-    letter-spacing:.04em; box-shadow:0 0 0 12px rgba(236,230,211,.06), 0 0 60px rgba(240,178,58,.15);
-  }
-  #ligar button:focus-visible{outline:none; border-color:var(--amber); color:var(--amber)}
-  #ligar p{position:absolute; bottom:48px; color:var(--dim); font-size:16px}
+  /* ---------- Barra superior ---------- */
+  .topo{position:sticky; top:0; z-index:20; background:var(--bg); display:flex; align-items:center; gap:14px; padding:10px 28px; box-shadow:0 2px 0 var(--linha)}
+  @media (max-width:700px){ .topo{padding:8px 14px} }
+  .logo{display:flex; align-items:center; gap:10px; font-family:"Fredoka",sans-serif; font-weight:700; font-size:28px; letter-spacing:.01em}
+  .logo svg{width:40px; height:40px}
+  .logo b{color:var(--vermelho)}
+  .espaco{flex:1}
+  .relogio{font-family:"Fredoka",sans-serif; font-weight:600; font-size:26px; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--amarelo); padding:4px 14px; border-radius:999px}
+  .perfil-chip{display:flex; align-items:center; gap:8px; padding:4px 12px 4px 4px; border-radius:999px; background:var(--bg2); font-weight:800}
+  .avatar{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:22px; background:var(--azul); color:#fff; flex:none}
+  .icone{width:46px; height:46px; border-radius:50%; display:grid; place-items:center; background:var(--bg2); font-size:22px}
 
-  /* ---------- Home: canais ---------- */
-  .topo{display:flex; align-items:flex-end; gap:24px; margin-bottom:28px; padding-right:280px}
-  .topo h1{font-size:64px; letter-spacing:.01em}
-  .topo h1 span{color:var(--amber)}
-  .topo p{margin:0 0 6px; color:var(--dim)}
-  .secao{margin-bottom:34px}
-  .secao h2{font-size:26px; font-weight:600; color:var(--dim); margin-bottom:12px; letter-spacing:.01em}
-  .grade-canais{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px}
-  .canal{
-    position:relative; display:grid; grid-template-columns:64px 1fr; gap:14px; align-items:center;
-    background:var(--panel); border:2px solid var(--line); border-radius:var(--radius); padding:14px; text-align:left;
-  }
-  .canal:focus-visible,.canal:hover{outline:none; border-color:var(--amber); background:var(--panel2)}
-  .canal .num{
-    font-family:"Barlow Condensed",sans-serif; font-size:44px; font-weight:800; color:var(--amber); text-align:center;
-    font-variant-numeric:tabular-nums; line-height:1;
-  }
-  .canal img{width:56px; height:56px; border-radius:50%; object-fit:cover; background:#000; display:block; margin:6px auto 0}
-  .canal .nome{font-weight:600; font-size:20px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .canal .status{color:var(--dim); font-size:15px}
-  .canal.noar .status{color:var(--ok)}
-  .canal.noar::before{
-    content:""; position:absolute; top:12px; right:12px; width:10px; height:10px; border-radius:50%;
-    background:var(--onair); box-shadow:0 0 10px var(--onair);
-  }
-  .vazio{color:var(--dim); border:2px dashed var(--line); border-radius:var(--radius); padding:28px; max-width:720px}
+  /* ---------- Bolhas de canais ---------- */
+  .bolhas{display:flex; gap:18px; overflow-x:auto; padding:14px 4px 8px; scrollbar-width:none}
+  .bolhas::-webkit-scrollbar{display:none}
+  .bolha{display:flex; flex-direction:column; align-items:center; gap:8px; width:104px; flex:none; text-align:center}
+  .bolha .anel{width:84px; height:84px; border-radius:50%; padding:4px; background:var(--cor,var(--azul)); position:relative}
+  .bolha img{width:100%; height:100%; border-radius:50%; object-fit:cover; background:#fff; border:3px solid #fff; display:block}
+  .bolha.fora .anel{background:#D6DAE6}
+  .bolha.fora img{filter:grayscale(1); opacity:.7}
+  .bolha .num{position:absolute; left:-4px; top:-4px; width:28px; height:28px; border-radius:50%; background:var(--ink); color:#fff; font-family:"Fredoka",sans-serif; font-weight:600; display:grid; place-items:center; font-size:15px}
+  .bolha .ponto{position:absolute; right:2px; bottom:2px; width:18px; height:18px; border-radius:50%; background:var(--verde); border:3px solid #fff}
+  .bolha span{font-size:14px; font-weight:700; line-height:1.15; max-height:2.3em; overflow:hidden}
+
+  /* ---------- Seções e cards ---------- */
+  .secao{margin:18px 0 6px}
+  .secao h2{font-size:26px; display:flex; align-items:center; gap:10px}
+  .secao h2 i{font-style:normal; font-size:24px}
+  .grade{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:18px; margin-top:12px}
+  @media (max-width:700px){ .grade{grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px} }
+  .card{background:var(--card); border-radius:var(--raio); box-shadow:var(--sombra); overflow:hidden; text-align:left; display:flex; flex-direction:column; transition:transform .12s}
+  .card:hover,.card:focus-visible{transform:translateY(-3px)}
+  .card .capa{position:relative; aspect-ratio:16/9; background:#DDE2EE}
+  .card .capa img{width:100%; height:100%; object-fit:cover; display:block}
+  .card .selo{position:absolute; left:12px; top:12px; background:var(--vermelho); color:#fff; font-family:"Fredoka",sans-serif; font-weight:600; font-size:14px; padding:4px 10px; border-radius:999px; display:flex; align-items:center; gap:6px}
+  .card .selo::before{content:""; width:8px; height:8px; border-radius:50%; background:#fff; animation:pisca 1.2s infinite}
+  @keyframes pisca{50%{opacity:.3}}
+  .card .selo.cinza{background:var(--dim)} .card .selo.cinza::before{display:none}
+  .card .selo.azul{background:var(--azul)} .card .selo.azul::before{display:none}
+  .card .barra{position:absolute; left:0; right:0; bottom:0; height:7px; background:rgba(255,255,255,.5)}
+  .card .barra i{display:block; height:100%; background:var(--vermelho)}
+  .card .info{display:flex; gap:10px; padding:12px 14px 14px; align-items:center}
+  .card .info img{width:42px; height:42px; border-radius:50%; flex:none}
+  .card .t1{font-weight:800; font-size:16px; line-height:1.2; max-height:2.4em; overflow:hidden}
+  .card .t2{color:var(--dim); font-size:14px; margin-top:2px}
+  .card.fora .capa img{filter:grayscale(1); opacity:.55}
+  .card.fora .capa::after{content:"💤"; position:absolute; inset:0; display:grid; place-items:center; font-size:48px}
+  .vazio{background:var(--card); border-radius:var(--raio); padding:26px; color:var(--dim); box-shadow:var(--sombra); max-width:760px; margin-top:12px}
   .vazio strong{color:var(--ink)}
-  .rodape{position:fixed; left:36px; right:36px; bottom:16px; color:var(--dim); font-size:15px; display:flex; gap:28px; flex-wrap:wrap}
-  .rodape b{color:var(--ink); font-weight:600; border:1px solid var(--line); border-radius:4px; padding:0 7px; margin-right:6px}
+  .btn{display:inline-flex; align-items:center; gap:8px; background:var(--bg2); border-radius:999px; padding:10px 20px; font-weight:800; border:2px solid transparent}
+  .btn:hover{border-color:var(--linha)}
+  .btn.p{background:var(--vermelho); color:#fff}
+  .btn.p:hover{background:#ff6b78}
+  .btn.verde{background:var(--verde); color:#fff}
+  .btn.azul{background:var(--azul); color:#fff}
+  .btn.perigo:hover{border-color:var(--vermelho); color:var(--vermelho)}
+  .btn:disabled{opacity:.5; cursor:default}
+
+  /* ---------- Navegação inferior ---------- */
+  .nav{position:fixed; left:0; right:0; bottom:0; z-index:25; background:var(--bg); box-shadow:0 -2px 0 var(--linha); display:flex; justify-content:center; gap:6px; padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .nav button{display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 18px; border-radius:18px; font-size:13px; font-weight:800; color:var(--dim); min-width:88px}
+  .nav button i{font-style:normal; font-size:26px}
+  .nav button[aria-current="page"]{background:var(--bg2); color:var(--ink)}
+
+  /* ---------- Ligar / Perfis ---------- */
+  .centro{min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px 20px; gap:16px}
+  #tela-ligar{background:linear-gradient(160deg,#FFF4D6,#FFE1E4 50%,#DCEBFF)}
+  .poder{width:220px; height:220px; border-radius:50%; background:var(--vermelho); color:#fff; font-family:"Fredoka",sans-serif; font-size:44px; font-weight:700; box-shadow:0 18px 40px rgba(255,79,94,.4), inset 0 -8px 0 rgba(0,0,0,.12)}
+  .poder:active{transform:scale(.97)}
+  .perfis{display:flex; gap:22px; flex-wrap:wrap; justify-content:center; margin-top:10px}
+  .perfil-card{display:flex; flex-direction:column; align-items:center; gap:10px; width:150px; padding:18px 10px; background:var(--card); border-radius:var(--raio); box-shadow:var(--sombra); font-weight:800; font-size:18px}
+  .perfil-card .avatar{width:90px; height:90px; font-size:50px}
+  .pais{position:fixed; right:22px; top:16px}
+  .canto{position:fixed; right:18px; top:14px; z-index:45; background:rgba(255,255,255,.92); box-shadow:var(--sombra); opacity:.35; transition:opacity .25s}
+  .canto:hover,.canto:focus-visible,.canto.visivel{opacity:1}
+  .setup{width:min(560px,94vw); text-align:center; display:flex; flex-direction:column; gap:12px; align-items:center}
+  .setup h2{font-size:26px} .setup p{color:var(--dim); margin:0}
+  #tela-setup{background:linear-gradient(160deg,#FFF4D6,#FFE1E4 50%,#DCEBFF)}
 
   /* ---------- Player ---------- */
-  #tela-player{padding:0; background:#000}
+  #tela-player{background:#000}
   #player-wrap{position:absolute; inset:0}
   #player-wrap iframe,#player{position:absolute; inset:0; width:100%; height:100%}
-  #blindagem{position:absolute; inset:0; z-index:5} /* blocks clicks in strict mode */
-  .bug{ /* channel bug, like TV logos in the corner */
-    position:absolute; left:28px; bottom:28px; z-index:10; display:flex; align-items:center; gap:12px;
-    background:rgba(0,0,0,.55); border-left:4px solid var(--amber); padding:8px 14px 8px 12px; border-radius:0 var(--radius) var(--radius) 0;
-    opacity:1; transition:opacity .4s;
-  }
-  .bug.oculto{opacity:0}
-  .bug img{width:36px; height:36px; border-radius:50%}
-  .bug .b1{font-weight:600; font-size:17px}
-  .bug .b2{color:var(--dim); font-size:14px; max-width:60vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .livre-lista{
-    position:absolute; right:0; top:0; bottom:0; width:340px; z-index:10; background:rgba(7,16,12,.94); border-left:2px solid var(--line);
-    overflow:auto; padding:16px; transform:translateX(100%); transition:transform .25s;
-  }
+  #blindagem{position:absolute; inset:0; z-index:5}
+  [hidden]{display:none!important}
+  .hud{position:absolute; left:16px; right:80px; top:14px; z-index:10; display:flex; align-items:center; gap:10px; transition:opacity .4s}
+  .hud.oculto{opacity:0}
+  .chip{display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.94); border-radius:999px; padding:6px 16px 6px 6px; box-shadow:var(--sombra); max-width:70vw}
+  .chip img{width:38px; height:38px; border-radius:50%}
+  .chip .c1{font-weight:800; font-size:15px; line-height:1.1}
+  .chip .c2{color:var(--dim); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:50vw}
+  .hud .icone{background:rgba(255,255,255,.94); box-shadow:var(--sombra)}
+  .hud .icone.ativo{background:var(--rosa); color:#fff}
+  .livre-lista{position:absolute; right:0; top:0; bottom:0; width:360px; max-width:88vw; z-index:12; background:var(--bg); overflow:auto; padding:14px; transform:translateX(100%); transition:transform .25s; border-radius:var(--raio) 0 0 var(--raio)}
   .livre-lista.aberta{transform:none}
-  .livre-lista h3{font-size:22px; font-weight:600; color:var(--dim); margin-bottom:10px}
-  .livre-lista button{display:block; width:100%; text-align:left; background:none; border:0; border-bottom:1px solid var(--line); padding:10px 4px; font-size:15px}
-  .livre-lista button:focus-visible,.livre-lista button:hover{outline:none; color:var(--amber)}
-  .livre-lista button small{display:block; color:var(--dim)}
+  .livre-lista h3{font-size:22px; margin:6px 6px 12px}
+  .livre-lista button.item{display:flex; gap:10px; width:100%; text-align:left; padding:8px; border-radius:14px; align-items:center}
+  .livre-lista button.item:hover,.livre-lista button.item:focus-visible{background:var(--bg2)}
+  .livre-lista img{width:96px; aspect-ratio:16/9; object-fit:cover; border-radius:10px; flex:none; background:#DDE2EE}
+  .livre-lista .ti{font-weight:800; font-size:14px; line-height:1.2; max-height:2.4em; overflow:hidden}
+  .livre-lista small{color:var(--dim); display:block}
 
-  /* ---------- Fora do ar ---------- */
-  #tela-foradoar{padding:0; background:#000}
-  #ruido{position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; opacity:.55}
-  .foradoar-info{
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px;
-    text-shadow:0 2px 10px rgba(0,0,0,.9);
-  }
-  .foradoar-info h2{font-size:96px; letter-spacing:.02em}
-  .foradoar-info .volta{font-family:"Barlow Condensed",sans-serif; font-size:36px; font-weight:600; color:var(--amber)}
-  .foradoar-info .conta{font-family:"Barlow Condensed",sans-serif; font-size:72px; font-weight:800; font-variant-numeric:tabular-nums}
-  .foradoar-info .dica{color:var(--dim); margin-top:18px}
+  /* ---------- Fora do ar / Descanso ---------- */
+  #tela-foradoar,#tela-descanso{background:linear-gradient(180deg,#DCEBFF,#F4F6FB)}
+  .soneca{width:min(420px,70vw)}
+  .balao{background:#fff; border-radius:var(--raio); padding:16px 26px; box-shadow:var(--sombra)}
+  .balao .volta{font-family:"Fredoka",sans-serif; font-size:30px; color:var(--azul)}
+  .balao .conta{font-family:"Fredoka",sans-serif; font-size:56px; font-weight:700; font-variant-numeric:tabular-nums}
+  .centro h2{font-size:44px}
+  .centro p{color:var(--dim); margin:0; max-width:46ch}
 
   /* ---------- Guia ---------- */
-  .dias{display:flex; gap:8px; margin:0 0 18px}
-  .dias button{background:var(--panel); border:2px solid var(--line); border-radius:var(--radius); padding:6px 16px; font-family:"Barlow Condensed",sans-serif; font-size:22px; font-weight:600}
-  .dias button[aria-pressed="true"]{border-color:var(--amber); color:var(--amber)}
-  .dias button:focus-visible{outline:none; background:var(--panel2); border-color:var(--ink)}
-  .epg{display:grid; grid-template-columns:220px 1fr; border:2px solid var(--line); border-radius:var(--radius); overflow:hidden}
-  .epg .cab{background:var(--panel); border-bottom:2px solid var(--line); padding:8px 12px; color:var(--dim); font-size:14px}
-  .epg .horas{position:relative; height:34px; background:var(--panel); border-bottom:2px solid var(--line)}
-  .epg .horas span{position:absolute; top:8px; transform:translateX(-50%); font-size:13px; color:var(--dim); font-variant-numeric:tabular-nums}
-  .epg .lin{display:contents}
-  .epg .rot{padding:10px 12px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .epg .rot img{width:28px; height:28px; border-radius:50%}
-  .epg .faixa{position:relative; border-bottom:1px solid var(--line); min-height:52px;
-    background:repeating-linear-gradient(90deg, transparent 0 calc(100%/24 - 1px), var(--line) calc(100%/24 - 1px) calc(100%/24))}
-  .epg .bloco{
-    position:absolute; top:7px; bottom:7px; background:#2A4432; border:1px solid #4E7A5C; border-radius:4px; padding:2px 8px;
-    font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink);
-  }
-  .epg .bloco.livre{background:#3C3A2A; border-color:#7A7149}
-  .epg .bloco:focus-visible,.epg .bloco:hover{outline:none; border-color:var(--amber)}
-  .epg .agora{position:absolute; top:0; bottom:0; width:2px; background:var(--onair); box-shadow:0 0 8px var(--onair); z-index:2; pointer-events:none}
-  .legenda{color:var(--dim); font-size:15px; margin-top:12px; display:flex; gap:22px}
-  .legenda i{display:inline-block; width:14px; height:14px; border-radius:3px; vertical-align:-2px; margin-right:6px; background:#2A4432; border:1px solid #4E7A5C}
-  .legenda i.livre{background:#3C3A2A; border-color:#7A7149}
+  .dias{display:flex; gap:8px; overflow-x:auto; padding:6px 2px; scrollbar-width:none}
+  .dias button{flex:none; background:var(--card); border-radius:999px; padding:8px 18px; font-family:"Fredoka",sans-serif; font-weight:600; font-size:20px; box-shadow:var(--sombra)}
+  .dias button[aria-pressed="true"]{background:var(--ink); color:#fff}
+  .epg{margin-top:14px; display:grid; grid-template-columns:150px 1fr; gap:0 12px; align-items:stretch}
+  @media (max-width:700px){ .epg{grid-template-columns:70px 1fr} .epg .rot span{display:none} }
+  .epg .horas{position:relative; height:26px}
+  .epg .horas span{position:absolute; top:0; transform:translateX(-50%); font-size:13px; font-weight:800; color:var(--dim)}
+  .epg .rot{display:flex; align-items:center; gap:8px; padding:8px 0; font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .epg .rot img{width:44px; height:44px; border-radius:50%; flex:none}
+  .epg .faixa{position:relative; min-height:60px; margin:6px 0; background:var(--card); border-radius:16px; box-shadow:var(--sombra); background-image:repeating-linear-gradient(90deg, transparent 0 calc(100%/12 - 1px), var(--linha) calc(100%/12 - 1px) calc(100%/12))}
+  .epg .bloco{position:absolute; top:8px; bottom:8px; background:var(--cor,var(--azul)); color:#fff; border-radius:12px; padding:4px 10px; font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left}
+  .epg .bloco.livre{background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.18) 0 8px, transparent 8px 16px)}
+  .epg .agora{position:absolute; top:-4px; bottom:-4px; width:3px; background:var(--vermelho); border-radius:3px; z-index:2; pointer-events:none}
+  .legenda{display:flex; gap:20px; margin-top:12px; color:var(--dim); font-size:14px; font-weight:700}
+  .legenda i{display:inline-block; width:16px; height:16px; border-radius:5px; background:var(--azul); vertical-align:-3px; margin-right:6px}
+  .legenda i.livre{background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.3) 0 4px, transparent 4px 8px)}
 
-  /* ---------- Ajustes ---------- */
-  .ajustes{max-width:980px; padding-right:0}
-  .ajustes h1{font-size:48px; margin-bottom:6px}
-  .ajustes h2{font-size:28px; margin:34px 0 12px; color:var(--amber); font-weight:600}
-  .ajustes p.ajuda{color:var(--dim); margin:0 0 14px; max-width:70ch}
-  .form{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-  .form label{display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--dim)}
-  input[type=text],input[type=password],input[type=time],select{
-    background:var(--panel); border:2px solid var(--line); color:var(--ink); border-radius:var(--radius); padding:8px 12px; min-width:160px;
-  }
-  input:focus-visible,select:focus-visible{outline:none; border-color:var(--amber)}
-  .btn{background:var(--panel2); border:2px solid var(--line); border-radius:var(--radius); padding:8px 16px; font-weight:600}
-  .btn:focus-visible,.btn:hover{outline:none; border-color:var(--amber)}
-  .btn.primario{background:var(--amber); color:#1a1205; border-color:var(--amber)}
-  .btn.primario:focus-visible,.btn.primario:hover{background:#ffc54f}
-  .btn.perigo:hover,.btn.perigo:focus-visible{border-color:var(--onair); color:var(--onair)}
-  .lista{list-style:none; padding:0; margin:12px 0 0}
-  .lista li{display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); flex-wrap:wrap}
-  .lista li .cresce{flex:1; min-width:200px}
-  .lista li small{color:var(--dim); display:block}
-  .dias-check{display:flex; gap:6px}
-  .dias-check label{flex-direction:row; align-items:center; gap:4px; background:var(--panel); border:2px solid var(--line); border-radius:4px; padding:4px 8px; cursor:pointer; color:var(--ink)}
-  .dias-check label:has(input:checked){border-color:var(--amber); color:var(--amber)}
-  .dias-check input{display:none}
-  .passos{margin:0 0 16px; padding-left:22px; max-width:72ch; color:var(--dim)}
+  /* ---------- PIN ---------- */
+  #pin{display:none; position:fixed; inset:0; z-index:60; background:rgba(31,35,64,.55); align-items:center; justify-content:center; padding:20px}
+  #pin.ativa{display:flex}
+  .pin-caixa{background:#fff; border-radius:28px; padding:26px; width:min(380px,92vw); text-align:center; box-shadow:0 30px 60px rgba(0,0,0,.3)}
+  .pin-caixa h2{font-size:28px}
+  .pin-caixa p{color:var(--dim); margin:6px 0 14px}
+  .pin-pontos{display:flex; justify-content:center; gap:14px; margin:10px 0 16px}
+  .pin-pontos i{width:18px; height:18px; border-radius:50%; background:var(--linha)}
+  .pin-pontos i.on{background:var(--ink)}
+  .teclado{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+  .teclado button{height:60px; border-radius:18px; background:var(--bg2); font-family:"Fredoka",sans-serif; font-size:26px; font-weight:600}
+  .teclado button:hover{background:var(--linha)}
+  .pin-erro{color:var(--vermelho); font-weight:800; min-height:1.4em; margin-top:8px}
+
+  /* ---------- Ajustes (pais) ---------- */
+  .ajustes{max-width:1000px; margin:0 auto}
+  .ajustes h1{font-size:40px; margin:8px 0 2px}
+  .ajustes h2{font-size:26px; margin:30px 0 8px; color:var(--ink)}
+  .ajustes p.ajuda{color:var(--dim); margin:0 0 12px; max-width:72ch}
+  .painel{background:var(--card); border-radius:var(--raio); box-shadow:var(--sombra); padding:18px 20px}
+  .form{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
+  .form label{display:flex; flex-direction:column; gap:4px; font-size:14px; font-weight:800; color:var(--dim)}
+  input[type=text],input[type=password],input[type=time],input[type=number],select{background:var(--bg2); border:2px solid transparent; border-radius:14px; padding:10px 14px; min-width:150px}
+  input:focus-visible,select:focus-visible{outline:none; border-color:var(--azul); border-radius:14px}
+  .passos{margin:0 0 14px; padding-left:22px; max-width:72ch; color:var(--dim)}
   .passos li{margin:8px 0}
   .passos strong,.passos em{color:var(--ink); font-style:normal}
-  .passos a.btn{display:inline-block; text-decoration:none; color:var(--amber); padding:5px 12px; margin-left:4px; vertical-align:middle}
-  .msg{margin-top:10px; color:var(--dim); min-height:1.4em}
-  .msg.erro{color:var(--onair)}
-  .msg.ok{color:var(--ok)}
-  .chk{display:flex; align-items:center; gap:10px; margin:8px 0; cursor:pointer}
-  .chk input{width:20px; height:20px; accent-color:var(--amber)}
-  .voltar{position:fixed; left:36px; top:22px; z-index:40}
-  @media (max-width:800px){
-    body{font-size:16px}
-    .tela{padding:18px}
-    .osd{right:18px; top:12px}
-    .osd .hora{font-size:40px}
-    .topo{padding-right:150px; flex-direction:column; align-items:flex-start; gap:4px}
-    .topo h1{font-size:44px}
-    .foradoar-info h2{font-size:56px}
-    .foradoar-info .conta{font-size:48px}
-    .epg{grid-template-columns:120px 1fr}
-    .livre-lista{width:80vw}
-    .rodape{display:none}
-    .voltar{left:18px; top:12px}
-  }
-  @media (prefers-reduced-motion:reduce){ .bug,.livre-lista{transition:none} }
+  .passos a.btn{text-decoration:none; padding:6px 14px; margin-left:4px; vertical-align:middle; color:var(--azul)}
+  .lista{list-style:none; padding:0; margin:12px 0 0}
+  .lista li{display:flex; gap:12px; align-items:center; padding:10px 0; border-top:1px solid var(--linha); flex-wrap:wrap}
+  .lista li .cresce{flex:1; min-width:200px; font-weight:800}
+  .lista li small{color:var(--dim); display:block; font-weight:600}
+  .lista img{width:40px; height:40px; border-radius:50%}
+  .dias-check{display:flex; gap:6px; flex-wrap:wrap}
+  .dias-check label{flex-direction:row; align-items:center; background:var(--bg2); border-radius:999px; padding:6px 12px; cursor:pointer; color:var(--ink); border:2px solid transparent}
+  .dias-check label:has(input:checked){background:var(--azul); color:#fff}
+  .dias-check input{display:none}
+  .msg{margin-top:10px; color:var(--dim); min-height:1.4em; font-weight:700}
+  .msg.erro{color:var(--vermelho)} .msg.ok{color:var(--verde)}
+  .chk{display:flex; align-items:center; gap:10px; margin:10px 0; cursor:pointer; font-weight:700}
+  .chk input{width:22px; height:22px; accent-color:var(--azul)}
+  .avatares{display:flex; gap:8px; flex-wrap:wrap}
+  .avatares button{width:48px; height:48px; border-radius:50%; background:var(--bg2); font-size:26px}
+  .avatares button[aria-pressed="true"]{background:var(--amarelo)}
+  .sugestoes{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; margin-top:10px}
+  .sugestoes button{display:flex; align-items:center; gap:10px; background:var(--bg2); border-radius:16px; padding:10px 12px; text-align:left; font-weight:800}
+  .sugestoes button small{display:block; color:var(--dim); font-weight:600}
+  .sugestoes button .ok{margin-left:auto; color:var(--verde); font-size:20px}
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
 </style>
 </head>
 <body>
 
-<!-- Botão de ligar: o gesto do usuário libera o autoplay com som -->
-<div id="ligar" class="tela ativa">
-  <button id="btn-ligar" aria-label="Ligar a TV">ligar</button>
-  <p>Pressione Enter ou toque para ligar</p>
-</div>
+<!-- ===== Ligar ===== -->
+<section id="tela-ligar" class="tela ativa">
+  <div class="centro">
+    <div class="logo" style="font-size:40px"><svg viewBox="0 0 48 48" width="64" height="64" aria-hidden="true"><rect x="4" y="10" width="40" height="28" rx="8" fill="#FF4F5E"/><rect x="9" y="15" width="30" height="18" rx="5" fill="#fff"/><polygon points="21,19 21,29 30,24" fill="#3D8BFF"/><rect x="16" y="38" width="16" height="4" rx="2" fill="#1F2340"/><circle cx="14" cy="6" r="3" fill="#FFC53D"/><circle cx="34" cy="6" r="3" fill="#FFC53D"/><path d="M14 6 L20 11 M34 6 L28 11" stroke="#1F2340" stroke-width="2.5" stroke-linecap="round"/></svg>Grade <b>TV</b></div>
+    <button class="poder" id="btn-ligar" aria-label="Ligar a TV">ligar</button>
+    <p>Toque ou pressione Enter para ligar</p>
+  </div>
+</section>
 
-<div class="osd" aria-live="off"><div class="hora" id="osd-hora">--:--</div><div class="data" id="osd-data"></div></div>
+<!-- Engrenagem de canto (aparece ao passar o mouse ou tocar) -->
+<button class="icone canto" id="gear" title="Para os pais" aria-label="Para os pais" hidden>⚙️</button>
 
-<!-- ===== Canais (home) ===== -->
-<section id="tela-canais" class="tela">
+<!-- ===== Primeiro acesso ===== -->
+<section id="tela-setup" class="tela">
+  <div class="centro" style="gap:14px">
+    <div class="logo" style="font-size:34px">👋 Bem-vindo à Grade TV</div>
+    <div class="painel setup" id="setup-1">
+      <h2>1 de 2 · Crie o PIN dos pais</h2>
+      <p>Quatro números. Ele protege as configurações e a liberação de tempo extra.</p>
+      <div class="form" style="justify-content:center">
+        <label>PIN<input type="password" id="setup-pin" inputmode="numeric" maxlength="4" style="min-width:120px;text-align:center;font-size:24px;letter-spacing:.4em"></label>
+        <label>Repita<input type="password" id="setup-pin2" inputmode="numeric" maxlength="4" style="min-width:120px;text-align:center;font-size:24px;letter-spacing:.4em"></label>
+      </div>
+      <div class="msg" id="msg-setup1"></div>
+      <button class="btn p" id="setup-avancar">Continuar</button>
+    </div>
+    <div class="painel setup" id="setup-2" hidden>
+      <h2>2 de 2 · Quem vai assistir?</h2>
+      <p>Depois você pode criar mais perfis na área dos pais.</p>
+      <div class="form" style="justify-content:center">
+        <label>Nome da criança<input type="text" id="setup-nome" placeholder="Ex.: Lia" style="min-width:200px"></label>
+        <label>Limite por dia (min)<input type="number" id="setup-limite" min="0" step="15" value="60" style="min-width:120px"></label>
+      </div>
+      <label style="font-size:14px;font-weight:800;color:var(--dim)">Avatar</label>
+      <div class="avatares" id="setup-avatares" style="justify-content:center"></div>
+      <div class="msg" id="msg-setup2"></div>
+      <button class="btn p" id="setup-concluir">Concluir e configurar canais</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Perfis ===== -->
+<section id="tela-perfis" class="tela">
+  <button class="icone pais" id="btn-pais-perfis" title="Para os pais" aria-label="Para os pais">⚙️</button>
+  <div class="centro">
+    <h2>Quem vai assistir?</h2>
+    <div class="perfis" id="lista-perfis"></div>
+  </div>
+</section>
+
+<!-- ===== Início ===== -->
+<section id="tela-inicio" class="tela">
   <div class="topo">
-    <h1>Grade <span>TV</span></h1>
-    <p>Seus canais do YouTube, cada um no seu horário.</p>
+    <div class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="10" width="40" height="28" rx="8" fill="#FF4F5E"/><rect x="9" y="15" width="30" height="18" rx="5" fill="#fff"/><polygon points="21,19 21,29 30,24" fill="#3D8BFF"/><rect x="16" y="38" width="16" height="4" rx="2" fill="#1F2340"/><circle cx="14" cy="6" r="3" fill="#FFC53D"/><circle cx="34" cy="6" r="3" fill="#FFC53D"/><path d="M14 6 L20 11 M34 6 L28 11" stroke="#1F2340" stroke-width="2.5" stroke-linecap="round"/></svg>Grade <b>TV</b></div>
+    <div class="espaco"></div>
+    <button class="perfil-chip" id="chip-perfil" title="Trocar perfil"><span class="avatar" id="chip-avatar">🙂</span><span id="chip-nome"></span></button>
+    <div class="relogio" id="relogio">--:--</div>
   </div>
-  <div class="secao">
-    <h2>No ar agora</h2>
-    <div class="grade-canais" id="noar"></div>
-  </div>
-  <div class="secao">
-    <h2>Fora do ar</h2>
-    <div class="grade-canais" id="foradoar"></div>
-  </div>
-  <div class="rodape">
-    <span><b>↑↓←→</b>navegar</span><span><b>Enter</b>sintonizar</span><span><b>1–9</b>canal</span>
-    <span><b>G</b>guia</span><span><b>A</b>ajustes</span><span><b>Esc</b>voltar</span>
+  <div class="conteudo">
+    <div class="bolhas" id="bolhas"></div>
+    <div class="secao"><h2><i>📺</i> No ar agora</h2><div class="grade" id="noar"></div></div>
+    <div class="secao"><h2><i>⏰</i> Daqui a pouco</h2><div class="grade" id="proximos"></div></div>
+    <div class="secao"><h2><i>💤</i> Dormindo</h2><div class="grade" id="dormindo"></div></div>
   </div>
 </section>
 
-<!-- ===== Player ===== -->
-<section id="tela-player" class="tela">
-  <div id="player-wrap"><div id="player"></div><div id="blindagem" hidden></div></div>
-  <div class="bug" id="bug"><img id="bug-img" alt=""><div><div class="b1" id="bug-canal"></div><div class="b2" id="bug-info"></div></div></div>
-  <aside class="livre-lista" id="livre-lista"><h3>Vídeos deste canal</h3><div id="livre-itens"></div></aside>
-</section>
-
-<!-- ===== Fora do ar ===== -->
-<section id="tela-foradoar" class="tela">
-  <canvas id="ruido" width="160" height="90"></canvas>
-  <div class="foradoar-info">
-    <h2 id="fda-titulo">Fora do ar</h2>
-    <div class="volta" id="fda-volta"></div>
-    <div class="conta" id="fda-conta"></div>
-    <div class="dica" id="fda-dica">Esc para voltar aos canais</div>
-  </div>
+<!-- ===== Favoritos ===== -->
+<section id="tela-favoritos" class="tela">
+  <div class="topo"><div class="logo">💖 Favoritos</div><div class="espaco"></div><div class="relogio" id="relogio2">--:--</div></div>
+  <div class="conteudo"><div class="grade" id="lista-favoritos"></div></div>
 </section>
 
 <!-- ===== Guia ===== -->
 <section id="tela-guia" class="tela">
-  <button class="btn voltar" data-ir="canais">← Canais</button>
-  <div class="topo"><h1>Guia de <span>programação</span></h1></div>
-  <div class="dias" id="dias" role="tablist"></div>
-  <div class="epg" id="epg"></div>
-  <div class="legenda"><span><i></i>Linear (sem pausa, no horário)</span><span><i class="livre"></i>Livre (escolhe o vídeo)</span></div>
+  <div class="topo"><div class="logo">🗓️ Hoje na TV</div><div class="espaco"></div><div class="relogio" id="relogio3">--:--</div></div>
+  <div class="conteudo">
+    <div class="dias" id="dias" role="tablist"></div>
+    <div class="epg" id="epg"></div>
+    <div class="legenda"><span><i></i>Linear: toca no horário, sem pausa</span><span><i class="livre"></i>Livre: a criança escolhe o vídeo</span></div>
+  </div>
 </section>
 
+<!-- Navegação inferior (compartilhada) -->
+<nav class="nav" id="nav" hidden>
+  <button data-ir="inicio" aria-current="page"><i>🏠</i>Início</button>
+  <button data-ir="guia"><i>🗓️</i>Hoje</button>
+  <button data-ir="favoritos"><i>💖</i>Favoritos</button>
+  <button id="btn-pais"><i>⚙️</i>Pais</button>
+</nav>
+
+<!-- ===== Player ===== -->
+<section id="tela-player" class="tela">
+  <div id="player-wrap"><div id="player"></div><div id="blindagem" hidden></div></div>
+  <div class="hud" id="hud">
+    <button class="icone" id="btn-sair" title="Voltar (Esc)">←</button>
+    <div class="chip"><img id="hud-img" alt=""><div><div class="c1" id="hud-canal"></div><div class="c2" id="hud-info"></div></div></div>
+    <div class="espaco"></div>
+    <button class="icone" id="btn-fav" title="Favoritar">🤍</button>
+    <button class="icone" id="btn-lista" title="Escolher vídeo (L)" hidden>📋</button>
+  </div>
+  <aside class="livre-lista" id="livre-lista"><h3>Escolha um vídeo</h3><div id="livre-itens"></div></aside>
+</section>
+
+<!-- ===== Fora do ar ===== -->
+<section id="tela-foradoar" class="tela">
+  <div class="centro">
+    <svg class="soneca" viewBox="0 0 320 240" aria-hidden="true">
+      <rect x="40" y="40" width="240" height="160" rx="30" fill="#3D8BFF"/>
+      <rect x="62" y="62" width="196" height="116" rx="18" fill="#fff"/>
+      <rect x="120" y="200" width="80" height="14" rx="7" fill="#1F2340"/>
+      <circle cx="90" cy="26" r="9" fill="#FFC53D"/><circle cx="230" cy="26" r="9" fill="#FFC53D"/>
+      <path d="M90 26 L120 50 M230 26 L200 50" stroke="#1F2340" stroke-width="6" stroke-linecap="round"/>
+      <path d="M110 115 q14 -12 28 0 M182 115 q14 -12 28 0" stroke="#1F2340" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M145 142 q15 12 30 0" stroke="#1F2340" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="104" cy="128" r="7" fill="#FFB3BA"/><circle cx="216" cy="128" r="7" fill="#FFB3BA"/>
+      <text x="236" y="70" font-family="Fredoka, sans-serif" font-weight="700" font-size="26" fill="#9B5CFF">z</text>
+      <text x="252" y="48" font-family="Fredoka, sans-serif" font-weight="700" font-size="34" fill="#9B5CFF">Z</text>
+    </svg>
+    <h2 id="fda-titulo">Este canal está dormindo</h2>
+    <div class="balao"><div class="volta" id="fda-volta"></div><div class="conta" id="fda-conta"></div></div>
+    <p>Quando chegar a hora, a TV liga sozinha. Enquanto isso, veja o que está no ar.</p>
+    <button class="btn p" data-ir="inicio">Ver o que está no ar</button>
+  </div>
+</section>
+
+<!-- ===== Descanso (limite de tempo) ===== -->
+<section id="tela-descanso" class="tela">
+  <div class="centro">
+    <div style="font-size:120px">🌙</div>
+    <h2>Hora de descansar</h2>
+    <p id="descanso-texto">O tempo de TV de hoje acabou. Amanhã tem mais!</p>
+    <button class="btn" id="btn-mais-tempo">Pais: liberar mais 15 minutos</button>
+    <button class="btn p" data-ir="perfis">Trocar perfil</button>
+  </div>
+</section>
+
+<!-- ===== PIN dos pais ===== -->
+<div id="pin" role="dialog" aria-modal="true">
+  <div class="pin-caixa">
+    <h2 id="pin-titulo">Área dos pais</h2>
+    <p id="pin-texto">Digite o PIN de 4 números</p>
+    <div class="pin-pontos"><i></i><i></i><i></i><i></i></div>
+    <div class="teclado" id="teclado"></div>
+    <div class="pin-erro" id="pin-erro"></div>
+    <button class="btn" id="pin-cancelar" style="margin-top:8px">Cancelar</button>
+  </div>
+</div>
+
 <!-- ===== Ajustes ===== -->
-<section id="tela-ajustes" class="tela ajustes">
-  <button class="btn voltar" data-ir="canais">← Canais</button>
-  <div class="topo" style="padding-right:0;margin-top:50px"><h1>Ajustes</h1></div>
+<section id="tela-ajustes" class="tela">
+  <div class="topo"><button class="btn" data-ir="inicio">← Voltar</button><div class="logo">⚙️ Para os pais</div><div class="espaco"></div></div>
+  <div class="conteudo ajustes">
 
-  <h2>Chave da YouTube Data API</h2>
-  <p class="ajuda">A chave é gratuita e fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
-  <ol class="passos">
-    <li>Entre no Google Cloud com sua conta Google e crie um projeto (qualquer nome, ex. <em>grade-tv</em>).</li>
-    <li>Ative a API no projeto: <a class="btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Ativar YouTube Data API v3</a></li>
-    <li>Crie a chave em <strong>Criar credenciais → Chave de API</strong>: <a class="btn" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Abrir página de credenciais</a></li>
-    <li>Copie a chave (começa com <em>AIza</em>), cole abaixo e clique em <strong>Testar</strong>. Depois, em "Restringir chave", limite a API ao YouTube Data API v3 e, se publicar a página, ao seu domínio.</li>
-  </ol>
-  <div class="form">
-    <input type="password" id="apikey" placeholder="AIza…" autocomplete="off" style="min-width:320px">
-    <button class="btn primario" id="salvar-key">Salvar chave</button>
-    <button class="btn" id="testar-key">Testar</button>
+    <h2>Perfis</h2>
+    <p class="ajuda">Cada criança tem seu avatar, seus canais liberados, seu limite de tempo por dia e seus favoritos.</p>
+    <div class="painel">
+      <div class="form">
+        <label>Nome<input type="text" id="perfil-nome" placeholder="Ex.: Lia" style="min-width:200px"></label>
+        <label>Avatar<div class="avatares" id="perfil-avatares"></div></label>
+        <label>Limite por dia (min)<input type="number" id="perfil-limite" min="0" step="15" value="60" style="min-width:120px"></label>
+        <button class="btn p" id="add-perfil">Adicionar perfil</button>
+      </div>
+      <div class="msg" id="msg-perfil"></div>
+      <ul class="lista" id="lista-perfis-adm"></ul>
+    </div>
+
+    <h2>PIN dos pais</h2>
+    <p class="ajuda">Protege esta área e a liberação de tempo extra. Sem PIN, qualquer um entra aqui.</p>
+    <div class="painel form">
+      <label>Novo PIN (4 números)<input type="password" id="novo-pin" inputmode="numeric" maxlength="4" pattern="\d{4}" style="min-width:140px"></label>
+      <button class="btn p" id="salvar-pin">Salvar PIN</button>
+      <button class="btn perigo" id="remover-pin">Remover PIN</button>
+      <div class="msg" id="msg-pin" style="width:100%"></div>
+    </div>
+
+    <h2>Chave da YouTube Data API</h2>
+    <p class="ajuda">A chave é gratuita e fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
+    <div class="painel">
+      <ol class="passos">
+        <li>Entre no Google Cloud com sua conta Google e crie um projeto (qualquer nome, ex. <em>grade-tv</em>).</li>
+        <li>Ative a API no projeto: <a class="btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Ativar YouTube Data API v3</a></li>
+        <li>Crie a chave em <strong>Criar credenciais → Chave de API</strong>: <a class="btn" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Abrir página de credenciais</a></li>
+        <li>Copie a chave (começa com <em>AIza</em>), cole abaixo e clique em <strong>Testar</strong>. Depois, em "Restringir chave", limite ao YouTube Data API v3 e ao seu domínio.</li>
+      </ol>
+      <div class="form">
+        <input type="password" id="apikey" placeholder="AIza…" autocomplete="off" style="min-width:320px">
+        <button class="btn p" id="salvar-key">Salvar chave</button>
+        <button class="btn" id="testar-key">Testar</button>
+      </div>
+      <div class="msg" id="msg-key"></div>
+    </div>
+
+    <h2>Canais</h2>
+    <p class="ajuda">Cole o link do canal (youtube.com/@nome), o ID (UC…) ou o link de uma playlist. Ou adicione um dos canais sugeridos com um toque.</p>
+    <div class="painel">
+      <div class="form">
+        <input type="text" id="novo-canal" placeholder="https://www.youtube.com/@canal" style="min-width:min(380px,80vw)">
+        <button class="btn p" id="add-canal">Adicionar canal</button>
+      </div>
+      <div class="msg" id="msg-canal"></div>
+      <div class="sugestoes" id="sugestoes"></div>
+      <ul class="lista" id="lista-canais"></ul>
+    </div>
+
+    <h2>Grade de horários</h2>
+    <p class="ajuda">Cada faixa diz quando um canal pode ser assistido. Fora dela, o canal fica dormindo.</p>
+    <div class="painel">
+      <div class="form" id="form-slot">
+        <label>Canal<select id="slot-canal"></select></label>
+        <label>Início<input type="time" id="slot-ini" value="20:00"></label>
+        <label>Fim<input type="time" id="slot-fim" value="21:00"></label>
+        <label>Modo<select id="slot-modo"><option value="linear">Linear (sem pausa)</option><option value="livre">Livre</option></select></label>
+        <label>Dias<div class="dias-check" id="slot-dias"></div></label>
+        <button class="btn p" id="add-slot">Adicionar faixa</button>
+      </div>
+      <div class="msg" id="msg-slot"></div>
+      <ul class="lista" id="lista-slots"></ul>
+    </div>
+
+    <h2>Comportamento</h2>
+    <div class="painel">
+      <label class="chk"><input type="checkbox" id="cfg-strict"> No modo linear, bloquear pausa, avanço e cliques no player</label>
+      <label class="chk"><input type="checkbox" id="cfg-shorts"> Ignorar vídeos com menos de 2 minutos (Shorts)</label>
+      <label class="chk"><input type="checkbox" id="cfg-auto"> Ligar o canal sozinho quando o horário começar</label>
+    </div>
+
+    <h2>Dados</h2>
+    <div class="painel form">
+      <button class="btn" id="exportar">Exportar configuração</button>
+      <button class="btn" id="importar">Importar configuração</button>
+      <input type="file" id="arquivo" accept="application/json" hidden>
+      <button class="btn perigo" id="zerar-hist">Zerar histórico de assistidos</button>
+      <div class="msg" id="msg-dados" style="width:100%"></div>
+    </div>
+    <p class="ajuda" style="margin-top:24px">Os vídeos tocam pelo player oficial do YouTube; anúncios e restrições de incorporação continuam valendo.</p>
   </div>
-  <div class="msg" id="msg-key"></div>
-
-  <h2>Canais</h2>
-  <p class="ajuda">Cole o link do canal (youtube.com/@nome), o ID (UC…) ou o link de uma playlist para usar como fonte.</p>
-  <div class="form">
-    <input type="text" id="novo-canal" placeholder="https://www.youtube.com/@canal" style="min-width:380px">
-    <button class="btn primario" id="add-canal">Adicionar canal</button>
-  </div>
-  <div class="msg" id="msg-canal"></div>
-  <ul class="lista" id="lista-canais"></ul>
-
-  <h2>Grade de horários</h2>
-  <p class="ajuda">Cada faixa diz quando um canal pode ser assistido. Fora dela, o canal fica fora do ar.</p>
-  <div class="form" id="form-slot">
-    <label>Canal<select id="slot-canal"></select></label>
-    <label>Início<input type="time" id="slot-ini" value="20:00"></label>
-    <label>Fim<input type="time" id="slot-fim" value="22:00"></label>
-    <label>Modo<select id="slot-modo"><option value="linear">Linear (sem pausa)</option><option value="livre">Livre</option></select></label>
-    <label>Dias<div class="dias-check" id="slot-dias"></div></label>
-    <button class="btn primario" id="add-slot">Adicionar faixa</button>
-  </div>
-  <div class="msg" id="msg-slot"></div>
-  <ul class="lista" id="lista-slots"></ul>
-
-  <h2>Comportamento</h2>
-  <label class="chk"><input type="checkbox" id="cfg-strict"> No modo linear, bloquear pausa, avanço e cliques no player</label>
-  <label class="chk"><input type="checkbox" id="cfg-shorts"> Ignorar vídeos com menos de 2 minutos (Shorts)</label>
-  <label class="chk"><input type="checkbox" id="cfg-auto"> Sintonizar automaticamente o canal quando o horário começar</label>
-
-  <h2>Dados</h2>
-  <div class="form">
-    <button class="btn" id="exportar">Exportar configuração</button>
-    <button class="btn" id="importar">Importar configuração</button>
-    <input type="file" id="arquivo" accept="application/json" hidden>
-    <button class="btn perigo" id="zerar-hist">Zerar histórico de assistidos</button>
-  </div>
-  <div class="msg" id="msg-dados"></div>
-  <p class="ajuda" style="margin-top:30px">Grade TV é um projeto pessoal. Os vídeos tocam pelo player oficial do YouTube; anúncios e restrições de incorporação continuam valendo.</p>
 </section>
 
 <script>
 /* =========================================================
-   Grade TV — MVP (fase 1): HTML único + localStorage
+   Grade TV — fase 1 (HTML único + localStorage), interface lúdica
    ========================================================= */
 'use strict';
 
 // ---------- Estado ----------
-const CHAVE_DB = 'gradetv.v1';
+const CHAVE_DB = 'gradetv.v2';
 const DIAS_CURTO = ['dom','seg','ter','qua','qui','sex','sáb'];
 const DIAS_LONGO = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
-const TTL_CACHE = 6*60*60*1000; // 6 h
+const CORES = ['#FF4F5E','#3D8BFF','#35C77B','#FF8A3D','#9B5CFF','#2EC4D6','#FF6FB5','#FFC53D'];
+const AVATARES = ['🦊','🐼','🦄','🐸','🐯','🐨','🦖','🐙','🐧','🦋','🚀','🌈'];
+const TTL_CACHE = 6*60*60*1000;
+const SUGESTOES = [
+  {h:'@SheriffLabradorPT', t:'Detetive Labrador', d:'Episódios de ~30 min'},
+  {h:'@OmNomPT', t:'As Histórias do Om Nom', d:'Compilações de ~20 min'},
+  {h:'@MundoBita', t:'Mundo Bita', d:'Música brasileira, 2 a 5 anos'},
+  {h:'@blueyportuguesbrasil-canal', t:'Bluey Português Brasil', d:'Blocos de 40 min a 1 h'},
+  {h:'@GalinhaPintadinha', t:'Galinha Pintadinha', d:'Clipes curtos: desative o filtro de 2 min'},
+  {h:'@pokemonkidstv', t:'Pokémon Kids TV', d:'Músicas e rimas (sem fala/inglês)'},
+];
 
 let DB = carregar();
 function carregar(){
-  const base = { apiKey:'', channels:[], slots:[], watched:{}, cache:{}, occ:{}, cfg:{strict:true, shorts:true, auto:true} };
-  try{ const s = JSON.parse(localStorage.getItem(CHAVE_DB)||'null'); return s ? Object.assign(base, s, {cfg:Object.assign(base.cfg, s.cfg||{})}) : base; }
-  catch(e){ return base; }
+  const base = { apiKey:'', pin:'', profiles:[], activeProfile:null, channels:[], slots:[], watched:{}, cache:{}, occ:{}, uso:{}, favs:{}, cfg:{strict:true, shorts:true, auto:true} };
+  try{
+    let s = JSON.parse(localStorage.getItem(CHAVE_DB)||'null');
+    if(!s){ const v1 = JSON.parse(localStorage.getItem('gradetv.v1')||'null'); if(v1) s = v1; } // migra a versão anterior
+    return s ? Object.assign(base, s, {cfg:Object.assign(base.cfg, s.cfg||{})}) : base;
+  }catch(e){ return base; }
 }
 function salvar(){ try{ localStorage.setItem(CHAVE_DB, JSON.stringify(DB)); }catch(e){ console.warn('localStorage indisponível', e); } }
 const uid = () => Math.random().toString(36).slice(2,10);
 const $ = s => document.querySelector(s);
 const el = (tag, attrs={}, ...kids) => { const n=document.createElement(tag); for(const [k,v] of Object.entries(attrs)){ if(k==='class') n.className=v; else if(k.startsWith('on')) n.addEventListener(k.slice(2),v); else if(v!==false&&v!=null) n.setAttribute(k,v);} for(const k of kids){ if(k==null) continue; n.append(k.nodeType?k:document.createTextNode(k)); } return n; };
+const hoje = () => new Date().toISOString().slice(0,10);
+const corDoCanal = ch => CORES[Math.max(0, DB.channels.indexOf(ch)) % CORES.length];
+const perfil = () => DB.profiles.find(p=>p.id===DB.activeProfile) || null;
+function canaisDoPerfil(){ const p=perfil(); return DB.channels.filter(ch => !p || !p.canais?.length || p.canais.includes(ch.id)); }
 
 // ---------- Tempo / grade ----------
 const hm = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
 const pad = n => String(n).padStart(2,'0');
 const fmtHora = d => pad(d.getHours())+':'+pad(d.getMinutes());
+const fmtHoraCurta = d => d.getMinutes() ? fmtHora(d) : d.getHours()+'h';
 
-// Gera as ocorrências de uma faixa entre -1 e +7 dias (lida com faixas que viram a meia-noite)
 function ocorrencias(slot, agora=new Date()){
-  const out = [];
-  const ini = hm(slot.start), fim = hm(slot.end);
+  const out = []; const ini = hm(slot.start), fim = hm(slot.end);
   const dur = (fim > ini ? fim - ini : 24*60 - ini + fim) * 60000;
   for(let d=-1; d<=7; d++){
     const dia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()+d);
@@ -360,51 +515,49 @@ function proximaExibicao(channelId, agora=new Date()){
     for(const o of ocorrencias(s, agora)) if(o.start>agora && (!best || o.start<best.start)) best=o;
   return best;
 }
-function chaveOcc(o){ return o.slot.id+'|'+o.start.getTime(); }
+const chaveOcc = o => o.slot.id+'|'+o.start.getTime();
 function quandoVolta(o, agora=new Date()){
   if(!o) return 'sem horário na grade';
-  const mesmoDia = o.start.toDateString()===agora.toDateString();
   const amanha = new Date(agora); amanha.setDate(amanha.getDate()+1);
-  const pref = mesmoDia ? 'hoje' : (o.start.toDateString()===amanha.toDateString() ? 'amanhã' : DIAS_LONGO[o.start.getDay()]);
-  return `${pref} às ${fmtHora(o.start)}`;
+  const pref = o.start.toDateString()===agora.toDateString() ? 'hoje' : (o.start.toDateString()===amanha.toDateString() ? 'amanhã' : DIAS_LONGO[o.start.getDay()]);
+  return `${pref} às ${fmtHoraCurta(o.start)}`;
+}
+function faltaTexto(ms){
+  const m=Math.max(0,Math.round(ms/60000)); if(m<60) return `${m} min`;
+  const h=Math.floor(m/60), r=m%60; return r ? `${h} h e ${r} min` : `${h} h`;
 }
 
-// ---------- Vídeos (YouTube Data API v3) ----------
+// ---------- YouTube Data API ----------
 const API = 'https://www.googleapis.com/youtube/v3/';
 async function yt(recurso, params){
-  if(!DB.apiKey) throw new Error('Informe a chave da YouTube Data API em Ajustes.');
+  if(!DB.apiKey) throw new Error('Informe a chave da YouTube Data API na área dos pais.');
   const u = new URL(API+recurso); for(const [k,v] of Object.entries(params)) u.searchParams.set(k,v); u.searchParams.set('key', DB.apiKey);
   const r = await fetch(u.toString()); const j = await r.json();
   if(!r.ok) throw new Error(j.error?.message || ('Erro '+r.status)); return j;
 }
 function parseISODur(s){ const m=/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s||''); return m ? (+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0) : 0; }
-
 async function resolverCanal(entrada){
   entrada = entrada.trim();
-  let pl = /[?&]list=([\w-]+)/.exec(entrada);
+  const pl = /[?&]list=([\w-]+)/.exec(entrada);
   if(pl){
     const j = await yt('playlists', {part:'snippet', id:pl[1]});
     const p = j.items?.[0]; if(!p) throw new Error('Playlist não encontrada.');
     return { id:'PL:'+p.id, title:p.snippet.title, thumb:p.snippet.thumbnails?.default?.url||'', uploads:p.id, order:'antigos' };
   }
-  let params;
-  const mId = /(UC[\w-]{22})/.exec(entrada);
-  const mHandle = /@([\w.-]+)/.exec(entrada);
+  let params; const mId = /(UC[\w-]{22})/.exec(entrada); const mHandle = /@([\w.-]+)/.exec(entrada);
   if(mId) params={id:mId[1]}; else if(mHandle) params={forHandle:mHandle[1]}; else params={forHandle:entrada.replace(/^.*\//,'')};
   const j = await yt('channels', Object.assign({part:'snippet,contentDetails'}, params));
   const c = j.items?.[0]; if(!c) throw new Error('Canal não encontrado. Use o link com @nome ou o ID UC….');
   return { id:c.id, title:c.snippet.title, thumb:c.snippet.thumbnails?.default?.url||'', uploads:c.contentDetails.relatedPlaylists.uploads, order:'recentes' };
 }
-
 async function atualizarVideos(ch, forcar=false){
-  const c = DB.cache[ch.id];
-  if(!forcar && c && Date.now()-c.ts < TTL_CACHE) return c.videos;
+  const c = DB.cache[ch.id]; if(!forcar && c && Date.now()-c.ts < TTL_CACHE) return c.videos;
   let ids=[], token=null;
   for(let pag=0; pag<2; pag++){
     const j = await yt('playlistItems', Object.assign({part:'contentDetails', playlistId:ch.uploads, maxResults:50}, token?{pageToken:token}:{}));
     ids.push(...j.items.map(i=>i.contentDetails.videoId)); token=j.nextPageToken; if(!token) break;
   }
-  let videos=[];
+  const videos=[];
   for(let i=0;i<ids.length;i+=50){
     const j = await yt('videos', {part:'snippet,contentDetails,status', id:ids.slice(i,i+50).join(',')});
     for(const v of j.items){
@@ -414,23 +567,19 @@ async function atualizarVideos(ch, forcar=false){
       videos.push({ id:v.id, title:v.snippet.title, dur, pub:v.snippet.publishedAt, thumb:v.snippet.thumbnails?.medium?.url||'' });
     }
   }
-  DB.cache[ch.id] = { ts:Date.now(), videos }; salvar();
-  return videos;
+  DB.cache[ch.id] = { ts:Date.now(), videos }; salvar(); return videos;
 }
 function videosDoCanal(ch){
   let v = (DB.cache[ch.id]?.videos||[]).slice();
   if(DB.cfg.shorts) v = v.filter(x=>x.dur>=120);
-  if(ch.order==='antigos') v.sort((a,b)=>a.pub.localeCompare(b.pub));
-  else if(ch.order==='recentes') v.sort((a,b)=>b.pub.localeCompare(a.pub));
+  if(ch.order==='antigos') v.sort((a,b)=>a.pub.localeCompare(b.pub)); else if(ch.order==='recentes') v.sort((a,b)=>b.pub.localeCompare(a.pub));
   return v;
 }
-// embaralhamento determinístico (mesma fila durante toda a exibição)
 function embaralhar(arr, seed){ let s=0; for(const ch of seed) s=(s*31+ch.charCodeAt(0))>>>0; const a=arr.slice(); for(let i=a.length-1;i>0;i--){ s=(s*1664525+1013904223)>>>0; const j=s%(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
 // ---------- Programação linear ----------
-// Fecha exibições passadas: marca como assistidos os vídeos que tocaram por inteiro
 function fecharExibicoes(channelId, agora=new Date()){
-  for(const [k,o] of Object.entries(DB.occ)){
+  for(const o of Object.values(DB.occ)){
     if(o.ch!==channelId || o.final || o.end>agora.getTime()) continue;
     const dur = id => DB.cache[channelId]?.videos.find(v=>v.id===id)?.dur || 600;
     let t=0; const w = DB.watched[channelId] ||= {};
@@ -441,119 +590,175 @@ function fecharExibicoes(channelId, agora=new Date()){
   for(const k of Object.keys(DB.occ)) if(DB.occ[k].end<lim) delete DB.occ[k];
 }
 function filaDaExibicao(ch, o){
-  const k = chaveOcc(o);
-  if(DB.occ[k]) return DB.occ[k];
+  const k = chaveOcc(o); if(DB.occ[k]) return DB.occ[k];
   fecharExibicoes(ch.id, o.start);
-  let v = videosDoCanal(ch); const w = DB.watched[ch.id]||{};
+  const v = videosDoCanal(ch); const w = DB.watched[ch.id]||{};
   let fila = v.filter(x=>!w[x.id]);
-  if(!fila.length && v.length){ DB.watched[ch.id]={}; fila=v; } // reprise: tudo visto, começa de novo
+  if(!fila.length && v.length){ DB.watched[ch.id]={}; fila=v; }
   if(ch.order==='aleatorio') fila = embaralhar(fila, k);
   DB.occ[k] = { ch:ch.id, queue:fila.map(x=>x.id), start:o.start.getTime(), end:o.end.getTime() };
   salvar(); return DB.occ[k];
 }
-// Dado o instante, qual vídeo da fila está "no ar" e em que segundo
 function posicaoLinear(ch, o, agora=new Date()){
   const occ = filaDaExibicao(ch, o); if(!occ.queue.length) return null;
-  const vids = occ.queue.map(id => DB.cache[ch.id]?.videos.find(v=>v.id===id) || {id, title:'', dur:600});
+  const vids = occ.queue.map(id => DB.cache[ch.id]?.videos.find(v=>v.id===id) || {id, title:'', dur:600, thumb:''});
   const total = vids.reduce((s,v)=>s+v.dur,0);
-  let off = Math.floor((agora - o.start)/1000) % total; // passou da fila: reprise em loop
+  let off = Math.floor((agora - o.start)/1000) % total;
   for(let i=0;i<vids.length;i++){ if(off < vids[i].dur) return { video:vids[i], seek:off, idx:i, total:vids.length }; off -= vids[i].dur; }
   return { video:vids[0], seek:0, idx:0, total:vids.length };
 }
 
 // ---------- Telas ----------
-let telaAtual = 'canais';
+let telaAtual = 'ligar';
 function ir(nome){
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));
   $('#tela-'+nome).classList.add('ativa'); telaAtual = nome;
-  document.body.classList.toggle('sem-osd', nome==='player');
+  $('#nav').hidden = !['inicio','guia','favoritos'].includes(nome);
+  document.querySelectorAll('#nav [data-ir]').forEach(b=>b.toggleAttribute('aria-current', b.dataset.ir===nome) || (b.dataset.ir===nome ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current')));
   if(nome!=='player') pararPlayer();
-  if(nome!=='foradoar') pararRuido();
-  if(nome==='canais') renderCanais();
+  if(nome!=='foradoar') clearInterval(fdaTimer);
+  if(nome==='inicio') renderInicio();
   if(nome==='guia') renderGuia();
+  if(nome==='favoritos') renderFavoritos();
   if(nome==='ajustes') renderAjustes();
-  const f = $('#tela-'+nome).querySelector('button,[tabindex]'); if(f && nome!=='player') f.focus({preventScroll:true});
+  if(nome==='perfis') renderPerfis();
+  if(nome==='setup') renderSetup();
+  $('#gear').hidden = ['ligar','setup','ajustes'].includes(nome);
+  $('#gear').classList.toggle('visivel', nome!=='player');
+  const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
 }
 document.querySelectorAll('[data-ir]').forEach(b=>b.addEventListener('click', ()=>ir(b.dataset.ir)));
-
-// Relógio OSD
-function tickRelogio(){
-  const d=new Date(); $('#osd-hora').textContent=fmtHora(d);
-  $('#osd-data').textContent = d.toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'});
-}
+function tickRelogio(){ const t=fmtHora(new Date()); for(const id of ['relogio','relogio2','relogio3']) $('#'+id).textContent=t; }
 setInterval(tickRelogio, 1000); tickRelogio();
 
-// ----- Home -----
-function renderCanais(){
-  const focado = document.activeElement?.dataset?.num;
-  const agora=new Date(), noar=$('#noar'), fora=$('#foradoar'); noar.innerHTML=''; fora.innerHTML='';
-  if(!DB.channels.length){
-    noar.append(el('div',{class:'vazio'}, 'Nenhum canal cadastrado. Pressione ', el('strong',{},'A'), ' ou abra os ajustes para informar a chave da API e adicionar canais e horários.'));
-    noar.append(el('button',{class:'btn primario', onclick:()=>ir('ajustes'), style:'margin-top:12px'},'Abrir ajustes'));
-    fora.append(el('div',{class:'vazio'},'A grade fica aqui.')); return;
-  }
-  DB.channels.forEach((ch,i)=>{
-    const atual = exibicaoAtual(ch.id, agora);
-    const card = el('button',{class:'canal'+(atual?' noar':''), tabindex:'0', 'data-num':i+1, onclick:()=>sintonizar(ch)},
-      el('div',{}, el('div',{class:'num'}, String(i+1)), el('img',{src:ch.thumb, alt:''})),
-      el('div',{}, el('div',{class:'nome'}, ch.title),
-        el('div',{class:'status'}, atual ? `No ar até ${fmtHora(atual.end)}` + (atual.slot.mode==='livre'?' (livre)':'') : 'Volta ' + quandoVolta(proximaExibicao(ch.id, agora), agora))));
-    (atual?noar:fora).append(card);
-  });
-  if(!noar.children.length) noar.append(el('div',{class:'vazio'},'Nada no ar neste momento. Espere o próximo horário ou veja o guia.'));
-  if(!fora.children.length) fora.append(el('div',{class:'vazio'},'Todos os canais estão no ar.'));
-  if(focado){ const b=document.querySelector(`.canal[data-num="${focado}"]`); if(b) b.focus({preventScroll:true}); }
+// ----- Perfis -----
+function garantirPerfil(){
+  if(!DB.profiles.length){ DB.profiles.push({id:uid(), nome:'Criança', avatar:'🦊', limite:60, canais:[]}); salvar(); }
+  if(!perfil()) DB.activeProfile = DB.profiles[0].id;
 }
+function renderPerfis(){
+  const box=$('#lista-perfis'); box.innerHTML='';
+  DB.profiles.forEach((p,i)=>box.append(el('button',{class:'perfil-card', onclick:()=>{ DB.activeProfile=p.id; salvar(); ir('inicio'); }},
+    el('span',{class:'avatar', style:`background:${CORES[i%CORES.length]}`}, p.avatar), p.nome)));
+}
+function entrar(){
+  if(!DB.setupDone){ ir('setup'); return; }
+  garantirPerfil(); if(DB.profiles.length>1) ir('perfis'); else ir('inicio');
+}
+
+// ----- Primeiro acesso -----
+let setupAvatar = AVATARES[0];
+function renderSetup(){
+  $('#setup-1').hidden=false; $('#setup-2').hidden=true;
+  const av=$('#setup-avatares'); av.innerHTML=''; for(const a of AVATARES) av.append(el('button',{type:'button','aria-pressed':String(a===setupAvatar), onclick:e=>{ setupAvatar=a; [...av.children].forEach(b=>b.setAttribute('aria-pressed', String(b.textContent===a))); }}, a));
+  $('#setup-pin').focus();
+}
+$('#setup-avancar').onclick = ()=>{
+  const a=$('#setup-pin').value, b=$('#setup-pin2').value;
+  if(!/^\d{4}$/.test(a)) return msg('#msg-setup1','O PIN precisa ter 4 números.','erro');
+  if(a!==b) return msg('#msg-setup1','Os dois PINs não são iguais.','erro');
+  DB.pin=a; salvar(); $('#setup-1').hidden=true; $('#setup-2').hidden=false; $('#setup-nome').focus();
+};
+$('#setup-concluir').onclick = ()=>{
+  const nome=$('#setup-nome').value.trim(); if(!nome) return msg('#msg-setup2','Dê um nome para o perfil.','erro');
+  DB.profiles.push({id:uid(), nome, avatar:setupAvatar, limite:+$('#setup-limite').value||0, canais:[]});
+  DB.activeProfile = DB.profiles[DB.profiles.length-1].id; DB.setupDone=true; salvar(); ir('ajustes');
+};
+
+// ----- Início -----
+function cardCanal(ch, o, agora){
+  const cor = corDoCanal(ch); let capa = ch.thumb, titulo = ch.title, sub = '', selo = null, prog = null;
+  if(o){
+    const p = DB.cache[ch.id] ? posicaoLinear(ch, o, agora) : null;
+    if(p){ capa = p.video.thumb || ch.thumb; titulo = p.video.title || ch.title; }
+    sub = `No ar até ${fmtHoraCurta(o.end)}` + (o.slot.mode==='livre' ? ' · livre' : '');
+    selo = el('span',{class:'selo'}, 'No ar');
+    prog = el('div',{class:'barra'}, el('i',{style:`width:${Math.min(100,(agora-o.start)/(o.end-o.start)*100)}%`}));
+  }
+  const card = el('button',{class:'card'+(o?'':' fora'), onclick:()=>sintonizar(ch)},
+    el('div',{class:'capa'}, el('img',{src:capa, alt:'', loading:'lazy'}), selo, prog),
+    el('div',{class:'info'}, el('img',{src:ch.thumb, alt:'', style:`border:3px solid ${cor}`}), el('div',{}, el('div',{class:'t1'}, titulo), el('div',{class:'t2'}, sub))));
+  return card;
+}
+function renderInicio(){
+  const p = perfil(); $('#chip-nome').textContent = p?.nome||''; $('#chip-avatar').textContent = p?.avatar||'🙂';
+  const focado = document.activeElement?.dataset?.num;
+  const agora=new Date(), canais=canaisDoPerfil();
+  const bolhas=$('#bolhas'), noar=$('#noar'), prox=$('#proximos'), dorm=$('#dormindo');
+  bolhas.innerHTML=''; noar.innerHTML=''; prox.innerHTML=''; dorm.innerHTML='';
+  if(!canais.length){
+    noar.append(el('div',{class:'vazio'}, el('strong',{},'Nenhum canal ainda. '), 'Na área dos pais (⚙️), informe a chave da API, adicione canais e monte a grade de horários.'));
+    return;
+  }
+  const proximos=[];
+  canais.forEach((ch,i)=>{
+    const o = exibicaoAtual(ch.id, agora), prx = o ? null : proximaExibicao(ch.id, agora);
+    bolhas.append(el('button',{class:'bolha'+(o?'':' fora'), 'data-num':i+1, style:`--cor:${corDoCanal(ch)}`, onclick:()=>sintonizar(ch)},
+      el('div',{class:'anel'}, el('img',{src:ch.thumb, alt:''}), el('span',{class:'num'}, String(i+1)), o?el('span',{class:'ponto'}):null), el('span',{}, ch.title)));
+    if(o) noar.append(cardCanal(ch, o, agora));
+    else {
+      const c = cardCanal(ch, null, agora);
+      if(prx && prx.start.toDateString()===agora.toDateString()){ c.querySelector('.t2').textContent = `Começa às ${fmtHoraCurta(prx.start)} · falta ${faltaTexto(prx.start-agora)}`; c.querySelector('.capa').append(el('span',{class:'selo azul'}, fmtHoraCurta(prx.start))); proximos.push([prx.start, c]); }
+      else { c.querySelector('.t2').textContent = 'Volta ' + quandoVolta(prx, agora); dorm.append(c); }
+    }
+  });
+  proximos.sort((a,b)=>a[0]-b[0]).forEach(([,c])=>prox.append(c));
+  if(!noar.children.length) noar.append(el('div',{class:'vazio'},'Nada no ar agora. Veja o que começa daqui a pouco.'));
+  if(!prox.children.length) prox.append(el('div',{class:'vazio'},'Nada mais hoje.'));
+  if(!dorm.children.length) dorm.append(el('div',{class:'vazio'},'Todos os canais acordam ainda hoje.'));
+  if(focado){ const b=document.querySelector(`.bolha[data-num="${focado}"]`); if(b) b.focus({preventScroll:true}); }
+}
+$('#chip-perfil').onclick = ()=>ir('perfis');
+
+// ----- Limite de tempo -----
+function usoHoje(){ const p=perfil(); if(!p) return 0; return DB.uso[p.id]?.[hoje()] || 0; }
+function limiteEstourado(){ const p=perfil(); return !!p && p.limite>0 && usoHoje() >= p.limite + (p.extra?.[hoje()]||0); }
+function contarMinuto(){ const p=perfil(); if(!p) return; (DB.uso[p.id] ||= {})[hoje()] = usoHoje()+1; salvar(); }
+function mostrarDescanso(){ const p=perfil(); $('#descanso-texto').textContent = `${p?.nome||'Você'} já assistiu ${usoHoje()} min hoje. Amanhã tem mais!`; ir('descanso'); }
+$('#btn-mais-tempo').onclick = ()=>pedirPin(()=>{ const p=perfil(); (p.extra ||= {})[hoje()] = (p.extra[hoje()]||0)+15; salvar(); if(canalSintonizado) sintonizar(canalSintonizado); else ir('inicio'); });
 
 // ----- Sintonizar -----
 let canalSintonizado = null;
 async function sintonizar(ch){
   canalSintonizado = ch;
-  const o = exibicaoAtual(ch.id);
-  if(!o){ mostrarForaDoAr(ch); return; }
+  if(limiteEstourado()){ mostrarDescanso(); return; }
+  const o = exibicaoAtual(ch.id); if(!o){ mostrarForaDoAr(ch); return; }
   try{
     if(!DB.cache[ch.id] || !DB.cache[ch.id].videos.length) await atualizarVideos(ch);
-    else if(Date.now()-DB.cache[ch.id].ts > TTL_CACHE) atualizarVideos(ch).catch(()=>{}); // atualiza em segundo plano
+    else if(Date.now()-DB.cache[ch.id].ts > TTL_CACHE) atualizarVideos(ch).catch(()=>{});
   }catch(e){ alert('Não foi possível carregar os vídeos: '+e.message); return; }
   if(!videosDoCanal(ch).length){ alert('Este canal não tem vídeos incorporáveis para exibir.'); return; }
   abrirPlayer(ch, o);
 }
 
 // ----- Fora do ar -----
-let ruidoRAF=null, ruidoTimer=null;
+let fdaTimer=null;
 function mostrarForaDoAr(ch){
-  pararRuido(); ir('foradoar');
-  $('#fda-titulo').textContent = ch.title;
+  clearInterval(fdaTimer); ir('foradoar');
+  $('#fda-titulo').textContent = `${ch.title} está dormindo`;
   const atualiza = () => {
     const prox = proximaExibicao(ch.id);
     if(!prox){ $('#fda-volta').textContent='Sem horário na grade'; $('#fda-conta').textContent=''; return; }
-    $('#fda-volta').textContent = 'Volta ' + quandoVolta(prox);
-    const s = Math.max(0, Math.floor((prox.start - Date.now())/1000));
-    const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
+    $('#fda-volta').textContent = 'Acorda ' + quandoVolta(prox);
+    const s = Math.max(0, Math.floor((prox.start - Date.now())/1000)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
     $('#fda-conta').textContent = (h>=24 ? Math.floor(h/24)+'d ' : '') + pad(h%24)+':'+pad(m)+':'+pad(ss);
-    if(s===0 && DB.cfg.auto){ sintonizar(ch); }
+    if(s===0 && DB.cfg.auto) sintonizar(ch);
   };
-  atualiza(); ruidoTimer = setInterval(atualiza, 1000);
-  const cv=$('#ruido'), ctx=cv.getContext('2d'), img=ctx.createImageData(cv.width, cv.height), d=img.data;
-  const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const frame = () => { for(let i=0;i<d.length;i+=4){ const v=Math.random()*255|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; } ctx.putImageData(img,0,0); if(!reduz) ruidoRAF=requestAnimationFrame(frame); };
-  frame();
+  atualiza(); fdaTimer = setInterval(atualiza, 1000);
 }
-function pararRuido(){ if(ruidoRAF) cancelAnimationFrame(ruidoRAF); ruidoRAF=null; if(ruidoTimer) clearInterval(ruidoTimer); ruidoTimer=null; }
 
-// ----- Player (YouTube IFrame API) -----
-let YT_PRONTO=false, player=null, ctxPlayer=null, tickPlayer=null, bugTimer=null;
+// ----- Player -----
+let YT_PRONTO=false, player=null, ctxPlayer=null, tickPlayer=null, hudTimer=null, minutoTimer=null;
 window.onYouTubeIframeAPIReady = () => { YT_PRONTO=true; };
 (function(){ const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.append(s); })();
-function esperarYT(){ return new Promise(r=>{ const i=setInterval(()=>{ if(YT_PRONTO){clearInterval(i); r();} },100); }); }
-
+const esperarYT = () => new Promise(r=>{ const i=setInterval(()=>{ if(YT_PRONTO){clearInterval(i); r();} },100); });
 async function abrirPlayer(ch, o){
   ir('player'); await esperarYT();
   const linear = o.slot.mode==='linear', strict = linear && DB.cfg.strict;
   ctxPlayer = { ch, o, linear, strict, videoAtual:null };
-  $('#blindagem').hidden = !strict;
+  $('#blindagem').hidden = !strict; $('#btn-lista').hidden = linear;
   $('#livre-lista').classList.remove('aberta');
-  $('#bug-img').src = ch.thumb; $('#bug-canal').textContent = ch.title;
+  $('#hud-img').src = ch.thumb; $('#hud-canal').textContent = ch.title;
   if(player){ player.destroy(); player=null; $('#player-wrap').prepend(el('div',{id:'player'})); }
   player = new YT.Player('player', {
     width:'100%', height:'100%',
@@ -569,88 +774,139 @@ async function abrirPlayer(ch, o){
     if(Date.now() >= ctxPlayer.o.end.getTime()){ encerrarTransmissao(); return; }
     if(ctxPlayer.linear) sincronizar(false);
   }, 2000);
-  mostrarBug();
+  minutoTimer = setInterval(()=>{ if(!ctxPlayer) return; contarMinuto(); if(limiteEstourado()){ pararPlayer(); mostrarDescanso(); } }, 60000);
+  mostrarHud();
 }
 function tocar(video, seek){
-  ctxPlayer.videoAtual = video.id;
-  player.loadVideoById({videoId:video.id, startSeconds:seek||0});
-  $('#bug-info').textContent = `${video.title}  —  até ${fmtHora(ctxPlayer.o.end)}`; mostrarBug();
+  ctxPlayer.videoAtual = video.id; player.loadVideoById({videoId:video.id, startSeconds:seek||0});
+  $('#hud-info').textContent = `${video.title}  ·  até ${fmtHoraCurta(ctxPlayer.o.end)}`; atualizarFavBtn(); mostrarHud();
 }
 function sincronizar(forcar, acabou){
   const {ch,o} = ctxPlayer; const p = posicaoLinear(ch, o); if(!p) return;
   const trocou = p.video.id !== ctxPlayer.videoAtual;
-  if(acabou && !trocou){ // o vídeo acabou um pouco antes do previsto: segue para o próximo da fila
-    const occ = filaDaExibicao(ch, o); const id = occ.queue[(p.idx+1)%occ.queue.length];
-    const v = DB.cache[ch.id]?.videos.find(x=>x.id===id) || {id, title:''}; return tocar(v, 0);
-  }
+  if(acabou && !trocou){ const occ = filaDaExibicao(ch, o); const id = occ.queue[(p.idx+1)%occ.queue.length]; return tocar(DB.cache[ch.id]?.videos.find(x=>x.id===id) || {id, title:''}, 0); }
   if(trocou || forcar) return tocar(p.video, p.seek);
-  if(ctxPlayer.strict && typeof player.getCurrentTime==='function'){
-    const cur = player.getCurrentTime(); if(Math.abs(cur - p.seek) > 6) player.seekTo(p.seek, true);
-  }
+  if(ctxPlayer.strict && typeof player.getCurrentTime==='function'){ const cur = player.getCurrentTime(); if(Math.abs(cur - p.seek) > 6) player.seekTo(p.seek, true); }
 }
 function iniciarLivre(){
-  const {ch} = ctxPlayer; const w = DB.watched[ch.id]||{};
-  const box=$('#livre-itens'); box.innerHTML='';
+  const {ch} = ctxPlayer; const w = DB.watched[ch.id]||{}; const box=$('#livre-itens'); box.innerHTML='';
   const vs = videosDoCanal(ch);
-  for(const v of vs){
-    box.append(el('button',{onclick:()=>{ tocar(v, 0); $('#livre-lista').classList.remove('aberta'); }},
-      v.title, el('small',{}, Math.round(v.dur/60)+' min' + (w[v.id]?' · visto':''))));
-  }
-  const primeiro = vs.find(v=>!w[v.id]) || vs[0];
-  if(primeiro) tocar(primeiro, 0);
-  $('#livre-lista').classList.add('aberta');
-  const b=box.querySelector('button'); if(b) b.focus();
+  for(const v of vs) box.append(el('button',{class:'item', onclick:()=>{ tocar(v, 0); $('#livre-lista').classList.remove('aberta'); }},
+    el('img',{src:v.thumb, alt:''}), el('div',{}, el('div',{class:'ti'}, v.title), el('small',{}, Math.round(v.dur/60)+' min' + (w[v.id]?' · já visto':'')))));
+  const primeiro = vs.find(v=>!w[v.id]) || vs[0]; if(primeiro) tocar(primeiro, 0);
+  $('#livre-lista').classList.add('aberta'); const b=box.querySelector('button'); if(b) b.focus();
 }
 function proximoLivre(){
   const {ch} = ctxPlayer; const vs=videosDoCanal(ch); const i=vs.findIndex(v=>v.id===ctxPlayer.videoAtual);
-  (DB.watched[ch.id] ||= {})[ctxPlayer.videoAtual]=1; salvar();
-  const n = vs[(i+1)%vs.length]; if(n) tocar(n, 0);
+  (DB.watched[ch.id] ||= {})[ctxPlayer.videoAtual]=1; salvar(); const n = vs[(i+1)%vs.length]; if(n) tocar(n, 0);
 }
-function mostrarBug(){ const b=$('#bug'); b.classList.remove('oculto'); clearTimeout(bugTimer); bugTimer=setTimeout(()=>b.classList.add('oculto'), 6000); }
-function encerrarTransmissao(){ const ch = ctxPlayer?.ch; pararPlayer(); if(ch){ fecharExibicoes(ch.id); salvar(); mostrarForaDoAr(ch); } else ir('canais'); }
-function pararPlayer(){ clearInterval(tickPlayer); tickPlayer=null; ctxPlayer=null; if(player){ try{ player.stopVideo(); }catch(e){} } }
+function mostrarHud(){ const h=$('#hud'), g=$('#gear'); h.classList.remove('oculto'); g.classList.add('visivel'); clearTimeout(hudTimer); hudTimer=setTimeout(()=>{ h.classList.add('oculto'); if(telaAtual==='player') g.classList.remove('visivel'); }, 6000); }
+function encerrarTransmissao(){ const ch = ctxPlayer?.ch; pararPlayer(); if(ch){ fecharExibicoes(ch.id); salvar(); mostrarForaDoAr(ch); } else ir('inicio'); }
+function pararPlayer(){ clearInterval(tickPlayer); clearInterval(minutoTimer); tickPlayer=minutoTimer=null; ctxPlayer=null; if(player){ try{ player.stopVideo(); }catch(e){} } }
+$('#btn-sair').onclick = ()=>ir('inicio');
+$('#btn-lista').onclick = ()=>$('#livre-lista').classList.toggle('aberta');
+$('#player-wrap').addEventListener('pointermove', mostrarHud);
 
-// ----- Guia (EPG) -----
+// ----- Favoritos -----
+function favsDoPerfil(){ const p=perfil(); return p ? (DB.favs[p.id] ||= []) : []; }
+function ehFav(id){ return favsDoPerfil().some(f=>f.id===id); }
+function atualizarFavBtn(){ $('#btn-fav').textContent = ctxPlayer && ehFav(ctxPlayer.videoAtual) ? '💖' : '🤍'; $('#btn-fav').classList.toggle('ativo', !!ctxPlayer && ehFav(ctxPlayer.videoAtual)); }
+$('#btn-fav').onclick = ()=>{
+  if(!ctxPlayer) return; const fs=favsDoPerfil(), id=ctxPlayer.videoAtual;
+  const i=fs.findIndex(f=>f.id===id);
+  if(i>=0) fs.splice(i,1); else { const v=DB.cache[ctxPlayer.ch.id]?.videos.find(x=>x.id===id); if(v) fs.unshift({id, title:v.title, thumb:v.thumb, ch:ctxPlayer.ch.id}); }
+  salvar(); atualizarFavBtn(); mostrarHud();
+};
+function renderFavoritos(){
+  const box=$('#lista-favoritos'); box.innerHTML=''; const fs=favsDoPerfil(); const agora=new Date();
+  if(!fs.length){ box.append(el('div',{class:'vazio'},'Toque no 🤍 enquanto assiste para guardar os vídeos preferidos aqui.')); return; }
+  for(const f of fs){
+    const ch=DB.channels.find(c=>c.id===f.ch); if(!ch) continue;
+    const o=exibicaoAtual(ch.id, agora);
+    box.append(el('button',{class:'card'+(o?'':' fora'), onclick:()=>{ if(!o) return mostrarForaDoAr(ch); sintonizar(ch).then(()=>{ if(ctxPlayer && !ctxPlayer.linear) tocar(DB.cache[ch.id].videos.find(x=>x.id===f.id)||{id:f.id,title:f.title}, 0); }); }},
+      el('div',{class:'capa'}, el('img',{src:f.thumb, alt:''}), o ? el('span',{class:'selo'},'No ar') : null),
+      el('div',{class:'info'}, el('img',{src:ch.thumb, alt:''}), el('div',{}, el('div',{class:'t1'}, f.title), el('div',{class:'t2'}, o ? (o.slot.mode==='livre' ? 'Pode assistir agora' : 'Canal no ar (modo linear)') : 'Volta '+quandoVolta(proximaExibicao(ch.id, agora), agora))))));
+  }
+}
+
+// ----- Guia -----
 let diaGuia = new Date().getDay();
 function renderGuia(){
   const dias=$('#dias'); dias.innerHTML='';
-  for(let d=0; d<7; d++) dias.append(el('button',{role:'tab','aria-pressed':String(d===diaGuia), onclick:()=>{diaGuia=d; renderGuia();}}, DIAS_CURTO[d]));
+  for(let d=0; d<7; d++) dias.append(el('button',{role:'tab','aria-pressed':String(d===diaGuia), onclick:()=>{diaGuia=d; renderGuia();}}, d===new Date().getDay()?'Hoje':DIAS_CURTO[d]));
   const epg=$('#epg'); epg.innerHTML='';
-  epg.append(el('div',{class:'cab'},'Canal'));
-  const horas=el('div',{class:'horas'}); for(let h=0;h<24;h+=2) horas.append(el('span',{style:`left:${h/24*100}%`}, pad(h)+'h')); epg.append(horas);
-  const hoje=new Date().getDay();
-  DB.channels.forEach(ch=>{
-    epg.append(el('div',{class:'rot'}, el('img',{src:ch.thumb,alt:''}), ch.title));
+  epg.append(el('div',{}));
+  const horas=el('div',{class:'horas'}); for(let h=0;h<24;h+=2) horas.append(el('span',{style:`left:${h/24*100}%`}, h+'h')); epg.append(horas);
+  const hoje_=new Date().getDay();
+  for(const ch of canaisDoPerfil()){
+    epg.append(el('div',{class:'rot'}, el('img',{src:ch.thumb,alt:''}), el('span',{}, ch.title)));
     const faixa=el('div',{class:'faixa'});
     for(const s of DB.slots.filter(s=>s.channelId===ch.id && s.days.includes(diaGuia))){
-      const a=hm(s.start), b=hm(s.end);
-      const segs = b>a ? [[a,b]] : [[a,24*60],[0,b]];
-      for(const [x,y] of segs) faixa.append(el('button',{class:'bloco'+(s.mode==='livre'?' livre':''), style:`left:${x/1440*100}%; width:${(y-x)/1440*100}%`, title:`${s.start}–${s.end}`, onclick:()=>sintonizar(ch)}, `${s.start}–${s.end}`));
+      const a=hm(s.start), b=hm(s.end); const segs = b>a ? [[a,b]] : [[a,24*60],[0,b]];
+      for(const [x,y] of segs) faixa.append(el('button',{class:'bloco'+(s.mode==='livre'?' livre':''), style:`--cor:${corDoCanal(ch)}; left:${x/1440*100}%; width:${(y-x)/1440*100}%`, title:`${s.start}–${s.end}`, onclick:()=>sintonizar(ch)}, `${s.start}–${s.end}`));
     }
-    if(diaGuia===hoje){ const n=new Date(); faixa.append(el('div',{class:'agora', style:`left:${(n.getHours()*60+n.getMinutes())/1440*100}%`})); }
+    if(diaGuia===hoje_){ const n=new Date(); faixa.append(el('div',{class:'agora', style:`left:${(n.getHours()*60+n.getMinutes())/1440*100}%`})); }
     epg.append(faixa);
-  });
-  if(!DB.channels.length) epg.append(el('div',{class:'rot'},'—'), el('div',{class:'faixa'}));
+  }
 }
+
+// ----- PIN -----
+let pinDigitos='', pinCallback=null;
+(function(){ const t=$('#teclado'); for(const k of ['1','2','3','4','5','6','7','8','9','⌫','0','OK']) t.append(el('button',{onclick:()=>teclaPin(k)}, k)); })();
+function pedirPin(cb){
+  if(!DB.pin){ cb(); return; }
+  pinCallback=cb; pinDigitos=''; $('#pin-erro').textContent=''; desenharPin(); $('#pin').classList.add('ativa'); $('#teclado button').focus();
+}
+function desenharPin(){ [...$('.pin-pontos').children].forEach((i,n)=>i.classList.toggle('on', n<pinDigitos.length)); }
+function teclaPin(k){
+  if(k==='⌫') pinDigitos=pinDigitos.slice(0,-1);
+  else if(k==='OK'){ if(pinDigitos===DB.pin){ $('#pin').classList.remove('ativa'); const cb=pinCallback; pinCallback=null; cb && cb(); } else { $('#pin-erro').textContent='PIN incorreto'; pinDigitos=''; } }
+  else if(pinDigitos.length<4) pinDigitos+=k;
+  desenharPin(); if(pinDigitos.length===4 && k!=='OK' && pinDigitos===DB.pin) teclaPin('OK');
+}
+$('#pin-cancelar').onclick = ()=>{ $('#pin').classList.remove('ativa'); pinCallback=null; };
+const abrirPais = ()=>pedirPin(()=>ir('ajustes'));
+$('#btn-pais').onclick = abrirPais; $('#btn-pais-perfis').onclick = abrirPais; $('#gear').onclick = abrirPais;
 
 // ----- Ajustes -----
 function msg(id, texto, tipo=''){ const m=$(id); m.textContent=texto; m.className='msg '+tipo; }
+let avatarSel = AVATARES[0];
 function renderAjustes(){
   $('#apikey').value = DB.apiKey;
   $('#cfg-strict').checked = DB.cfg.strict; $('#cfg-shorts').checked = DB.cfg.shorts; $('#cfg-auto').checked = DB.cfg.auto;
+  // avatares
+  const av=$('#perfil-avatares'); av.innerHTML=''; for(const a of AVATARES) av.append(el('button',{type:'button','aria-pressed':String(a===avatarSel), onclick:()=>{avatarSel=a; renderAjustes();}}, a));
+  // perfis
+  const lp=$('#lista-perfis-adm'); lp.innerHTML='';
+  DB.profiles.forEach(p=>{
+    const canaisSel = el('select',{multiple:true, size:Math.min(4,Math.max(2,DB.channels.length)), onchange:e=>{ p.canais=[...e.target.selectedOptions].map(o=>o.value); salvar(); }},
+      ...DB.channels.map(ch=>{ const o=el('option',{value:ch.id}, ch.title); if(p.canais?.includes(ch.id)) o.selected=true; return o; }));
+    lp.append(el('li',{}, el('span',{class:'avatar'}, p.avatar),
+      el('div',{class:'cresce'}, p.nome, el('small',{}, `Limite ${p.limite||'sem'} min/dia · hoje ${DB.uso[p.id]?.[hoje()]||0} min · canais liberados: ${p.canais?.length ? p.canais.length : 'todos'}`)),
+      el('label',{style:'font-size:13px;color:var(--dim);font-weight:800'}, 'Canais liberados (vazio = todos)', canaisSel),
+      el('button',{class:'btn perigo', onclick:()=>{ if(DB.profiles.length>1 && confirm(`Remover o perfil ${p.nome}?`)){ DB.profiles=DB.profiles.filter(x=>x!==p); if(DB.activeProfile===p.id) DB.activeProfile=DB.profiles[0].id; salvar(); renderAjustes(); } }},'Remover')));
+  });
+  // sugestões
+  const sg=$('#sugestoes'); sg.innerHTML='';
+  for(const s of SUGESTOES){
+    const ja = DB.channels.some(c=>c.handle===s.h);
+    sg.append(el('button',{disabled:ja, onclick:async e=>{ e.currentTarget.disabled=true; msg('#msg-canal',`Adicionando ${s.t}…`); try{ await adicionarCanal(s.h, s.h); }catch(err){ msg('#msg-canal',err.message,'erro'); renderAjustes(); } }},
+      el('div',{}, s.t, el('small',{}, s.d)), ja?el('span',{class:'ok'},'✓'):null));
+  }
+  // canais
   const lc=$('#lista-canais'); lc.innerHTML='';
   DB.channels.forEach((ch,i)=>{
     const sel = el('select',{onchange:e=>{ch.order=e.target.value; salvar();}},
       ...[['recentes','Mais recentes primeiro'],['antigos','Mais antigos primeiro'],['aleatorio','Aleatório']].map(([v,t])=>{ const o=el('option',{value:v},t); if(ch.order===v) o.selected=true; return o; }));
     const cache=DB.cache[ch.id];
-    lc.append(el('li',{}, el('img',{src:ch.thumb,alt:'',width:36,height:36,style:'border-radius:50%'}),
+    lc.append(el('li',{}, el('img',{src:ch.thumb,alt:''}),
       el('div',{class:'cresce'}, `${i+1}. ${ch.title}`, el('small',{}, cache ? `${cache.videos.length} vídeos · atualizado ${new Date(cache.ts).toLocaleString('pt-BR')}` : 'vídeos ainda não carregados')),
       sel,
       el('button',{class:'btn', onclick:async e=>{ e.target.disabled=true; try{ await atualizarVideos(ch,true); msg('#msg-canal',`${ch.title}: vídeos atualizados.`,'ok'); }catch(err){ msg('#msg-canal',err.message,'erro'); } renderAjustes(); }},'Atualizar vídeos'),
       el('button',{class:'btn perigo', onclick:()=>{ if(confirm(`Remover ${ch.title} e suas faixas?`)){ DB.channels=DB.channels.filter(c=>c!==ch); DB.slots=DB.slots.filter(s=>s.channelId!==ch.id); delete DB.cache[ch.id]; salvar(); renderAjustes(); } }},'Remover')));
   });
   const sc=$('#slot-canal'); sc.innerHTML=''; DB.channels.forEach(ch=>sc.append(el('option',{value:ch.id},ch.title)));
-  const sd=$('#slot-dias'); if(!sd.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); if(d>=1&&d<=5) cb.checked=true; sd.append(el('label',{},cb,DIAS_CURTO[d])); }
+  const sd=$('#slot-dias'); if(!sd.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); cb.checked=true; sd.append(el('label',{},cb,DIAS_CURTO[d])); }
   const ls=$('#lista-slots'); ls.innerHTML='';
   DB.slots.forEach(s=>{
     const ch=DB.channels.find(c=>c.id===s.channelId);
@@ -658,18 +914,22 @@ function renderAjustes(){
       el('button',{class:'btn perigo', onclick:()=>{ DB.slots=DB.slots.filter(x=>x!==s); salvar(); renderAjustes(); }},'Remover')));
   });
 }
+async function adicionarCanal(entrada, handle){
+  const ch = await resolverCanal(entrada);
+  if(DB.channels.some(c=>c.id===ch.id)) throw new Error('Esse canal já está na lista.');
+  if(handle) ch.handle = handle;
+  DB.channels.push(ch); salvar(); renderAjustes(); msg('#msg-canal',`${ch.title} adicionado. Carregando vídeos…`);
+  await atualizarVideos(ch, true); renderAjustes(); msg('#msg-canal',`${ch.title} pronto: ${DB.cache[ch.id].videos.length} vídeos.`,'ok');
+}
+$('#add-perfil').onclick = ()=>{
+  const nome=$('#perfil-nome').value.trim(); if(!nome) return msg('#msg-perfil','Dê um nome ao perfil.','erro');
+  DB.profiles.push({id:uid(), nome, avatar:avatarSel, limite:+$('#perfil-limite').value||0, canais:[]}); salvar(); $('#perfil-nome').value=''; renderAjustes(); msg('#msg-perfil',`Perfil ${nome} criado.`,'ok');
+};
+$('#salvar-pin').onclick = ()=>{ const v=$('#novo-pin').value; if(!/^\d{4}$/.test(v)) return msg('#msg-pin','O PIN precisa ter 4 números.','erro'); DB.pin=v; salvar(); $('#novo-pin').value=''; msg('#msg-pin','PIN salvo.','ok'); };
+$('#remover-pin').onclick = ()=>{ DB.pin=''; salvar(); msg('#msg-pin','PIN removido.','ok'); };
 $('#salvar-key').onclick = ()=>{ DB.apiKey=$('#apikey').value.trim(); salvar(); msg('#msg-key','Chave salva.','ok'); };
 $('#testar-key').onclick = async ()=>{ DB.apiKey=$('#apikey').value.trim(); salvar(); try{ const j=await yt('channels',{part:'id', forHandle:'YouTube'}); msg('#msg-key', j.items?.length?'Chave válida.':'Resposta inesperada.', j.items?.length?'ok':'erro'); }catch(e){ msg('#msg-key', e.message,'erro'); } };
-$('#add-canal').onclick = async ()=>{
-  const inp=$('#novo-canal'); if(!inp.value.trim()) return; msg('#msg-canal','Buscando canal…');
-  try{
-    const ch = await resolverCanal(inp.value);
-    if(DB.channels.some(c=>c.id===ch.id)) throw new Error('Esse canal já está na lista.');
-    DB.channels.push(ch); salvar(); inp.value=''; renderAjustes();
-    msg('#msg-canal',`${ch.title} adicionado. Carregando vídeos…`);
-    await atualizarVideos(ch, true); renderAjustes(); msg('#msg-canal',`${ch.title} pronto: ${DB.cache[ch.id].videos.length} vídeos.`,'ok');
-  }catch(e){ msg('#msg-canal', e.message, 'erro'); }
-};
+$('#add-canal').onclick = async ()=>{ const inp=$('#novo-canal'); if(!inp.value.trim()) return; msg('#msg-canal','Buscando canal…'); try{ const v=inp.value; inp.value=''; await adicionarCanal(v, (/@([\w.-]+)/.exec(v)||[])[0]); }catch(e){ msg('#msg-canal', e.message, 'erro'); } };
 $('#add-slot').onclick = ()=>{
   const channelId=$('#slot-canal').value, start=$('#slot-ini').value, end=$('#slot-fim').value, mode=$('#slot-modo').value;
   const days=[...$('#slot-dias').querySelectorAll('input:checked')].map(i=>+i.value);
@@ -681,46 +941,37 @@ $('#add-slot').onclick = ()=>{
 $('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
 $('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
 $('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
-$('#exportar').onclick = ()=>{
-  const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'});
-  const a=el('a',{href:URL.createObjectURL(b), download:'grade-tv.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok');
-};
+$('#exportar').onclick = ()=>{ const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'}); const a=el('a',{href:URL.createObjectURL(b), download:'grade-tv.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok'); };
 $('#importar').onclick = ()=>$('#arquivo').click();
-$('#arquivo').onchange = async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  try{ const j=JSON.parse(await f.text()); if(!Array.isArray(j.channels)) throw new Error('Arquivo inválido.'); DB=Object.assign(carregar(), j, {cache:DB.cache}); salvar(); renderAjustes(); msg('#msg-dados','Configuração importada.','ok'); }
-  catch(err){ msg('#msg-dados', err.message, 'erro'); }
-};
+$('#arquivo').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const j=JSON.parse(await f.text()); if(!Array.isArray(j.channels)) throw new Error('Arquivo inválido.'); DB=Object.assign(carregar(), j, {cache:DB.cache}); salvar(); garantirPerfil(); renderAjustes(); msg('#msg-dados','Configuração importada.','ok'); }catch(err){ msg('#msg-dados', err.message, 'erro'); } };
 $('#zerar-hist').onclick = ()=>{ if(confirm('Zerar o histórico de vídeos assistidos de todos os canais?')){ DB.watched={}; DB.occ={}; salvar(); msg('#msg-dados','Histórico zerado.','ok'); } };
 
-// ----- Teclado (controle remoto) -----
+// ----- Teclado / controle remoto -----
 document.addEventListener('keydown', e=>{
-  if($('#ligar').classList.contains('ativa')) return;
+  if(telaAtual==='ligar') return;
+  if($('#pin').classList.contains('ativa')){ if(/^\d$/.test(e.key)) teclaPin(e.key); if(e.key==='Backspace') teclaPin('⌫'); if(e.key==='Enter') teclaPin('OK'); if(e.key==='Escape') $('#pin-cancelar').click(); return; }
   const emCampo = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName);
-  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else ir('canais'); return; }
+  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else if(telaAtual==='ajustes') ir('inicio'); else if(telaAtual!=='inicio') ir('inicio'); return; }
   if(emCampo) return;
   const k=e.key.toLowerCase();
   if(k==='g') return ir('guia');
-  if(k==='a') return ir('ajustes');
-  if(/^[1-9]$/.test(k) && telaAtual!=='ajustes'){ const ch=DB.channels[+k-1]; if(ch) sintonizar(ch); return; }
+  if(k==='a') return abrirPais();
+  if(/^[1-9]$/.test(k) && telaAtual!=='ajustes'){ const ch=canaisDoPerfil()[+k-1]; if(ch) sintonizar(ch); return; }
   if(telaAtual==='player'){
     if(k==='l' && ctxPlayer && !ctxPlayer.linear) $('#livre-lista').classList.toggle('aberta');
-    if(k==='i') mostrarBug();
-    if(k==='f') document.documentElement.requestFullscreen?.();
+    if(k==='i') mostrarHud(); if(k==='f') document.documentElement.requestFullscreen?.(); if(k==='c') $('#btn-fav').click();
     return;
   }
   if(['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key)){
-    const foc=[...document.querySelectorAll('.tela.ativa button:not([hidden])')].filter(b=>b.offsetParent);
+    const foc=[...document.querySelectorAll('.tela.ativa button:not([hidden]), #nav button')].filter(b=>b.offsetParent);
     const i=foc.indexOf(document.activeElement); const dir=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;
     const n=foc[(i+dir+foc.length)%foc.length]; if(n){ n.focus(); e.preventDefault(); }
   }
 });
 
 // ----- Ligar -----
-$('#btn-ligar').onclick = ()=>{ $('#ligar').classList.remove('ativa'); ir('canais'); };
-$('#btn-ligar').focus();
-// Sintonia automática: quando um canal entra no ar e a TV está na tela de canais, mostra o novo estado
-setInterval(()=>{ if(telaAtual==='canais') renderCanais(); }, 30000);
+$('#btn-ligar').onclick = entrar; $('#btn-ligar').focus();
+setInterval(()=>{ if(telaAtual==='inicio') renderInicio(); }, 30000);
 </script>
 </body>
 </html>

@@ -6,12 +6,19 @@ Você cadastra canais e define uma grade (dias e faixas de horário). Ao "ligar 
 
 ## Fase 1 — MVP (este repositório)
 
-Um único `index.html`, sem backend. Tudo fica no `localStorage` do navegador.
+Um único `index.html`, sem backend. Tudo fica no `localStorage` do navegador. Interface clara, redonda e colorida, pensada para criança (estilo app infantil de vídeos), com área dos pais separada.
 
+- **Primeiro acesso** guiado: PIN dos pais → perfil da criança (nome, avatar, limite diário) → chave e canais
+- **Perfis** de criança: avatar, canais liberados, limite de tempo por dia e favoritos próprios
+- **PIN dos pais** protege a área de configuração e a liberação de tempo extra; engrenagem fixa no canto (aparece ao passar o mouse ou tocar, inclusive durante o vídeo)
+- **Limite diário**: ao estourar, tela "Hora de descansar"; os pais liberam +15 min com o PIN
+- **Favoritos** (coração durante o vídeo), reproduzíveis só quando o canal está no ar
+- **Canais sugeridos** verificados, adicionados com um toque
 - Cadastro de canais por link (`youtube.com/@canal`), ID (`UC…`) ou playlist
 - Grade de horários por canal: dias da semana, início, fim e modo (linear ou livre)
 - Tela de canais com o que está **no ar agora** e quando cada canal **volta**
-- Tela **fora do ar** com chuvisco e contagem regressiva (sintoniza sozinho quando o horário chega)
+- Tela **fora do ar** lúdica ("o canal está dormindo") com contagem regressiva (sintoniza sozinho quando o horário chega)
+- Início com bolhas dos canais, **No ar agora** (com a capa do vídeo que está passando e barra de progresso), **Daqui a pouco** e **Dormindo**
 - Modo **linear**: calcula qual vídeo está passando e em que segundo, bloqueia pausa/avanço, segue a fila e marca os vídeos assistidos (sem repetir até esgotar a fila)
 - Modo **livre**: dentro do horário você escolhe o vídeo e usa os controles normais
 - Guia de programação (EPG) por dia, com a linha do "agora"
@@ -21,7 +28,7 @@ Um único `index.html`, sem backend. Tudo fica no `localStorage` do navegador.
 ## Como usar
 
 1. Crie uma chave gratuita da **YouTube Data API v3**: crie um projeto no Google Cloud, [ative a API](https://console.cloud.google.com/apis/library/youtube.googleapis.com) e gere a chave na [página de credenciais](https://console.cloud.google.com/apis/credentials) (Criar credenciais → Chave de API). Guia oficial: [Obtaining authorization credentials](https://developers.google.com/youtube/registering_an_application). Restrinja a chave à API do YouTube e ao domínio onde a página vai rodar.
-2. Abra o `index.html` (localmente ou pelo GitHub Pages), vá em **Ajustes** (tecla `A`), cole a chave e clique em **Testar**.
+2. Abra o `index.html` no Chrome (localmente ou pelo GitHub Pages). No primeiro acesso, crie o PIN dos pais e o perfil da criança; em seguida, na área dos pais (engrenagem no canto), cole a chave e clique em **Testar**.
 3. Adicione os canais e as faixas de horário.
 4. Volte para a tela de canais e sintonize.
 
