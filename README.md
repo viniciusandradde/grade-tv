@@ -20,7 +20,7 @@ Um único `index.html`, sem backend. Tudo fica no `localStorage` do navegador.
 
 ## Como usar
 
-1. Crie uma chave gratuita da **YouTube Data API v3** no [Google Cloud Console](https://console.cloud.google.com/apis/library/youtube.googleapis.com). Restrinja a chave ao domínio onde a página vai rodar.
+1. Crie uma chave gratuita da **YouTube Data API v3**: crie um projeto no Google Cloud, [ative a API](https://console.cloud.google.com/apis/library/youtube.googleapis.com) e gere a chave na [página de credenciais](https://console.cloud.google.com/apis/credentials) (Criar credenciais → Chave de API). Guia oficial: [Obtaining authorization credentials](https://developers.google.com/youtube/registering_an_application). Restrinja a chave à API do YouTube e ao domínio onde a página vai rodar.
 2. Abra o `index.html` (localmente ou pelo GitHub Pages), vá em **Ajustes** (tecla `A`), cole a chave e clique em **Testar**.
 3. Adicione os canais e as faixas de horário.
 4. Volte para a tela de canais e sintonize.
