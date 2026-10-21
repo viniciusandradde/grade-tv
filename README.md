@@ -35,7 +35,7 @@ No modo **linear**, o vídeo já está em andamento quando a criança sintoniza,
 | **Favoritos** com o coração, que só tocam quando o canal está no ar | **Guia de programação** da semana, com a linha do "agora" |
 | Funciona com controle remoto: setas, OK, números 1–9, Voltar | Canais sugeridos verificados, adicionados com um toque |
 | Nada de Shorts, lives nem "próximo vídeo" automático | Exportar/importar a configuração em JSON |
-| **Hora de dormir**: nos horários de bloqueio a TV inteira dorme, e quem aparece é o **Dodó**, o cachorrinho detetive dorminhoco, em três cenas (noite, soneca da tarde, manhã cedo) | **Horários de bloqueio** por dia da semana, com cena automática pela hora; os pais liberam com o PIN |
+| **Hora de dormir**: nos horários de bloqueio a TV inteira dorme, e quem aparece é o detetive dormindo, em três cenas (noite, fim de tarde, manhã cedo) | **Horários de bloqueio** por dia da semana, com cena automática pela hora; os pais liberam com o PIN |
 
 Tudo roda com o player oficial do YouTube e a API oficial do YouTube. A Hora do Desenho não hospeda, não baixa e não reencoda nada: ela apenas decide **quando** cada canal pode aparecer.
 
@@ -107,7 +107,7 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 - [x] Fase 1 — MVP no navegador, grade de horários, modo linear e livre
 - [x] Fase 1.5 — interface lúdica, perfis, PIN, limite diário, favoritos
 - [x] Fase 2 — app Android TV como tela inicial, APK automático; celular em retrato
-- [x] Fase 2.5 — tela de bloqueio com o Dodó dormindo e horários de bloqueio
+- [x] Fase 2.5 — tela de bloqueio com o detetive dormindo e horários de bloqueio
 - [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
 - [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
 

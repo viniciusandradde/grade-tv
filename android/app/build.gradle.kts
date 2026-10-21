@@ -7,6 +7,7 @@ plugins {
 val webDir = layout.buildDirectory.dir("generated/web").get().asFile
 val copyWeb by tasks.registering(Copy::class) {
     from(rootProject.projectDir.resolve("../index.html"))
+    from(rootProject.projectDir.resolve("../img")) { into("img") }
     into(webDir)
 }
 
@@ -18,8 +19,8 @@ android {
         applicationId = "br.com.vsa.horadodesenho"
         minSdk = 21
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.3.1"
     }
 
     sourceSets["main"].assets.srcDir(webDir)
