@@ -111,6 +111,10 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 - [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
 - [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
 
+## Tempo em Família (app irmão, para os pais)
+
+Em `apps/tempo-em-familia/` há um segundo app, bem pequeno, para o celular **dos pais**: nos horários marcados ele trava o telefone numa tela com as fotos da família (carrossel) e só libera com senha. Serve para o jantar, a hora de dormir das crianças ou qualquer momento em que o celular deva ficar de lado. As fotos ficam apenas no aparelho. APK na página de Releases (`tempo-em-familia.apk`).
+
 ## Quem faz
 
 A Hora do Desenho é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Hora do Desenho nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com o mesmo cuidado profissional dos nossos produtos: código aberto, sem coleta de dados e com suporte pelas issues do repositório.

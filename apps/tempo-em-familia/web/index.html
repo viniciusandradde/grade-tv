@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tempo em Família</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#101418; --card:#1A2026; --linha:#2A323B; --ink:#F2F0EA; --dim:#9AA3AD; --ouro:#E9C46A; --verde:#4CC38A; --vermelho:#E5606E; --azul:#5FA8FF; --raio:18px }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:"Nunito",system-ui,sans-serif; font-size:15px; line-height:1.45; -webkit-text-size-adjust:100%}
+  button{font:inherit; color:inherit; cursor:pointer; border:0; background:none}
+  input,select{font:inherit; color:inherit}
+  h1,h2,h3{margin:0; font-weight:800; line-height:1.15}
+  h1{font-size:24px} h2{font-size:17px; color:var(--dim); margin:22px 0 8px}
+  :focus-visible{outline:3px solid var(--azul); outline-offset:2px; border-radius:12px}
+  .tela{display:none; position:fixed; inset:0; overflow:auto; padding:max(18px,env(safe-area-inset-top)) 18px 40px}
+  .tela.ativa{display:block}
+  .painel{background:var(--card); border-radius:var(--raio); padding:16px; margin-top:10px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:999px; background:var(--linha); font-weight:800; width:100%; margin-top:10px}
+  .btn.p{background:var(--ouro); color:#1a1405}
+  .btn.perigo{color:var(--vermelho)}
+  .btn.peq{width:auto; padding:8px 14px; margin:0; font-size:14px}
+  input[type=text],input[type=password],input[type=time]{width:100%; background:#0C1014; border:2px solid var(--linha); color:var(--ink); border-radius:12px; padding:11px 12px; margin-top:6px}
+  input:focus-visible{outline:none; border-color:var(--azul)}
+  label.c{display:block; font-size:13px; color:var(--dim); font-weight:700; margin-top:12px}
+  .dias{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
+  .dias label{background:#0C1014; border:2px solid var(--linha); border-radius:999px; padding:6px 11px; font-size:13px; font-weight:800}
+  .dias label:has(input:checked){background:var(--azul); border-color:var(--azul); color:#06131f}
+  .dias input{display:none}
+  .lista{list-style:none; padding:0; margin:8px 0 0}
+  .lista li{display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--linha)}
+  .lista li .cresce{flex:1; font-weight:800} .lista small{display:block; color:var(--dim); font-weight:600}
+  .msg{min-height:1.4em; margin-top:8px; color:var(--dim); font-weight:700}
+  .msg.erro{color:var(--vermelho)} .msg.ok{color:var(--verde)}
+  .status{display:flex; align-items:center; gap:12px}
+  .status .bola{width:14px; height:14px; border-radius:50%; background:var(--verde); flex:none}
+  .status.bloq .bola{background:var(--vermelho)}
+  .fotinha{width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:14px; background:#0C1014; display:block; margin-top:8px}
+  .perm{display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--linha)}
+  .perm .cresce{flex:1} .perm .ok{color:var(--verde); font-weight:800} .perm .nao{color:var(--ouro); font-weight:800}
+  .topo{display:flex; align-items:center; gap:10px; margin-bottom:6px}
+  .topo .espaco{flex:1}
+  .icone{width:42px; height:42px; border-radius:50%; background:var(--card); display:grid; place-items:center; font-size:20px}
+
+  /* ----- bloqueio ----- */
+  #tela-bloqueio{padding:0; background:#000}
+  #tela-bloqueio .foto{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 1.4s ease, transform 9s linear; transform:scale(1.04)}
+  #tela-bloqueio .foto.on{opacity:1; transform:scale(1.12)}
+  .pontos{position:absolute; left:0; right:0; bottom:max(10px,env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:6px}
+  .pontos i{width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.45)} .pontos i.on{background:#fff}
+  .minis{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px}
+  .minis div{position:relative; aspect-ratio:1; border-radius:12px; overflow:hidden; background:#0C1014}
+  .minis img{width:100%; height:100%; object-fit:cover; display:block}
+  .minis button{position:absolute; top:4px; right:4px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; font-size:14px; line-height:26px; text-align:center}
+  #tela-bloqueio .veu{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,.75) 100%)}
+  #tela-bloqueio .conteudo{position:absolute; left:0; right:0; bottom:0; padding:20px 22px max(28px,env(safe-area-inset-bottom)); text-align:center}
+  #tela-bloqueio .hora{position:absolute; top:max(26px,env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:64px; font-weight:800; letter-spacing:.02em; text-shadow:0 2px 14px rgba(0,0,0,.6); font-variant-numeric:tabular-nums}
+  #tela-bloqueio .frase{font-size:22px; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  #tela-bloqueio .ate{color:#E8E6DF; margin-top:4px; font-weight:700; text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  #tela-bloqueio .conta{font-size:30px; font-weight:800; font-variant-numeric:tabular-nums; text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  #tela-bloqueio .btn{width:auto; background:rgba(255,255,255,.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); margin-top:14px}
+  #tela-bloqueio .btn:hover{background:rgba(255,255,255,.26)}
+  .sem-foto{position:absolute; inset:0; background:linear-gradient(160deg,#1b2a3a,#101418); display:grid; place-items:center; font-size:90px}
+
+  /* ----- senha ----- */
+  #senha{display:none; position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.72); align-items:flex-end; justify-content:center; padding:16px}
+  #senha.ativa{display:flex}
+  .caixa{background:var(--card); border-radius:22px; padding:20px; width:100%; max-width:420px}
+  .caixa h3{font-size:18px}
+  .caixa p{color:var(--dim); margin:4px 0 8px; font-weight:700}
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+</style>
+</head>
+<body>
+
+<!-- Primeiro acesso -->
+<section id="tela-setup" class="tela">
+  <h1>Tempo em Família</h1>
+  <p style="color:var(--dim); font-weight:700">Nos horários que você marcar, o celular trava numa tela com a foto da sua família. Só sai com a sua senha.</p>
+  <div class="painel">
+    <h3>1 · Crie a sua senha</h3>
+    <label class="c">Senha (mínimo 4 caracteres)<input type="password" id="setup-s1" autocomplete="new-password"></label>
+    <label class="c">Repita<input type="password" id="setup-s2" autocomplete="new-password"></label>
+    <div class="msg" id="msg-setup"></div>
+    <button class="btn p" id="setup-ok">Continuar</button>
+  </div>
+</section>
+
+<!-- Início -->
+<section id="tela-inicio" class="tela">
+  <div class="topo"><h1>Tempo em Família</h1><div class="espaco"></div><button class="icone" id="btn-ajustes" aria-label="Ajustes">⚙️</button></div>
+  <div class="painel">
+    <div class="status" id="status"><span class="bola"></span><div><strong id="status-t">Livre</strong><div id="status-s" style="color:var(--dim); font-weight:700"></div></div></div>
+  </div>
+  <div class="painel">
+    <div class="minis" id="minis-ini"></div>
+    <div id="sem-foto-ini" style="color:var(--dim); font-weight:700; text-align:center; padding:18px 0">Nenhuma foto ainda — escolha nos ajustes.</div>
+  </div>
+  <h2>Horários de bloqueio</h2>
+  <div class="painel"><ul class="lista" id="lista-ini"></ul></div>
+  <button class="btn" id="btn-bloquear-agora">🔒 Bloquear agora por 30 min</button>
+</section>
+
+<!-- Ajustes (senha) -->
+<section id="tela-ajustes" class="tela">
+  <div class="topo"><button class="icone" data-ir="inicio" aria-label="Voltar">←</button><h1>Ajustes</h1></div>
+
+  <h2>Fotos da família</h2>
+  <div class="painel">
+    <div class="minis" id="minis-adm"></div>
+    <button class="btn" id="btn-foto">📷 Adicionar fotos da galeria</button>
+    <p style="color:var(--dim); font-weight:700; margin:8px 0 0; font-size:13px">As fotos ficam só neste celular. Na tela de bloqueio elas passam em carrossel.</p>
+    <label class="c">Frase na tela de bloqueio<input type="text" id="frase" placeholder="Agora é hora deles."></label>
+    <button class="btn peq" id="salvar-frase" style="margin-top:10px">Salvar frase</button>
+    <div class="msg" id="msg-frase"></div>
+  </div>
+
+  <h2>Horários</h2>
+  <div class="painel">
+    <div style="display:flex; gap:10px"><label class="c" style="flex:1; margin:0">Início<input type="time" id="h-ini" value="19:00"></label><label class="c" style="flex:1; margin:0">Fim<input type="time" id="h-fim" value="21:00"></label></div>
+    <label class="c">Dias<div class="dias" id="h-dias"></div></label>
+    <button class="btn p" id="add-h">Adicionar horário</button>
+    <div class="msg" id="msg-h"></div>
+    <ul class="lista" id="lista-h"></ul>
+  </div>
+
+  <h2>Permissões do Android</h2>
+  <div class="painel" id="perms">
+    <div class="perm"><div class="cresce"><strong>Exibir sobre outros apps</strong><small style="display:block;color:var(--dim)">Necessária para o app abrir sozinho na hora do bloqueio.</small></div><span id="p-sobre"></span><button class="btn peq" id="b-sobre">Permitir</button></div>
+    <div class="perm"><div class="cresce"><strong>Alarmes exatos</strong><small style="display:block;color:var(--dim)">Para acertar o minuto exato (Android 12+).</small></div><span id="p-alarme"></span><button class="btn peq" id="b-alarme">Permitir</button></div>
+    <p style="color:var(--dim); font-weight:700; margin:10px 0 0">Na primeira vez que o bloqueio ativar, o Android pergunta "Fixar este app?" — confirme. Para desfixar sem a senha do app é preciso a senha de tela do celular.</p>
+  </div>
+
+  <h2>Senha</h2>
+  <div class="painel">
+    <label class="c">Nova senha<input type="password" id="nova-s1" autocomplete="new-password"></label>
+    <label class="c">Repita<input type="password" id="nova-s2" autocomplete="new-password"></label>
+    <button class="btn" id="trocar-senha">Trocar senha</button>
+    <div class="msg" id="msg-senha"></div>
+  </div>
+</section>
+
+<!-- Bloqueio -->
+<section id="tela-bloqueio" class="tela">
+  <div class="sem-foto" id="sem-foto">👨‍👩‍👧</div>
+  <div id="carrossel"></div>
+  <div class="veu"></div>
+  <div class="pontos" id="pontos"></div>
+  <div class="hora" id="bloq-hora">--:--</div>
+  <div class="conteudo">
+    <div class="frase" id="bloq-frase">Agora é hora deles.</div>
+    <div class="ate" id="bloq-ate"></div>
+    <div class="conta" id="bloq-conta"></div>
+    <button class="btn" id="bloq-liberar">🔓 Liberar com a senha</button>
+  </div>
+</section>
+
+<!-- Senha -->
+<div id="senha" role="dialog" aria-modal="true">
+  <div class="caixa">
+    <h3 id="senha-t">Senha</h3><p id="senha-p">Digite a sua senha para continuar.</p>
+    <input type="password" id="senha-in" autocomplete="current-password">
+    <div class="msg erro" id="senha-erro"></div>
+    <div style="display:flex; gap:10px"><button class="btn" id="senha-cancel">Cancelar</button><button class="btn p" id="senha-ok">Entrar</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const el = (tag, attrs={}, ...kids) => { const n=document.createElement(tag); for(const [k,v] of Object.entries(attrs)){ if(k==='class') n.className=v; else if(k.startsWith('on')) n.addEventListener(k.slice(2),v); else if(v!==false&&v!=null) n.setAttribute(k,v);} for(const k of kids){ if(k==null) continue; n.append(k.nodeType?k:document.createTextNode(k)); } return n; };
+const DIAS = ['dom','seg','ter','qua','qui','sex','sáb'], DIAS_L=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const pad = n => String(n).padStart(2,'0'); const fmt = d => pad(d.getHours())+':'+pad(d.getMinutes());
+const uid = () => Math.random().toString(36).slice(2,9);
+const P = window.Familia || null; // ponte nativa
+
+// ---------- dados ----------
+const CHAVE='tempoemfamilia.v1';
+function lerJSON(t){ try{ return t?JSON.parse(t):null; }catch(e){ return null; } }
+let DB = (()=>{ const base={senha:'', frase:'Agora é hora deles.', horarios:[], override:0, manual:0, ts:0, setup:false};
+  let a=null,b=null; try{ a=lerJSON(localStorage.getItem(CHAVE)); }catch(e){} try{ if(P) b=lerJSON(P.carregarDados()); }catch(e){}
+  const s=(a&&b)?(((b.ts||0)>(a.ts||0))?b:a):(a||b); return s?Object.assign(base,s):base; })();
+let salvarT=null;
+function salvar(){ DB.ts=Date.now(); const j=JSON.stringify(DB); try{ localStorage.setItem(CHAVE,j); }catch(e){} if(P){ clearTimeout(salvarT); salvarT=setTimeout(()=>{ try{ P.salvarDados(JSON.stringify(DB)); }catch(e){} },200); } }
+window.addEventListener('pagehide', ()=>{ if(P){ try{ P.salvarDados(JSON.stringify(DB)); }catch(e){} } });
+
+// ---------- senha (SHA-256) ----------
+function sha256(str){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b=new TextEncoder().encode(str); const l=b.length; const n=((l+9+63)>>6)<<6; const m=new Uint8Array(n); m.set(b); m[l]=0x80; const dv=new DataView(m.buffer); dv.setUint32(n-4,(l*8)>>>0); dv.setUint32(n-8,Math.floor(l*8/4294967296));
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]; const w=new Uint32Array(64); const r=(x,k)=>(x>>>k)|(x<<(32-k));
+  for(let i=0;i<n;i+=64){ for(let t=0;t<16;t++) w[t]=dv.getUint32(i+t*4); for(let t=16;t<64;t++){ const s0=r(w[t-15],7)^r(w[t-15],18)^(w[t-15]>>>3), s1=r(w[t-2],17)^r(w[t-2],19)^(w[t-2]>>>10); w[t]=(w[t-16]+s0+w[t-7]+s1)>>>0; }
+    let [a,b2,c,d,e,f,g,h]=H; for(let t=0;t<64;t++){ const S1=r(e,6)^r(e,11)^r(e,25), ch=(e&f)^(~e&g), t1=(h+S1+ch+K[t]+w[t])>>>0, S0=r(a,2)^r(a,13)^r(a,22), mj=(a&b2)^(a&c)^(b2&c), t2=(S0+mj)>>>0; h=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b2; b2=a; a=(t1+t2)>>>0; }
+    H=[a,b2,c,d,e,f,g,h].map((v,k)=>(H[k]+v)>>>0); }
+  return H.map(v=>v.toString(16).padStart(8,'0')).join('');
+}
+const hash = s => sha256('tempoemfamilia|'+s);
+
+// ---------- horários ----------
+const hm = s => { const [h,m]=s.split(':').map(Number); return h*60+m; };
+function ocorrencias(h, agora){ const out=[]; const ini=hm(h.start), fim=hm(h.end); const dur=(fim>ini?fim-ini:1440-ini+fim)*60000;
+  for(let d=-1; d<=7; d++){ const dia=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()+d); if(!h.days.includes(dia.getDay())) continue;
+    const start=new Date(dia.getFullYear(),dia.getMonth(),dia.getDate(),Math.floor(ini/60),ini%60); out.push({start,end:new Date(start.getTime()+dur)}); } return out; }
+function bloqueioAtual(agora=new Date()){
+  if(DB.manual && DB.manual>agora.getTime()) return {start:new Date(agora.getTime()-1), end:new Date(DB.manual), manual:true};
+  for(const h of DB.horarios) for(const o of ocorrencias(h,agora)) if(o.start<=agora && agora<o.end){ if(DB.override===o.end.getTime()) return null; return o; }
+  return null;
+}
+function proximoBloqueio(agora=new Date()){ let b=null; for(const h of DB.horarios) for(const o of ocorrencias(h,agora)) if(o.start>agora && (!b||o.start<b.start)) b=o; return b; }
+function quando(d, agora=new Date()){ const am=new Date(agora); am.setDate(am.getDate()+1); const pref = d.toDateString()===agora.toDateString()?'hoje':(d.toDateString()===am.toDateString()?'amanhã':DIAS_L[d.getDay()]); return `${pref} às ${fmt(d)}`; }
+function agendarNativo(){ if(P){ try{ P.agendar(JSON.stringify(DB.horarios)); }catch(e){} } }
+
+// ---------- telas ----------
+let tela='';
+function ir(nome){ if(nome==='inicio'){ const b=bloqueioAtual(); if(b){ mostrarBloqueio(b); return; } }
+  document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); $('#tela-'+nome).classList.add('ativa'); tela=nome;
+  if(nome!=='bloqueio'){ clearInterval(carT); clearInterval(bloqT); }
+  if(nome==='inicio') renderInicio(); if(nome==='ajustes') renderAjustes();
+  if(P){ try{ if(nome==='bloqueio'){ if(!P.travado()) P.travar(true); } else if(P.travado()) P.travar(false); }catch(e){} }
+}
+document.querySelectorAll('[data-ir]').forEach(b=>b.addEventListener('click', ()=>ir(b.dataset.ir)));
+function fotos(){ try{ return P ? JSON.parse(P.listarFotos()) : []; }catch(e){ return []; } }
+const urlFoto = n => 'https://appassets.androidplatform.net/foto/'+n;
+function mostrarFotos(){ const fs=fotos(); $('#sem-foto-ini').hidden=!!fs.length;
+  for(const [id,adm] of [['minis-ini',false],['minis-adm',true]]){ const g=$('#'+id); g.innerHTML=''; for(const n of fs){ const d=el('div',{}, el('img',{src:urlFoto(n), alt:'', loading:'lazy'})); if(adm) d.append(el('button',{'aria-label':'Remover', onclick:()=>{ try{ P.removerFoto(n); }catch(e){} mostrarFotos(); }},'✕')); g.append(d); } }
+  if(!fs.length && !P) $('#sem-foto-ini').textContent='As fotos são escolhidas dentro do app Android.'; }
+window.fotosAtualizadas = ()=>mostrarFotos();
+
+function renderInicio(){
+  const agora=new Date(), b=bloqueioAtual(agora), prox=proximoBloqueio(agora);
+  $('#status').classList.toggle('bloq', !!b);
+  $('#status-t').textContent = b ? 'Bloqueado' : 'Livre';
+  $('#status-s').textContent = b ? `até ${fmt(b.end)}` : (prox ? `Próximo bloqueio ${quando(prox.start, agora)}` : 'Nenhum horário marcado');
+  mostrarFotos();
+  const l=$('#lista-ini'); l.innerHTML='';
+  if(!DB.horarios.length) l.append(el('li',{}, el('div',{class:'cresce', style:'color:var(--dim)'}, 'Nenhum horário. Toque em ⚙️ para adicionar.')));
+  for(const h of DB.horarios) l.append(el('li',{}, el('div',{class:'cresce'}, `${h.start} – ${h.end}`, el('small',{}, h.days.map(d=>DIAS[d]).join(', ')))));
+}
+function renderAjustes(){
+  mostrarFotos(); $('#frase').value=DB.frase;
+  const hd=$('#h-dias'); if(!hd.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); cb.checked=true; hd.append(el('label',{},cb,DIAS[d])); }
+  const l=$('#lista-h'); l.innerHTML='';
+  for(const h of DB.horarios) l.append(el('li',{}, el('div',{class:'cresce'}, `${h.start} – ${h.end}`, el('small',{}, h.days.map(d=>DIAS[d]).join(', '))), el('button',{class:'btn peq perigo', onclick:()=>{ DB.horarios=DB.horarios.filter(x=>x!==h); salvar(); agendarNativo(); renderAjustes(); }},'Remover')));
+  renderPerms();
+}
+function renderPerms(){
+  if(!P){ $('#perms').innerHTML='<p style="color:var(--dim);font-weight:700;margin:0">Permissões aparecem só dentro do app Android.</p>'; return; }
+  let so=false, al=false; try{ so=P.temSobreposicao(); al=P.temAlarmeExato(); }catch(e){}
+  $('#p-sobre').textContent = so?'✓':'pendente'; $('#p-sobre').className = so?'ok':'nao'; $('#b-sobre').hidden=so;
+  $('#p-alarme').textContent = al?'✓':'pendente'; $('#p-alarme').className = al?'ok':'nao'; $('#b-alarme').hidden=al;
+}
+$('#b-sobre').onclick = ()=>{ try{ P.pedirSobreposicao(); }catch(e){} };
+$('#b-alarme').onclick = ()=>{ try{ P.pedirAlarmeExato(); }catch(e){} };
+$('#btn-foto').onclick = ()=>{ if(P) P.escolherFotos(); else alert('A escolha de fotos funciona dentro do app Android.'); };
+$('#salvar-frase').onclick = ()=>{ DB.frase=$('#frase').value.trim()||'Agora é hora deles.'; salvar(); $('#msg-frase').textContent='Frase salva.'; $('#msg-frase').className='msg ok'; };
+$('#add-h').onclick = ()=>{
+  const start=$('#h-ini').value, end=$('#h-fim').value, days=[...$('#h-dias').querySelectorAll('input:checked')].map(i=>+i.value);
+  if(!start||!end||start===end){ $('#msg-h').textContent='Informe início e fim diferentes.'; $('#msg-h').className='msg erro'; return; }
+  if(!days.length){ $('#msg-h').textContent='Marque pelo menos um dia.'; $('#msg-h').className='msg erro'; return; }
+  DB.horarios.push({id:uid(), start, end, days}); salvar(); agendarNativo(); renderAjustes(); $('#msg-h').textContent='Horário adicionado.'; $('#msg-h').className='msg ok';
+};
+$('#trocar-senha').onclick = ()=>{ const a=$('#nova-s1').value, b=$('#nova-s2').value; const m=$('#msg-senha');
+  if(a.length<4){ m.textContent='Mínimo de 4 caracteres.'; m.className='msg erro'; return; } if(a!==b){ m.textContent='As senhas não conferem.'; m.className='msg erro'; return; }
+  DB.senha=hash(a); salvar(); $('#nova-s1').value=$('#nova-s2').value=''; m.textContent='Senha trocada.'; m.className='msg ok'; };
+
+// ---------- setup ----------
+$('#setup-ok').onclick = ()=>{ const a=$('#setup-s1').value, b=$('#setup-s2').value; const m=$('#msg-setup');
+  if(a.length<4){ m.textContent='Mínimo de 4 caracteres.'; m.className='msg erro'; return; } if(a!==b){ m.textContent='As senhas não conferem.'; m.className='msg erro'; return; }
+  DB.senha=hash(a); DB.setup=true; salvar(); ir('ajustes'); };
+
+// ---------- senha (diálogo) ----------
+let senhaCb=null;
+function pedirSenha(cb){ senhaCb=cb; $('#senha-in').value=''; $('#senha-erro').textContent=''; $('#senha').classList.add('ativa'); setTimeout(()=>$('#senha-in').focus(),50); }
+$('#senha-ok').onclick = ()=>{ if(hash($('#senha-in').value)===DB.senha){ $('#senha').classList.remove('ativa'); const cb=senhaCb; senhaCb=null; cb&&cb(); } else { $('#senha-erro').textContent='Senha incorreta.'; $('#senha-in').value=''; } };
+$('#senha-cancel').onclick = ()=>{ $('#senha').classList.remove('ativa'); senhaCb=null; };
+$('#senha-in').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#senha-ok').click(); });
+$('#btn-ajustes').onclick = ()=>pedirSenha(()=>ir('ajustes'));
+
+// ---------- bloqueio ----------
+let bloqT=null, carT=null, carI=0;
+function carrossel(fs){ clearInterval(carT); const c=$('#carrossel'), pts=$('#pontos'); c.innerHTML=''; pts.innerHTML=''; if(!fs.length) return;
+  fs.forEach((n,i)=>{ c.append(el('img',{class:'foto'+(i===0?' on':''), src:urlFoto(n), alt:''})); pts.append(el('i',{class:i===0?'on':''})); });
+  carI=0; if(fs.length>1) carT=setInterval(()=>{ carI=(carI+1)%fs.length; [...c.children].forEach((im,i)=>im.classList.toggle('on', i===carI)); [...pts.children].forEach((p,i)=>p.classList.toggle('on', i===carI)); }, 8000); }
+function mostrarBloqueio(b){
+  clearInterval(bloqT); ir('bloqueio');
+  const fs=fotos(); $('#sem-foto').hidden=!!fs.length; carrossel(fs);
+  $('#bloq-frase').textContent = DB.frase;
+  const tick=()=>{ const agora=new Date(); $('#bloq-hora').textContent=fmt(agora);
+    if(agora>=b.end || !bloqueioAtual(agora)){ clearInterval(bloqT); ir('inicio'); return; }
+    $('#bloq-ate').textContent = 'Libera ' + quando(b.end, agora);
+    const s=Math.max(0,Math.floor((b.end-agora)/1000)); $('#bloq-conta').textContent = pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60); };
+  tick(); bloqT=setInterval(tick,1000);
+}
+$('#bloq-liberar').onclick = ()=>pedirSenha(()=>{ const b=bloqueioAtual(); if(b){ if(b.manual) DB.manual=0; else DB.override=b.end.getTime(); salvar(); } clearInterval(bloqT); ir('inicio'); });
+$('#btn-bloquear-agora').onclick = ()=>{ DB.manual=Date.now()+30*60000; salvar(); verificar(); };
+window.verificar = ()=>{ if(!DB.setup) return; const b=bloqueioAtual(); if(b && tela!=='bloqueio' && tela!=='ajustes') mostrarBloqueio(b); else if(!b && tela==='bloqueio') ir('inicio'); else if(tela==='inicio') renderInicio(); };
+setInterval(verificar, 5000);
+
+// ---------- teclado / voltar ----------
+document.addEventListener('keydown', e=>{ if(e.key!=='Escape') return; if($('#senha').classList.contains('ativa')) return $('#senha-cancel').click(); if(tela==='ajustes') ir('inicio'); /* bloqueio: Voltar não sai */ });
+
+// ---------- início ----------
+if(!DB.setup) ir('setup'); else { const b=bloqueioAtual(); if(b) mostrarBloqueio(b); else ir('inicio'); }
+agendarNativo();
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+name: Tempo em Família APK
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/tempo-em-familia/**", ".github/workflows/tempo-em-familia.yml"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Publicar Release com esta tag (ex.: familia-v0.1.0). Vazio = só compilar."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v3
+        with: { gradle-version: "8.9" }
+      - name: Build debug APK
+        run: gradle -p apps/tempo-em-familia assembleDebug --no-daemon
+      - name: Rename APK
+        run: cp apps/tempo-em-familia/app/build/outputs/apk/debug/app-debug.apk tempo-em-familia.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: tempo-em-familia-apk, path: tempo-em-familia.apk }
+      - name: Publish release
+        if: inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: Tempo em Família ${{ inputs.release_tag }}
+          files: tempo-em-familia.apk
+          generate_release_notes: false
+          body: "App pessoal: bloqueia o celular nos horários marcados, com a foto da família; libera só com a senha."
