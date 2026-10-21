@@ -258,7 +258,7 @@
   .tema-manha{--c1:#FFB8A8; --c2:#FFE6C2; --tx:#1F2340}
   #tela-bloqueio.tema-tarde h2,#tela-bloqueio.tema-manha h2{color:var(--ink); text-shadow:none}
   #tela-bloqueio.tema-tarde p,#tela-bloqueio.tema-manha p{color:var(--dim); text-shadow:none}
-  .resp{transform-origin:170px 150px; animation:respira 3.2s ease-in-out infinite}
+  .resp{transform-origin:190px 200px; animation:respira 3.2s ease-in-out infinite}
   @keyframes respira{50%{transform:scale(1.025,1.04)}}
   .zzz text{animation:flutua 3s ease-in-out infinite; opacity:0}
   .zzz text:nth-child(2){animation-delay:.8s} .zzz text:nth-child(3){animation-delay:1.6s}
@@ -1093,23 +1093,60 @@ function temaDoBloqueio(o){
   const h = o.start.getHours(); if(h>=18 || h<5) return 'noite'; if(h>=11 && h<17) return 'tarde'; return 'manha';
 }
 const MASCOTE = `
+  <defs>
+  <radialGradient id="pelo" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#E8B778"/><stop offset="1" stop-color="#C3833F"/></radialGradient>
+  <radialGradient id="peloEsc" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#A66A33"/><stop offset="1" stop-color="#7A4A20"/></radialGradient>
+  <radialGradient id="creme" cx="45%" cy="35%" r="75%"><stop offset="0" stop-color="#FFF4E0"/><stop offset="1" stop-color="#F0D3A8"/></radialGradient>
+  <linearGradient id="touca" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5AA2FF"/><stop offset="1" stop-color="#2F6FE0"/></linearGradient>
+  <clipPath id="clipTouca"><path d="M96 96 C 110 50, 190 34, 236 44 C 262 50, 280 70, 290 92 C 270 80, 250 84, 236 96 C 214 70, 150 70, 124 102 Z"/></clipPath>
+</defs>
   <g class="resp">
-    <path d="M255 125 q45 -35 32 5 q-6 22 -30 12" fill="#C98A4B"/>
-    <ellipse cx="170" cy="135" rx="95" ry="52" fill="#C98A4B"/>
-    <ellipse cx="190" cy="152" rx="60" ry="26" fill="#F3D9B1"/>
-    <ellipse cx="125" cy="170" rx="22" ry="11" fill="#F3D9B1"/><ellipse cx="158" cy="174" rx="22" ry="11" fill="#F3D9B1"/>
-    <circle cx="105" cy="118" r="48" fill="#C98A4B"/>
-    <path d="M68 92 q-34 28 -12 72 q22 12 38 -24 z" fill="#8E5A2B"/>
-    <ellipse cx="90" cy="138" rx="30" ry="19" fill="#F3D9B1"/>
-    <ellipse cx="67" cy="131" rx="9" ry="7" fill="#2A2A3A"/>
-    <path d="M96 108 q8 7 16 0" stroke="#2A2A3A" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <circle cx="120" cy="131" r="7" fill="#FFB3BA" opacity=".85"/>
-    <path d="M62 86 q38 -56 100 -26 l-6 12 q-48 -18 -86 24 z" fill="#3D8BFF"/>
-    <path d="M62 86 q20 -10 40 -2" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/>
-    <circle cx="164" cy="60" r="10" fill="#FFC53D"/>
-    <g class="zzz" font-family="Fredoka, sans-serif" font-weight="700" fill="#9B5CFF">
-      <text x="150" y="66" font-size="22">z</text><text x="172" y="44" font-size="30">Z</text><text x="200" y="20" font-size="40">Z</text>
-    </g>
+<ellipse cx="190" cy="206" rx="130" ry="16" fill="#000" opacity=".10"/>
+<!-- rabo -->
+<path d="M292 142 C 330 118, 336 160, 300 170 C 290 173, 282 166, 286 158" fill="none" stroke="url(#peloEsc)" stroke-width="22" stroke-linecap="round"/>
+<path d="M300 170 C 290 173, 282 166, 286 158" fill="none" stroke="#FFF4E0" stroke-width="12" stroke-linecap="round"/>
+<!-- corpo -->
+<path d="M120 200 C 90 200, 84 150, 118 128 C 150 108, 240 100, 282 128 C 318 152, 306 200, 262 202 Z" fill="url(#pelo)"/>
+<path d="M160 202 C 150 180, 190 158, 236 164 C 268 168, 276 200, 258 202 Z" fill="url(#creme)"/>
+<!-- orelha de trás (pende à direita da cabeça) -->
+<path d="M196 98 C 226 96, 244 128, 236 158 C 230 176, 208 178, 202 160 C 198 146, 196 120, 196 98 Z" fill="url(#peloEsc)"/>
+<!-- cabeça -->
+<circle cx="150" cy="128" r="66" fill="url(#pelo)"/>
+<!-- touca: cone que abraça o topo da cabeça e cai para a direita -->
+<path d="M96 96 C 110 50, 190 34, 236 44 C 262 50, 280 70, 290 92 C 270 80, 250 84, 236 96 C 214 70, 150 70, 124 102 Z" fill="url(#touca)"/>
+<g clip-path="url(#clipTouca)" fill="#fff" opacity=".32"><rect x="140" y="20" width="14" height="100" transform="rotate(20 147 70)"/><rect x="178" y="16" width="14" height="100" transform="rotate(20 185 66)"/><rect x="216" y="20" width="14" height="100" transform="rotate(20 223 70)"/></g>
+<!-- faixa da touca -->
+<path d="M92 102 C 118 78, 180 70, 232 92" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+<path d="M92 102 C 118 78, 180 70, 232 92" fill="none" stroke="#E6EEF9" stroke-width="4" stroke-linecap="round" opacity=".6" transform="translate(0,5)"/>
+<circle cx="292" cy="94" r="14" fill="#FFC53D"/><circle cx="288" cy="90" r="5" fill="#FFE39A" opacity=".9"/>
+<!-- orelha da frente -->
+<path d="M94 104 C 60 110, 44 160, 72 190 C 94 208, 118 190, 116 160 C 114 136, 106 112, 94 104 Z" fill="url(#peloEsc)"/>
+<path d="M86 124 C 70 134, 64 164, 80 180 C 92 188, 104 176, 102 158 C 100 142, 96 128, 86 124 Z" fill="#E59AA8" opacity=".75"/>
+<!-- focinho -->
+<path d="M112 152 C 112 134, 136 126, 158 132 C 180 138, 184 158, 170 170 C 156 182, 118 178, 112 152 Z" fill="url(#creme)"/>
+<!-- nariz -->
+<path d="M110 150 C 106 140, 128 136, 130 146 C 131 152, 122 158, 117 157 C 113 156, 111 153, 110 150 Z" fill="#2A2A3A"/>
+<ellipse cx="117" cy="143" rx="3.5" ry="2" fill="#fff" opacity=".7"/>
+<!-- boca -->
+<path d="M134 162 C 140 168, 150 168, 156 162" fill="none" stroke="#2A2A3A" stroke-width="3" stroke-linecap="round"/>
+<path d="M124 158 C 128 162, 132 162, 134 162" fill="none" stroke="#2A2A3A" stroke-width="3" stroke-linecap="round"/>
+<!-- olhos fechados -->
+<path d="M146 124 C 154 132, 166 132, 174 124" fill="none" stroke="#2A2A3A" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M174 124 l 6 4" stroke="#2A2A3A" stroke-width="3" stroke-linecap="round"/>
+<path d="M108 126 C 112 131, 118 132, 122 130" fill="none" stroke="#2A2A3A" stroke-width="4" stroke-linecap="round"/>
+<ellipse cx="162" cy="110" rx="7" ry="4" fill="#F3D5A5" opacity=".9"/>
+<ellipse cx="114" cy="116" rx="6" ry="3.5" fill="#F3D5A5" opacity=".9"/>
+<ellipse cx="184" cy="148" rx="11" ry="7" fill="#FF9DB0" opacity=".65"/>
+<ellipse cx="104" cy="164" rx="7" ry="4.5" fill="#FF9DB0" opacity=".5"/>
+<!-- patas -->
+<ellipse cx="128" cy="188" rx="22" ry="12" fill="url(#creme)"/>
+<path d="M118 192 v6 M128 193 v7 M138 192 v6" stroke="#D9B98C" stroke-width="2.5" stroke-linecap="round"/>
+<ellipse cx="166" cy="194" rx="22" ry="12" fill="url(#creme)"/>
+<path d="M156 198 v6 M166 199 v7 M176 198 v6" stroke="#D9B98C" stroke-width="2.5" stroke-linecap="round"/>
+<!-- zzz -->
+<g class="zzz" font-family="Fredoka, sans-serif" font-weight="700" fill="#9B5CFF">
+  <text x="300" y="74" font-size="22">z</text><text x="318" y="52" font-size="30">Z</text><text x="340" y="28" font-size="38">Z</text>
+</g>
   </g>`;
 function cenaNoite(){
   let estrelas=''; for(let i=0;i<26;i++){ const x=(i*131)%800, y=(i*73)%230+10, r=(i%3)+1; estrelas+=`<circle class="estrela" cx="${x}" cy="${y}" r="${r}" fill="#fff"/>`; }
@@ -1120,27 +1157,30 @@ function cenaNoite(){
     <rect x="0" y="330" width="800" height="120" fill="#1A2A5A"/>
     <rect x="40" y="170" width="26" height="180" rx="10" fill="#6B4E2E"/><rect x="40" y="170" width="120" height="22" rx="10" fill="#6B4E2E"/>
     <rect x="24" y="268" width="400" height="92" rx="24" fill="#F7F3EA"/>
-    <ellipse cx="110" cy="286" rx="62" ry="18" fill="#fff"/>
-    <g transform="translate(60,150) scale(0.86)">${MASCOTE}</g>
-    <path d="M150 300 q130 -40 274 -6 v66 h-274 z" fill="#E24B6E"/><path d="M150 300 q130 -40 274 -6 v16 q-144 -34 -274 6 z" fill="#FF8A3D"/>
+    <ellipse cx="150" cy="274" rx="78" ry="22" fill="#fff"/>
+    <g transform="translate(40,116) scale(0.9)">${MASCOTE}</g>
+    <path d="M214 256 C 262 230, 340 226, 424 240 V 360 H 214 Z" fill="#E24B6E"/>
+    <path d="M214 256 C 262 230, 340 226, 424 240 V 262 C 340 250, 262 254, 214 280 Z" fill="#FF8A3D"/>
+    <g fill="#fff" opacity=".35"><circle cx="250" cy="310" r="6"/><circle cx="300" cy="330" r="6"/><circle cx="350" cy="305" r="6"/><circle cx="395" cy="330" r="6"/><circle cx="270" cy="350" r="5"/><circle cx="370" cy="352" r="5"/></g>
     <rect x="24" y="318" width="400" height="42" rx="14" fill="#E8DFCF"/>
-    <rect x="432" y="290" width="60" height="70" rx="12" fill="#6B4E2E"/><rect x="442" y="252" width="40" height="40" rx="9" fill="#FFC53D"/><rect x="458" y="274" width="8" height="18" fill="#6B4E2E"/>
+    
   </svg>`;
 }
 function cenaTarde(){
   return `<svg class="fundo" viewBox="0 0 800 450" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
     <defs><linearGradient id="gt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ED0FF"/><stop offset="1" stop-color="#E8F7FF"/></linearGradient></defs>
     <rect width="800" height="450" fill="url(#gt)"/>
-    <circle cx="300" cy="70" r="44" fill="#FFE066"/><circle cx="300" cy="70" r="60" fill="#FFE066" opacity=".3"/>
-    <g class="nuvem" fill="#fff"><ellipse cx="120" cy="90" rx="60" ry="26"/><ellipse cx="160" cy="76" rx="40" ry="30"/><ellipse cx="300" cy="140" rx="50" ry="20"/><ellipse cx="330" cy="128" rx="34" ry="24"/></g>
+    <circle cx="250" cy="62" r="40" fill="#FFE066"/><circle cx="250" cy="62" r="56" fill="#FFE066" opacity=".3"/>
+    <g class="nuvem" fill="#fff"><ellipse cx="120" cy="90" rx="60" ry="26"/><ellipse cx="160" cy="76" rx="40" ry="30"/><ellipse cx="330" cy="150" rx="44" ry="18"/><ellipse cx="356" cy="140" rx="30" ry="22"/></g>
     <ellipse cx="400" cy="470" rx="560" ry="150" fill="#7ED47E"/>
     <rect x="30" y="130" width="30" height="250" rx="12" fill="#8E5A2B"/><circle cx="45" cy="120" r="62" fill="#4CAF50"/><circle cx="20" cy="150" r="44" fill="#5CC25C"/>
-    <rect x="440" y="130" width="30" height="250" rx="12" fill="#8E5A2B"/><circle cx="455" cy="120" r="62" fill="#4CAF50"/><circle cx="485" cy="150" r="44" fill="#5CC25C"/>
-    <g class="balanca" style="transform-origin:250px 130px">
-      <path d="M60 200 q190 130 380 0" stroke="#C98A4B" stroke-width="8" fill="none"/>
-      <path d="M110 250 q140 80 280 0 q-40 66 -140 66 q-100 0 -140 -66z" fill="#FF6FB5"/>
-      <path d="M110 250 q140 80 280 0" stroke="#fff" stroke-width="5" fill="none" opacity=".7"/>
-      <g transform="translate(110,140) scale(0.82)">${MASCOTE}</g>
+    <rect x="372" y="130" width="30" height="250" rx="12" fill="#8E5A2B"/><circle cx="387" cy="120" r="58" fill="#4CAF50"/><circle cx="412" cy="150" r="40" fill="#5CC25C"/>
+    <g class="balanca" style="transform-origin:216px 130px">
+      <path d="M60 200 q156 130 312 0" stroke="#C98A4B" stroke-width="8" fill="none"/>
+      <path d="M96 244 q120 86 240 0 q-30 70 -120 70 q-90 0 -120 -70z" fill="#E85A9E"/>
+      <g transform="translate(78,126) scale(0.8)">${MASCOTE}</g>
+      <path d="M96 244 q120 86 240 0 q-26 34 -120 34 q-94 0 -120 -34z" fill="#FF6FB5"/>
+      <path d="M96 244 q120 86 240 0" stroke="#fff" stroke-width="5" fill="none" opacity=".7"/>
     </g>
     <g fill="#FF8A3D"><circle cx="250" cy="400" r="8"/><circle cx="520" cy="420" r="8"/><circle cx="420" cy="395" r="6"/></g>
     <g fill="#FFC53D"><circle cx="330" cy="420" r="7"/><circle cx="610" cy="400" r="7"/></g>
@@ -1150,13 +1190,12 @@ function cenaManha(){
   return `<svg class="fundo" viewBox="0 0 800 450" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
     <defs><linearGradient id="gm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9A8B"/><stop offset=".55" stop-color="#FFD3A5"/><stop offset="1" stop-color="#FFF4D6"/></linearGradient></defs>
     <rect width="800" height="450" fill="url(#gm)"/>
-    <circle cx="240" cy="300" r="110" fill="#FFE066"/><rect x="0" y="300" width="800" height="150" fill="#F7E9D2"/>
+    <circle cx="170" cy="250" r="78" fill="#FFE066"/><rect x="0" y="300" width="800" height="150" fill="#F7E9D2"/>
     <rect x="0" y="300" width="800" height="12" fill="#E8D5B8"/>
     <rect x="60" y="50" width="220" height="220" rx="18" fill="#fff" opacity=".25"/><rect x="60" y="50" width="220" height="220" rx="18" fill="none" stroke="#fff" stroke-width="12"/><rect x="164" y="50" width="12" height="220" fill="#fff"/><rect x="60" y="154" width="220" height="12" fill="#fff"/>
     <g fill="#1F2340"><path d="M120 120 q10 -12 20 0 q10 -12 20 0" stroke="#1F2340" stroke-width="3" fill="none"/><path d="M220 100 q8 -10 16 0 q8 -10 16 0" stroke="#1F2340" stroke-width="3" fill="none"/></g>
     <ellipse cx="240" cy="372" rx="210" ry="48" fill="#9B5CFF"/><ellipse cx="240" cy="358" rx="200" ry="40" fill="#B98CFF"/>
-    <g transform="translate(90,180) scale(0.9)">${MASCOTE}</g>
-    <rect x="450" y="226" width="80" height="76" rx="14" fill="#6B4E2E"/><rect x="462" y="190" width="56" height="36" rx="10" fill="#2EC4D6"/><circle cx="490" cy="208" r="10" fill="#fff"/><path d="M490 202 v6 l4 3" stroke="#1F2340" stroke-width="3" fill="none"/>
+    <g transform="translate(70,150) scale(0.92)">${MASCOTE}</g>
   </svg>`;
 }
 const CENAS = { noite:cenaNoite, tarde:cenaTarde, manha:cenaManha };
