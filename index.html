@@ -18,7 +18,7 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0; background:var(--bg2); color:var(--ink); font-family:"Nunito",system-ui,sans-serif; font-size:18px; line-height:1.4; overflow:hidden}
+  body{margin:0; background:var(--bg2); color:var(--ink); font-family:"Nunito",system-ui,sans-serif; font-size:16px; line-height:1.4; overflow:hidden}
   button{font:inherit; color:inherit; cursor:pointer; border:0; background:none}
   input,select{font:inherit; color:inherit}
   a{color:var(--azul)}
@@ -27,7 +27,7 @@
   .tela{display:none; position:fixed; inset:0; overflow:auto; background:var(--bg2)}
   .tela.ativa{display:block}
   .conteudo{padding:16px 28px 110px}
-  @media (max-width:700px){ .conteudo{padding:12px 14px 100px} body{font-size:16px} }
+  @media (max-width:700px){ .conteudo{padding:12px 14px 100px} body{font-size:14px} }
 
   /* ---------- Barra superior ---------- */
   .topo{position:sticky; top:0; z-index:20; background:var(--bg); display:flex; align-items:center; gap:14px; padding:10px 28px; box-shadow:0 2px 0 var(--linha)}
@@ -36,7 +36,7 @@
   .logo svg{width:40px; height:40px}
   .logo b{color:var(--vermelho)}
   .espaco{flex:1}
-  .relogio{font-family:"Fredoka",sans-serif; font-weight:600; font-size:26px; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--amarelo); padding:4px 14px; border-radius:999px}
+  .relogio{font-family:"Fredoka",sans-serif; font-weight:600; font-size:22px; font-variant-numeric:tabular-nums; color:var(--ink); background:var(--amarelo); padding:4px 14px; border-radius:999px}
   .perfil-chip{display:flex; align-items:center; gap:8px; padding:4px 12px 4px 4px; border-radius:999px; background:var(--bg2); font-weight:800}
   .avatar{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:22px; background:var(--azul); color:#fff; flex:none}
   .icone{width:46px; height:46px; border-radius:50%; display:grid; place-items:center; background:var(--bg2); font-size:22px}
@@ -51,11 +51,11 @@
   .bolha.fora img{filter:grayscale(1); opacity:.7}
   .bolha .num{position:absolute; left:-4px; top:-4px; width:28px; height:28px; border-radius:50%; background:var(--ink); color:#fff; font-family:"Fredoka",sans-serif; font-weight:600; display:grid; place-items:center; font-size:15px}
   .bolha .ponto{position:absolute; right:2px; bottom:2px; width:18px; height:18px; border-radius:50%; background:var(--verde); border:3px solid #fff}
-  .bolha span{font-size:14px; font-weight:700; line-height:1.15; max-height:2.3em; overflow:hidden}
+  .bolha span{font-size:13px; font-weight:700; line-height:1.15; max-height:2.3em; overflow:hidden}
 
   /* ---------- Seções e cards ---------- */
   .secao{margin:18px 0 6px}
-  .secao h2{font-size:26px; display:flex; align-items:center; gap:10px}
+  .secao h2{font-size:22px; display:flex; align-items:center; gap:10px}
   .secao h2 i{font-style:normal; font-size:24px}
   .grade{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:18px; margin-top:12px}
   @media (max-width:700px){ .grade{grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px} }
@@ -72,8 +72,8 @@
   .card .barra i{display:block; height:100%; background:var(--vermelho)}
   .card .info{display:flex; gap:10px; padding:12px 14px 14px; align-items:center}
   .card .info img{width:42px; height:42px; border-radius:50%; flex:none}
-  .card .t1{font-weight:800; font-size:16px; line-height:1.2; max-height:2.4em; overflow:hidden}
-  .card .t2{color:var(--dim); font-size:14px; margin-top:2px}
+  .card .t1{font-weight:800; font-size:15px; line-height:1.2; max-height:2.4em; overflow:hidden}
+  .card .t2{color:var(--dim); font-size:13px; margin-top:2px}
   .card.fora .capa img{filter:grayscale(1); opacity:.55}
   .card.fora .capa::after{content:"💤"; position:absolute; inset:0; display:grid; place-items:center; font-size:48px}
   .vazio{background:var(--card); border-radius:var(--raio); padding:26px; color:var(--dim); box-shadow:var(--sombra); max-width:760px; margin-top:12px}
@@ -135,9 +135,9 @@
   #tela-foradoar,#tela-descanso{background:linear-gradient(180deg,#DCEBFF,#F4F6FB)}
   .soneca{width:min(420px,70vw)}
   .balao{background:#fff; border-radius:var(--raio); padding:16px 26px; box-shadow:var(--sombra)}
-  .balao .volta{font-family:"Fredoka",sans-serif; font-size:30px; color:var(--azul)}
-  .balao .conta{font-family:"Fredoka",sans-serif; font-size:56px; font-weight:700; font-variant-numeric:tabular-nums}
-  .centro h2{font-size:44px}
+  .balao .volta{font-family:"Fredoka",sans-serif; font-size:24px; color:var(--azul)}
+  .balao .conta{font-family:"Fredoka",sans-serif; font-size:44px; font-weight:700; font-variant-numeric:tabular-nums}
+  .centro h2{font-size:36px}
   .centro p{color:var(--dim); margin:0; max-width:46ch}
 
   /* ---------- Guia ---------- */
@@ -174,8 +174,8 @@
 
   /* ---------- Ajustes (pais) ---------- */
   .ajustes{max-width:1000px; margin:0 auto}
-  .ajustes h1{font-size:40px; margin:8px 0 2px}
-  .ajustes h2{font-size:26px; margin:30px 0 8px; color:var(--ink)}
+  .ajustes h1{font-size:32px; margin:8px 0 2px}
+  .ajustes h2{font-size:22px; margin:30px 0 8px; color:var(--ink)}
   .ajustes p.ajuda{color:var(--dim); margin:0 0 12px; max-width:72ch}
   .painel{background:var(--card); border-radius:var(--raio); box-shadow:var(--sombra); padding:18px 20px}
   .form{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
@@ -209,13 +209,13 @@
   /* ---------- Celular (retrato) ---------- */
   html{-webkit-text-size-adjust:100%}
   @media (max-width:700px){
-    .topo .logo{font-size:20px} .topo .logo svg{width:30px; height:30px}
+    .topo .logo{font-size:18px} .topo .logo svg{width:30px; height:30px}
     .relogio{font-size:18px; padding:3px 10px}
     .perfil-chip{padding:3px}
     .perfil-chip #chip-nome{display:none}
     .bolha{width:82px} .bolha .anel{width:66px; height:66px} .bolha .num{width:24px; height:24px; font-size:13px}
-    .secao h2{font-size:21px}
-    .card .info{padding:10px 12px 12px} .card .t1{font-size:14px} .card .t2{font-size:12px}
+    .secao h2{font-size:18px}
+    .card .info{padding:8px 10px 10px} .card .t1{font-size:13px} .card .t2{font-size:11px}
     .form{flex-direction:column; align-items:stretch}
     .form label{width:100%}
     .form input,.form select,input[type=text],input[type=password],input[type=number],input[type=time]{min-width:0!important; width:100%}
@@ -225,7 +225,7 @@
     .lista li{gap:8px} .lista li .cresce{min-width:0; flex-basis:100%}
     .sugestoes{grid-template-columns:1fr}
     .chip{max-width:62vw} .chip .c2{max-width:42vw}
-    .centro h2{font-size:28px} .soneca{width:62vw} .balao .conta{font-size:40px} .balao .volta{font-size:22px}
+    .centro h2{font-size:24px} .soneca{width:62vw} .balao .conta{font-size:40px} .balao .volta{font-size:22px}
     .poder{width:170px; height:170px; font-size:36px}
     .perfil-card{width:130px} .perfil-card .avatar{width:72px; height:72px; font-size:40px}
     .pin-caixa{padding:20px} .teclado button{height:54px}
@@ -250,11 +250,11 @@
   #tela-bloqueio .zzz span:nth-child(1){font-size:28px} #tela-bloqueio .zzz span:nth-child(2){font-size:40px; animation-delay:.8s; margin-left:6px} #tela-bloqueio .zzz span:nth-child(3){font-size:54px; animation-delay:1.6s; margin-left:8px}
   @keyframes flutua{0%{opacity:0; transform:translateY(10px)} 30%{opacity:1} 100%{opacity:0; transform:translateY(-26px)}}
   #tela-bloqueio .texto{position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:10px; width:min(36vw,440px); padding:26px 24px; border-radius:30px; background:rgba(255,255,255,.88); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:0 20px 50px rgba(0,0,0,.35)}
-  #tela-bloqueio h2{font-size:32px; color:var(--ink); line-height:1.05}
+  #tela-bloqueio h2{font-size:26px; color:var(--ink); line-height:1.05}
   #tela-bloqueio .balao{display:flex; flex-direction:column; align-items:center; gap:2px; padding:12px 28px; background:var(--bg2); box-shadow:none}
-  #tela-bloqueio .balao .volta{font-size:22px; color:var(--dim)}
-  #tela-bloqueio .balao .conta{font-size:38px; color:var(--ink)}
-  #tela-bloqueio p{color:var(--dim); margin:0; max-width:40ch; font-weight:700}
+  #tela-bloqueio .balao .volta{font-size:17px; color:var(--dim)}
+  #tela-bloqueio .balao .conta{font-size:32px; color:var(--ink)}
+  #tela-bloqueio p{color:var(--dim); margin:0; max-width:40ch; font-weight:700; font-size:14px}
   #tela-bloqueio .acoes{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:6px}
   .previa{position:fixed; top:14px; left:14px; z-index:30}
   .temas{display:flex; gap:8px; flex-wrap:wrap}
@@ -264,7 +264,7 @@
     #tela-bloqueio .veu{background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.45) 100%)}
     #tela-bloqueio .zzz{left:auto; right:14%; top:16%}
     #tela-bloqueio .texto{width:100%; padding:18px 16px}
-    #tela-bloqueio h2{font-size:28px} #tela-bloqueio .balao .conta{font-size:30px} #tela-bloqueio .balao{gap:0; padding:10px 16px}
+    #tela-bloqueio h2{font-size:21px} #tela-bloqueio .balao .conta{font-size:26px} #tela-bloqueio .balao{gap:0; padding:10px 16px}
   }
   @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
 </style>
@@ -508,6 +508,8 @@
       <p class="ajuda">Na TV, a Hora do Desenho pode ser a tela inicial: a criança liga a TV e já cai nela. No celular, deixe desligado.</p>
       <div class="painel">
         <label class="chk"><input type="checkbox" id="cfg-launcher"> Usar como tela inicial (launcher) deste aparelho</label>
+        <label class="chk" id="linha-kiosk"><input type="checkbox" id="cfg-kiosk"> Modo criança no celular: fixar o app (Home e apps recentes ficam bloqueados; só sai pela área dos pais, com o PIN)</label>
+        <p class="ajuda" id="ajuda-kiosk" style="margin:6px 0 0">Na primeira vez o Android pergunta "Fixar este app?" — confirme. Se o celular tiver bloqueio de tela, desfixar fora do app exige a senha do aparelho.</p>
         <p class="ajuda" style="margin:6px 0 0">Depois de ligar, aperte o botão HOME do controle e escolha "Hora do Desenho" → "Sempre". Para desfazer, desligue aqui ou use Configurações → Apps → Hora do Desenho → Limpar padrões.</p>
       </div>
     </div>
@@ -567,15 +569,24 @@ const SUGESTOES = [
 ];
 
 let DB = carregar();
+function lerJSON(txt){ try{ return txt ? JSON.parse(txt) : null; }catch(e){ return null; } }
 function carregar(){
-  const base = { apiKey:'', pin:'', profiles:[], activeProfile:null, channels:[], slots:[], watched:{}, cache:{}, occ:{}, uso:{}, favs:{}, cfg:{strict:true, shorts:true, auto:true} };
-  try{
-    let s = JSON.parse(localStorage.getItem(CHAVE_DB)||'null');
-    if(!s){ const v1 = JSON.parse(localStorage.getItem('gradetv.v1')||'null'); if(v1) s = v1; } // migra a versão anterior
-    return s ? Object.assign(base, s, {cfg:Object.assign(base.cfg, s.cfg||{})}) : base;
-  }catch(e){ return base; }
+  const base = { apiKey:'', pin:'', profiles:[], activeProfile:null, channels:[], slots:[], locks:[], watched:{}, cache:{}, occ:{}, uso:{}, favs:{}, ts:0, cfg:{strict:true, shorts:true, auto:true, kiosk:true} };
+  let local=null, nativo=null;
+  try{ local = lerJSON(localStorage.getItem(CHAVE_DB)) || lerJSON(localStorage.getItem('gradetv.v1')); }catch(e){}
+  try{ if(window.HoraDoDesenho) nativo = lerJSON(HoraDoDesenho.carregarDados()); }catch(e){}
+  // usa a cópia mais recente entre o localStorage e o arquivo do app
+  const s = (local && nativo) ? ((nativo.ts||0) > (local.ts||0) ? nativo : local) : (local || nativo);
+  return s ? Object.assign(base, s, {cfg:Object.assign(base.cfg, s.cfg||{})}) : base;
 }
-function salvar(){ try{ localStorage.setItem(CHAVE_DB, JSON.stringify(DB)); }catch(e){ console.warn('localStorage indisponível', e); } }
+let salvarTimer=null;
+function salvar(){
+  DB.ts = Date.now();
+  const json = JSON.stringify(DB);
+  try{ localStorage.setItem(CHAVE_DB, json); }catch(e){ console.warn('localStorage indisponível', e); }
+  if(window.HoraDoDesenho){ clearTimeout(salvarTimer); salvarTimer=setTimeout(()=>{ try{ HoraDoDesenho.salvarDados(JSON.stringify(DB)); }catch(e){} }, 300); }
+}
+window.addEventListener('pagehide', ()=>{ if(window.HoraDoDesenho){ clearTimeout(salvarTimer); try{ HoraDoDesenho.salvarDados(JSON.stringify(DB)); }catch(e){} } });
 const uid = () => Math.random().toString(36).slice(2,10);
 const $ = s => document.querySelector(s);
 const el = (tag, attrs={}, ...kids) => { const n=document.createElement(tag); for(const [k,v] of Object.entries(attrs)){ if(k==='class') n.className=v; else if(k.startsWith('on')) n.addEventListener(k.slice(2),v); else if(v!==false&&v!=null) n.setAttribute(k,v);} for(const k of kids){ if(k==null) continue; n.append(k.nodeType?k:document.createTextNode(k)); } return n; };
@@ -724,11 +735,23 @@ function ir(nome){
   $('#gear').hidden = ['ligar','setup','ajustes'].includes(nome);
   $('#gear').classList.toggle('visivel', nome!=='player');
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(nome==='player'); }catch(e){} }
+  aplicarModoCrianca(nome);
   const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
 }
 document.querySelectorAll('[data-ir]').forEach(b=>b.addEventListener('click', ()=>ir(b.dataset.ir)));
 function tickRelogio(){ const t=fmtHora(new Date()); for(const id of ['relogio','relogio2','relogio3']) $('#'+id).textContent=t; }
 setInterval(tickRelogio, 1000); tickRelogio();
+
+// ----- Modo criança (celular): app fixado, só sai pela área dos pais -----
+function ehTv(){ try{ return !!(window.HoraDoDesenho && HoraDoDesenho.isTv()); }catch(e){ return false; } }
+function aplicarModoCrianca(nome){
+  if(!window.HoraDoDesenho || ehTv()) return;
+  try{
+    const liberar = ['ajustes','setup','ligar'].includes(nome);
+    if(liberar){ if(HoraDoDesenho.modoCriancaAtivo()) HoraDoDesenho.modoCrianca(false); }
+    else if(DB.cfg.kiosk && !HoraDoDesenho.modoCriancaAtivo()) HoraDoDesenho.modoCrianca(true);
+  }catch(e){}
+}
 
 // ----- Perfis -----
 function garantirPerfil(){
@@ -975,7 +998,7 @@ let avatarSel = AVATARES[0];
 function renderAjustes(){
   $('#apikey').value = DB.apiKey;
   $('#cfg-strict').checked = DB.cfg.strict; $('#cfg-shorts').checked = DB.cfg.shorts; $('#cfg-auto').checked = DB.cfg.auto;
-  if(window.HoraDoDesenho){ $('#sec-aparelho').hidden=false; try{ $('#cfg-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){} }
+  if(window.HoraDoDesenho){ $('#sec-aparelho').hidden=false; try{ $('#cfg-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){} $('#cfg-kiosk').checked = DB.cfg.kiosk!==false; const tv=ehTv(); $('#linha-kiosk').hidden=tv; $('#ajuda-kiosk').hidden=tv; }
   // avatares
   const av=$('#perfil-avatares'); av.innerHTML=''; for(const a of AVATARES) av.append(el('button',{type:'button','aria-pressed':String(a===avatarSel), onclick:()=>{avatarSel=a; renderAjustes();}}, a));
   // perfis
@@ -1058,6 +1081,7 @@ $('#add-lock').onclick = ()=>{
 $('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
 $('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
 $('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
+$('#cfg-kiosk').onchange = e=>{ DB.cfg.kiosk=e.target.checked; salvar(); };
 $('#cfg-launcher').onchange = e=>{ try{ HoraDoDesenho.definirLauncher(e.target.checked); }catch(err){ alert('Não foi possível alterar: '+err); } };
 $('#exportar').onclick = ()=>{ const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'}); const a=el('a',{href:URL.createObjectURL(b), download:'hora-do-desenho.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok'); };
 $('#importar').onclick = ()=>$('#arquivo').click();
@@ -1102,6 +1126,7 @@ function mostrarBloqueio(o){
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); telaAtual='bloqueio';
   $('#nav').hidden = true; $('#gear').hidden=false; $('#gear').classList.add('visivel'); $('#bloqueio-voltar').hidden = true;
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(false); }catch(e){} }
+  aplicarModoCrianca('bloqueio');
   renderCena(temaDoBloqueio(o), o);
   const atualiza = () => {
     const agora = Date.now();

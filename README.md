@@ -58,7 +58,7 @@ O botão **Voltar** do controle nunca fecha o app (ele volta de tela). O botão 
 
 ### No celular ou tablet Android
 
-O mesmo `hora-do-desenho.apk` instala no celular. Ali ele se comporta como um app comum (não vira a tela inicial do telefone), funciona em retrato e gira para paisagem sozinho quando um vídeo abre. Serve para a criança assistir no celular dos pais com a mesma grade, ou para o responsável configurar canais e horários com mais conforto e depois exportar/importar a configuração para a TV.
+O mesmo `hora-do-desenho.apk` instala no celular. Ali ele se comporta como um app comum (não vira a tela inicial do telefone), funciona em retrato e gira para paisagem sozinho quando um vídeo abre. Com o **modo criança** (ligado por padrão), o app fica fixado: Home e apps recentes não funcionam e só se sai pela área dos pais, com o PIN — na primeira vez o Android pergunta "Fixar este app?", confirme. Serve para a criança assistir no celular dos pais com a mesma grade, ou para o responsável configurar canais e horários com mais conforto e depois exportar/importar a configuração para a TV.
 
 ### No navegador (PC, Chromebox, tablet ou celular ligado na TV)
 

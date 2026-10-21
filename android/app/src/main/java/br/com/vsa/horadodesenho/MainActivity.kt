@@ -2,6 +2,7 @@ package br.com.vsa.horadodesenho
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -19,6 +20,8 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
+import java.io.File
+import java.util.concurrent.Executors
 
 /**
  * Hora do Desenho para Android / Android TV.
@@ -48,6 +51,7 @@ class MainActivity : Activity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             mediaPlaybackRequiresUserGesture = false
+            databaseEnabled = true
             useWideViewPort = true
             loadWithOverviewMode = true
             setSupportZoom(false)
@@ -116,6 +120,32 @@ class MainActivity : Activity() {
 
     private fun launcherAtivo(): Boolean =
         packageManager.getComponentEnabledSetting(aliasInicial) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+
+    // ----- Modo criança (app fixado: Home e Recentes bloqueados até os pais liberarem) -----
+    private fun travar() {
+        if (ehTv()) return
+        try { startLockTask() } catch (_: Exception) {}
+    }
+    private fun destravar() { try { stopLockTask() } catch (_: Exception) {} }
+    @Suppress("DEPRECATION")
+    private fun travado(): Boolean {
+        val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        return if (Build.VERSION.SDK_INT >= 23) am.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE else am.isInLockTaskMode
+    }
+
+    // ----- Dados: cópia em arquivo, independente do localStorage do WebView -----
+    private val gravador = Executors.newSingleThreadExecutor()
+    private val arquivoDados get() = File(filesDir, "dados.json")
+    private fun salvarDados(json: String) {
+        gravador.execute {
+            try {
+                val tmp = File(filesDir, "dados.json.tmp")
+                tmp.writeText(json)
+                if (!tmp.renameTo(arquivoDados)) { arquivoDados.writeText(json); tmp.delete() }
+            } catch (_: Exception) {}
+        }
+    }
+    private fun carregarDados(): String = try { if (arquivoDados.exists()) arquivoDados.readText() else "" } catch (_: Exception) { "" }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -189,6 +219,14 @@ class MainActivity : Activity() {
         /** Tela inicial (launcher) ligada/desligada — controlado na área dos pais. */
         @JavascriptInterface fun launcherAtivo(): Boolean = this@MainActivity.launcherAtivo()
         @JavascriptInterface fun definirLauncher(ativo: Boolean) = this@MainActivity.definirLauncher(ativo)
+
+        /** Modo criança: fixa o app (só sai pela área dos pais). */
+        @JavascriptInterface fun modoCrianca(ativo: Boolean) { runOnUiThread { if (ativo) travar() else destravar() } }
+        @JavascriptInterface fun modoCriancaAtivo(): Boolean = this@MainActivity.travado()
+
+        /** Dados persistidos em arquivo do app (além do localStorage). */
+        @JavascriptInterface fun salvarDados(json: String) = this@MainActivity.salvarDados(json)
+        @JavascriptInterface fun carregarDados(): String = this@MainActivity.carregarDados()
 
         /** Celular: trava em paisagem só enquanto o vídeo está aberto. */
         @JavascriptInterface fun travarPaisagem(travar: Boolean) {
