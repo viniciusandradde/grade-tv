@@ -239,6 +239,45 @@
     .conteudo{padding-bottom:80px}
     .centro{gap:8px} .soneca{width:34vh}
   }
+
+  /* ---------- Tela de bloqueio (Dodó dormindo) ---------- */
+  #tela-bloqueio{background:#0F1B3D; overflow:hidden}
+  #tela-bloqueio .cena{position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-end; padding:24px 6vw 24px 24px; text-align:center}
+  #tela-bloqueio .cena svg.fundo{position:absolute; inset:0; width:100%; height:100%}
+  #tela-bloqueio .texto{position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:12px; width:min(46vw,560px); padding:26px 24px; border-radius:30px; background:rgba(255,255,255,.14); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px)}
+  #tela-bloqueio.tema-tarde .texto,#tela-bloqueio.tema-manha .texto{background:rgba(255,255,255,.55)}
+  #tela-bloqueio h2{font-size:44px; color:#fff; text-shadow:0 4px 18px rgba(0,0,0,.35); line-height:1.05}
+  #tela-bloqueio .balao{display:flex; flex-direction:column; align-items:center; gap:2px; padding:12px 28px}
+  #tela-bloqueio .balao .volta{font-size:24px; color:var(--dim)}
+  #tela-bloqueio .balao .conta{font-size:44px; color:var(--ink)}
+  #tela-bloqueio p{color:rgba(255,255,255,.85); margin:0; max-width:44ch; font-weight:700; text-shadow:0 2px 8px rgba(0,0,0,.35)}
+  #tela-bloqueio .acoes{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:6px}
+  #tela-bloqueio .btn{background:rgba(255,255,255,.92); color:var(--ink)}
+  .tema-noite{--c1:#0F1B3D; --c2:#2B3F7A; --tx:#fff}
+  .tema-tarde{--c1:#FFE9B5; --c2:#BFE9FF; --tx:#1F2340}
+  .tema-manha{--c1:#FFB8A8; --c2:#FFE6C2; --tx:#1F2340}
+  #tela-bloqueio.tema-tarde h2,#tela-bloqueio.tema-manha h2{color:var(--ink); text-shadow:none}
+  #tela-bloqueio.tema-tarde p,#tela-bloqueio.tema-manha p{color:var(--dim); text-shadow:none}
+  .resp{transform-origin:170px 150px; animation:respira 3.2s ease-in-out infinite}
+  @keyframes respira{50%{transform:scale(1.025,1.04)}}
+  .zzz text{animation:flutua 3s ease-in-out infinite; opacity:0}
+  .zzz text:nth-child(2){animation-delay:.8s} .zzz text:nth-child(3){animation-delay:1.6s}
+  @keyframes flutua{0%{opacity:0; transform:translateY(8px)} 30%{opacity:1} 100%{opacity:0; transform:translateY(-22px)}}
+  .estrela{animation:pisca-estrela 2.6s ease-in-out infinite}
+  .estrela:nth-child(2n){animation-delay:.9s} .estrela:nth-child(3n){animation-delay:1.7s}
+  @keyframes pisca-estrela{50%{opacity:.25}}
+  .balanca{transform-origin:400px 120px; animation:balanco 5s ease-in-out infinite}
+  @keyframes balanco{50%{transform:rotate(1.6deg)}}
+  .nuvem{animation:deriva 40s linear infinite}
+  @keyframes deriva{to{transform:translateX(120px)}}
+  .previa{position:fixed; top:14px; left:14px; z-index:30}
+  .temas{display:flex; gap:8px; flex-wrap:wrap}
+  @media (max-width:700px), (orientation:portrait){
+    #tela-bloqueio .cena{align-items:flex-end; justify-content:center; padding:16px 16px 28px}
+    #tela-bloqueio .cena svg.fundo{height:62%; top:0}
+    #tela-bloqueio .texto{width:100%}
+    #tela-bloqueio h2{font-size:30px} #tela-bloqueio .balao .conta{font-size:30px} #tela-bloqueio .balao{gap:0; padding:10px 16px}
+  }
   @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
 </style>
 </head>
@@ -370,6 +409,12 @@
 </section>
 
 <!-- ===== Descanso (limite de tempo) ===== -->
+<!-- ===== Bloqueio (Dodó dormindo) ===== -->
+<section id="tela-bloqueio" class="tela tema-noite">
+  <button class="btn previa" id="bloqueio-voltar" hidden>← Voltar aos ajustes</button>
+  <div class="cena" id="cena"></div>
+</section>
+
 <section id="tela-descanso" class="tela">
   <div class="centro">
     <div style="font-size:120px">🌙</div>
@@ -476,6 +521,26 @@
       <div class="painel">
         <label class="chk"><input type="checkbox" id="cfg-launcher"> Usar como tela inicial (launcher) deste aparelho</label>
         <p class="ajuda" style="margin:6px 0 0">Depois de ligar, aperte o botão HOME do controle e escolha "Hora do Desenho" → "Sempre". Para desfazer, desligue aqui ou use Configurações → Apps → Hora do Desenho → Limpar padrões.</p>
+      </div>
+    </div>
+
+    <h2>Horários de bloqueio</h2>
+    <p class="ajuda">Nesses horários a TV inteira dorme: nenhum canal toca e aparece o Dodó dormindo. Serve para a noite, a hora do almoço ou a soneca da tarde. Os pais podem liberar com o PIN.</p>
+    <div class="painel">
+      <div class="form" id="form-lock">
+        <label>Início<input type="time" id="lock-ini" value="20:30"></label>
+        <label>Fim<input type="time" id="lock-fim" value="07:00"></label>
+        <label>Cena<select id="lock-tema"><option value="auto">Automática (pela hora)</option><option value="noite">Noite</option><option value="tarde">Soneca da tarde</option><option value="manha">Manhã cedo</option></select></label>
+        <label>Dias<div class="dias-check" id="lock-dias"></div></label>
+        <button class="btn p" id="add-lock">Adicionar bloqueio</button>
+      </div>
+      <div class="msg" id="msg-lock"></div>
+      <ul class="lista" id="lista-locks"></ul>
+      <p class="ajuda" style="margin:14px 0 6px">Veja como fica cada cena:</p>
+      <div class="temas">
+        <button class="btn" data-previa="noite">🌙 Noite</button>
+        <button class="btn" data-previa="tarde">🌤️ Soneca da tarde</button>
+        <button class="btn" data-previa="manha">🌅 Manhã cedo</button>
       </div>
     </div>
 
@@ -661,6 +726,7 @@ function ir(nome){
   document.querySelectorAll('#nav [data-ir]').forEach(b=>b.toggleAttribute('aria-current', b.dataset.ir===nome) || (b.dataset.ir===nome ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current')));
   if(nome!=='player') pararPlayer();
   if(nome!=='foradoar') clearInterval(fdaTimer);
+  if(nome!=='bloqueio') clearInterval(bloqTimer);
   if(nome==='inicio') renderInicio();
   if(nome==='guia') renderGuia();
   if(nome==='favoritos') renderFavoritos();
@@ -688,7 +754,8 @@ function renderPerfis(){
 }
 function entrar(){
   if(!DB.setupDone){ ir('setup'); return; }
-  garantirPerfil(); if(DB.profiles.length>1) ir('perfis'); else ir('inicio');
+  garantirPerfil(); { const b = emBloqueio(); if(b){ mostrarBloqueio(b); return; } }
+  if(DB.profiles.length>1) ir('perfis'); else ir('inicio');
 }
 
 // ----- Primeiro acesso -----
@@ -766,6 +833,7 @@ $('#btn-mais-tempo').onclick = ()=>pedirPin(()=>{ const p=perfil(); (p.extra ||=
 let canalSintonizado = null;
 async function sintonizar(ch){
   canalSintonizado = ch;
+  { const b = emBloqueio(); if(b){ mostrarBloqueio(b); return; } }
   if(limiteEstourado()){ mostrarDescanso(); return; }
   const o = exibicaoAtual(ch.id); if(!o){ mostrarForaDoAr(ch); return; }
   try{
@@ -953,6 +1021,14 @@ function renderAjustes(){
   });
   const sc=$('#slot-canal'); sc.innerHTML=''; DB.channels.forEach(ch=>sc.append(el('option',{value:ch.id},ch.title)));
   const sd=$('#slot-dias'); if(!sd.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); cb.checked=true; sd.append(el('label',{},cb,DIAS_CURTO[d])); }
+  const ld=$('#lock-dias'); if(!ld.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); cb.checked=true; ld.append(el('label',{},cb,DIAS_CURTO[d])); }
+  const ll=$('#lista-locks'); ll.innerHTML='';
+  const NOME_TEMA={auto:'cena automática', noite:'noite', tarde:'soneca da tarde', manha:'manhã cedo'};
+  (DB.locks||[]).forEach(l=>{
+    ll.append(el('li',{}, el('div',{class:'cresce'}, `${l.start} – ${l.end}`, el('small',{}, `${l.days.map(d=>DIAS_CURTO[d]).join(', ')} · ${NOME_TEMA[l.tema||'auto']}`)),
+      el('button',{class:'btn perigo', onclick:()=>{ DB.locks=DB.locks.filter(x=>x!==l); salvar(); renderAjustes(); }},'Remover')));
+  });
+  if(!DB.locks?.length) ll.append(el('li',{}, el('div',{class:'cresce', style:'color:var(--dim)'}, 'Nenhum bloqueio ainda. Sugestão: 20:30 às 07:00 todos os dias.')));
   const ls=$('#lista-slots'); ls.innerHTML='';
   DB.slots.forEach(s=>{
     const ch=DB.channels.find(c=>c.id===s.channelId);
@@ -984,6 +1060,13 @@ $('#add-slot').onclick = ()=>{
   if(!days.length) return msg('#msg-slot','Marque pelo menos um dia.','erro');
   DB.slots.push({id:uid(), channelId, days, start, end, mode}); salvar(); renderAjustes(); msg('#msg-slot','Faixa adicionada.','ok');
 };
+$('#add-lock').onclick = ()=>{
+  const start=$('#lock-ini').value, end=$('#lock-fim').value, tema=$('#lock-tema').value;
+  const days=[...$('#lock-dias').querySelectorAll('input:checked')].map(i=>+i.value);
+  if(!start||!end||start===end) return msg('#msg-lock','Informe início e fim diferentes.','erro');
+  if(!days.length) return msg('#msg-lock','Marque pelo menos um dia.','erro');
+  (DB.locks ||= []).push({id:uid(), days, start, end, tema}); salvar(); renderAjustes(); msg('#msg-lock','Bloqueio adicionado.','ok');
+};
 $('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
 $('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
 $('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
@@ -993,14 +1076,146 @@ $('#importar').onclick = ()=>$('#arquivo').click();
 $('#arquivo').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const j=JSON.parse(await f.text()); if(!Array.isArray(j.channels)) throw new Error('Arquivo inválido.'); DB=Object.assign(carregar(), j, {cache:DB.cache}); salvar(); garantirPerfil(); renderAjustes(); msg('#msg-dados','Configuração importada.','ok'); }catch(err){ msg('#msg-dados', err.message, 'erro'); } };
 $('#zerar-hist').onclick = ()=>{ if(confirm('Zerar o histórico de vídeos assistidos de todos os canais?')){ DB.watched={}; DB.occ={}; salvar(); msg('#msg-dados','Histórico zerado.','ok'); } };
 
+
+// ---------- Bloqueio (TV dormindo) ----------
+DB.locks ||= [];
+function bloqueioAtual(agora=new Date()){
+  for(const l of DB.locks) for(const o of ocorrencias(l, agora)) if(o.start<=agora && agora<o.end) return o;
+  return null;
+}
+function emBloqueio(agora=new Date()){
+  const o = bloqueioAtual(agora); if(!o) return null;
+  if(DB.lockOverride === o.end.getTime()) return null; // liberado pelos pais até o fim deste bloqueio
+  return o;
+}
+function temaDoBloqueio(o){
+  if(o.slot.tema && o.slot.tema!=='auto') return o.slot.tema;
+  const h = o.start.getHours(); if(h>=18 || h<5) return 'noite'; if(h>=11 && h<17) return 'tarde'; return 'manha';
+}
+const MASCOTE = `
+  <g class="resp">
+    <path d="M255 125 q45 -35 32 5 q-6 22 -30 12" fill="#C98A4B"/>
+    <ellipse cx="170" cy="135" rx="95" ry="52" fill="#C98A4B"/>
+    <ellipse cx="190" cy="152" rx="60" ry="26" fill="#F3D9B1"/>
+    <ellipse cx="125" cy="170" rx="22" ry="11" fill="#F3D9B1"/><ellipse cx="158" cy="174" rx="22" ry="11" fill="#F3D9B1"/>
+    <circle cx="105" cy="118" r="48" fill="#C98A4B"/>
+    <path d="M68 92 q-34 28 -12 72 q22 12 38 -24 z" fill="#8E5A2B"/>
+    <ellipse cx="90" cy="138" rx="30" ry="19" fill="#F3D9B1"/>
+    <ellipse cx="67" cy="131" rx="9" ry="7" fill="#2A2A3A"/>
+    <path d="M96 108 q8 7 16 0" stroke="#2A2A3A" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="120" cy="131" r="7" fill="#FFB3BA" opacity=".85"/>
+    <path d="M62 86 q38 -56 100 -26 l-6 12 q-48 -18 -86 24 z" fill="#3D8BFF"/>
+    <path d="M62 86 q20 -10 40 -2" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/>
+    <circle cx="164" cy="60" r="10" fill="#FFC53D"/>
+    <g class="zzz" font-family="Fredoka, sans-serif" font-weight="700" fill="#9B5CFF">
+      <text x="150" y="66" font-size="22">z</text><text x="172" y="44" font-size="30">Z</text><text x="200" y="20" font-size="40">Z</text>
+    </g>
+  </g>`;
+function cenaNoite(){
+  let estrelas=''; for(let i=0;i<26;i++){ const x=(i*131)%800, y=(i*73)%230+10, r=(i%3)+1; estrelas+=`<circle class="estrela" cx="${x}" cy="${y}" r="${r}" fill="#fff"/>`; }
+  return `<svg class="fundo" viewBox="0 0 800 450" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
+    <defs><linearGradient id="gn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F1B3D"/><stop offset="1" stop-color="#2B3F7A"/></linearGradient></defs>
+    <rect width="800" height="450" fill="url(#gn)"/>${estrelas}
+    <circle cx="470" cy="70" r="40" fill="#FFF3C4"/><circle cx="488" cy="60" r="35" fill="#1A2A5A"/>
+    <rect x="0" y="330" width="800" height="120" fill="#1A2A5A"/>
+    <rect x="40" y="170" width="26" height="180" rx="10" fill="#6B4E2E"/><rect x="40" y="170" width="120" height="22" rx="10" fill="#6B4E2E"/>
+    <rect x="24" y="268" width="400" height="92" rx="24" fill="#F7F3EA"/>
+    <ellipse cx="110" cy="286" rx="62" ry="18" fill="#fff"/>
+    <g transform="translate(60,150) scale(0.86)">${MASCOTE}</g>
+    <path d="M150 300 q130 -40 274 -6 v66 h-274 z" fill="#E24B6E"/><path d="M150 300 q130 -40 274 -6 v16 q-144 -34 -274 6 z" fill="#FF8A3D"/>
+    <rect x="24" y="318" width="400" height="42" rx="14" fill="#E8DFCF"/>
+    <rect x="432" y="290" width="60" height="70" rx="12" fill="#6B4E2E"/><rect x="442" y="252" width="40" height="40" rx="9" fill="#FFC53D"/><rect x="458" y="274" width="8" height="18" fill="#6B4E2E"/>
+  </svg>`;
+}
+function cenaTarde(){
+  return `<svg class="fundo" viewBox="0 0 800 450" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
+    <defs><linearGradient id="gt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ED0FF"/><stop offset="1" stop-color="#E8F7FF"/></linearGradient></defs>
+    <rect width="800" height="450" fill="url(#gt)"/>
+    <circle cx="300" cy="70" r="44" fill="#FFE066"/><circle cx="300" cy="70" r="60" fill="#FFE066" opacity=".3"/>
+    <g class="nuvem" fill="#fff"><ellipse cx="120" cy="90" rx="60" ry="26"/><ellipse cx="160" cy="76" rx="40" ry="30"/><ellipse cx="300" cy="140" rx="50" ry="20"/><ellipse cx="330" cy="128" rx="34" ry="24"/></g>
+    <ellipse cx="400" cy="470" rx="560" ry="150" fill="#7ED47E"/>
+    <rect x="30" y="130" width="30" height="250" rx="12" fill="#8E5A2B"/><circle cx="45" cy="120" r="62" fill="#4CAF50"/><circle cx="20" cy="150" r="44" fill="#5CC25C"/>
+    <rect x="440" y="130" width="30" height="250" rx="12" fill="#8E5A2B"/><circle cx="455" cy="120" r="62" fill="#4CAF50"/><circle cx="485" cy="150" r="44" fill="#5CC25C"/>
+    <g class="balanca" style="transform-origin:250px 130px">
+      <path d="M60 200 q190 130 380 0" stroke="#C98A4B" stroke-width="8" fill="none"/>
+      <path d="M110 250 q140 80 280 0 q-40 66 -140 66 q-100 0 -140 -66z" fill="#FF6FB5"/>
+      <path d="M110 250 q140 80 280 0" stroke="#fff" stroke-width="5" fill="none" opacity=".7"/>
+      <g transform="translate(110,140) scale(0.82)">${MASCOTE}</g>
+    </g>
+    <g fill="#FF8A3D"><circle cx="250" cy="400" r="8"/><circle cx="520" cy="420" r="8"/><circle cx="420" cy="395" r="6"/></g>
+    <g fill="#FFC53D"><circle cx="330" cy="420" r="7"/><circle cx="610" cy="400" r="7"/></g>
+  </svg>`;
+}
+function cenaManha(){
+  return `<svg class="fundo" viewBox="0 0 800 450" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
+    <defs><linearGradient id="gm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9A8B"/><stop offset=".55" stop-color="#FFD3A5"/><stop offset="1" stop-color="#FFF4D6"/></linearGradient></defs>
+    <rect width="800" height="450" fill="url(#gm)"/>
+    <circle cx="240" cy="300" r="110" fill="#FFE066"/><rect x="0" y="300" width="800" height="150" fill="#F7E9D2"/>
+    <rect x="0" y="300" width="800" height="12" fill="#E8D5B8"/>
+    <rect x="60" y="50" width="220" height="220" rx="18" fill="#fff" opacity=".25"/><rect x="60" y="50" width="220" height="220" rx="18" fill="none" stroke="#fff" stroke-width="12"/><rect x="164" y="50" width="12" height="220" fill="#fff"/><rect x="60" y="154" width="220" height="12" fill="#fff"/>
+    <g fill="#1F2340"><path d="M120 120 q10 -12 20 0 q10 -12 20 0" stroke="#1F2340" stroke-width="3" fill="none"/><path d="M220 100 q8 -10 16 0 q8 -10 16 0" stroke="#1F2340" stroke-width="3" fill="none"/></g>
+    <ellipse cx="240" cy="372" rx="210" ry="48" fill="#9B5CFF"/><ellipse cx="240" cy="358" rx="200" ry="40" fill="#B98CFF"/>
+    <g transform="translate(90,180) scale(0.9)">${MASCOTE}</g>
+    <rect x="450" y="226" width="80" height="76" rx="14" fill="#6B4E2E"/><rect x="462" y="190" width="56" height="36" rx="10" fill="#2EC4D6"/><circle cx="490" cy="208" r="10" fill="#fff"/><path d="M490 202 v6 l4 3" stroke="#1F2340" stroke-width="3" fill="none"/>
+  </svg>`;
+}
+const CENAS = { noite:cenaNoite, tarde:cenaTarde, manha:cenaManha };
+const FALAS = {
+  noite:{t:'Shhh… o Dodó está dormindo', p:'A TV também foi dormir. Bons sonhos! Amanhã tem desenho de novo.'},
+  tarde:{t:'Hora da soneca', p:'O Dodó está cochilando na rede. A TV volta depois do descanso.'},
+  manha:{t:'Ainda é cedinho…', p:'O Dodó acorda com o sol. A TV liga quando ele acordar.'}
+};
+let bloqTimer=null, previaBloqueio=false;
+function renderCena(tema, o){
+  const t = $('#tela-bloqueio'); t.className = 'tela ativa tema-'+tema;
+  const f = FALAS[tema];
+  $('#cena').innerHTML = CENAS[tema]() + `<div class="texto"><h2>${f.t}</h2>
+    <div class="balao"><div class="volta" id="bloq-volta"></div><div class="conta" id="bloq-conta"></div></div>
+    <p>${f.p}</p>
+    <div class="acoes"><button class="btn" id="bloq-liberar">🔓 Pais: liberar com o PIN</button></div></div>`;
+  $('#bloq-liberar').onclick = ()=>pedirPin(()=>{ if(o){ DB.lockOverride = o.end.getTime(); salvar(); } ir('inicio'); });
+}
+function mostrarBloqueio(o){
+  clearInterval(bloqTimer); previaBloqueio=false; pararPlayer();
+  document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); telaAtual='bloqueio';
+  $('#nav').hidden = true; $('#gear').hidden=false; $('#gear').classList.add('visivel'); $('#bloqueio-voltar').hidden = true;
+  if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(false); }catch(e){} }
+  renderCena(temaDoBloqueio(o), o);
+  const atualiza = () => {
+    const agora = Date.now();
+    if(agora >= o.end.getTime() || !emBloqueio()){ clearInterval(bloqTimer); ir('inicio'); return; }
+    $('#bloq-volta').textContent = 'A TV acorda ' + quandoVolta(o.end ? {start:o.end} : null);
+    const s = Math.max(0, Math.floor((o.end.getTime()-agora)/1000)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
+    $('#bloq-conta').textContent = pad(h)+':'+pad(m)+':'+pad(ss);
+  };
+  atualiza(); bloqTimer = setInterval(atualiza, 1000);
+  $('#bloq-liberar').focus();
+}
+function previaCena(tema){
+  clearInterval(bloqTimer); previaBloqueio=true;
+  document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); telaAtual='bloqueio';
+  $('#nav').hidden = true; $('#gear').hidden = true; $('#bloqueio-voltar').hidden = false;
+  renderCena(tema, null);
+  $('#bloq-volta').textContent = 'A TV acorda amanhã às 7h'; $('#bloq-conta').textContent = '09:30:00';
+  $('#bloq-liberar').onclick = ()=>ir('ajustes'); $('#bloqueio-voltar').focus();
+}
+$('#bloqueio-voltar').onclick = ()=>ir('ajustes');
+document.querySelectorAll('[data-previa]').forEach(b=>b.addEventListener('click', ()=>previaCena(b.dataset.previa)));
+// Vigia: se um bloqueio começar enquanto a criança assiste, a TV dorme na hora
+setInterval(()=>{
+  if(['ligar','setup','ajustes','bloqueio'].includes(telaAtual) || $('#pin').classList.contains('ativa')) return;
+  const o = emBloqueio(); if(o) mostrarBloqueio(o);
+}, 5000);
+
 // ----- Teclado / controle remoto -----
 document.addEventListener('keydown', e=>{
   if(telaAtual==='ligar') return;
   if($('#pin').classList.contains('ativa')){ if(/^\d$/.test(e.key)) teclaPin(e.key); if(e.key==='Backspace') teclaPin('⌫'); if(e.key==='Enter') teclaPin('OK'); if(e.key==='Escape') $('#pin-cancelar').click(); return; }
   const emCampo = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName);
-  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else if(telaAtual==='ajustes') ir('inicio'); else if(telaAtual!=='inicio') ir('inicio'); return; }
+  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='bloqueio'){ if(previaBloqueio) ir('ajustes'); } else if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else if(telaAtual==='ajustes') ir('inicio'); else if(telaAtual!=='inicio') ir('inicio'); return; }
   if(emCampo) return;
   const k=e.key.toLowerCase();
+  if(telaAtual==='bloqueio' && !previaBloqueio && k!=='a') return;
   if(k==='g') return ir('guia');
   if(k==='a') return abrirPais();
   if(/^[1-9]$/.test(k) && telaAtual!=='ajustes'){ const ch=canaisDoPerfil()[+k-1]; if(ch) sintonizar(ch); return; }
