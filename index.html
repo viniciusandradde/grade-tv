@@ -266,6 +266,32 @@
     #tela-bloqueio .texto{width:100%; padding:18px 16px}
     #tela-bloqueio h2{font-size:21px} #tela-bloqueio .balao .conta{font-size:26px} #tela-bloqueio .balao{gap:0; padding:10px 16px}
   }
+  /* Cena "Escuro" (quarto apagado): fundo preto, nenhuma caixa clara, só o contorno dos textos.
+     A classe .escuro fica no body para alcançar também a engrenagem e o PIN. */
+  body.escuro{--contorno:rgba(150,160,190,.42); background:#000}
+  #tela-bloqueio.tema-escuro{background:#000}
+  #tela-bloqueio.tema-escuro .veu{background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.7) 100%)}
+  #tela-bloqueio.tema-escuro .texto{background:none; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none}
+  #tela-bloqueio.tema-escuro .balao{background:none}
+  #tela-bloqueio.tema-escuro .zzz{color:var(--contorno); text-shadow:none}
+  #tela-bloqueio.tema-escuro h2, #tela-bloqueio.tema-escuro .balao div, #tela-bloqueio.tema-escuro p{color:var(--contorno)}
+  #tela-bloqueio.tema-escuro p{font-size:16px; font-weight:800}
+  body.escuro .btn{background:none; color:var(--contorno); border:1px solid rgba(150,160,190,.22)}
+  body.escuro .canto{background:none; box-shadow:none; filter:grayscale(1) brightness(.45); opacity:.35}
+  body.escuro .emoji{filter:grayscale(1) brightness(.45)}
+  body.escuro :focus-visible{outline:2px solid rgba(150,160,190,.3)}
+  body.escuro #pin{background:rgba(0,0,0,.9)}
+  body.escuro .pin-caixa{background:#000; box-shadow:none}
+  body.escuro .pin-caixa h2, body.escuro .pin-caixa p, body.escuro .teclado button{color:var(--contorno)}
+  body.escuro .teclado button{background:none; border:1px solid rgba(150,160,190,.22)}
+  body.escuro .pin-pontos i{background:none; border:1px solid var(--contorno)}
+  body.escuro .pin-pontos i.on{background:var(--contorno)}
+  body.escuro .pin-erro{color:rgba(255,79,94,.45)}
+  @supports (-webkit-text-stroke:1px){
+    #tela-bloqueio.tema-escuro h2, #tela-bloqueio.tema-escuro .balao div, #tela-bloqueio.tema-escuro .zzz,
+    body.escuro .btn, body.escuro .pin-caixa h2, body.escuro .teclado button{color:transparent; -webkit-text-stroke:1px var(--contorno)}
+    #tela-bloqueio.tema-escuro p, body.escuro .pin-caixa p{color:transparent; -webkit-text-stroke:.6px var(--contorno)}
+  }
   @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
 </style>
 </head>
@@ -515,12 +541,12 @@
     </div>
 
     <h2>Horários de bloqueio</h2>
-    <p class="ajuda">Nesses horários a TV inteira dorme: nenhum canal toca e aparece o detetive dormindo. Serve para a noite, a hora do almoço ou a soneca da tarde. Os pais podem liberar com o PIN.</p>
+    <p class="ajuda">Nesses horários a TV inteira dorme: nenhum canal toca e aparece o detetive dormindo. Serve para a noite, a hora do almoço ou a soneca da tarde. Os pais podem liberar com o PIN. A cena <b>Escuro</b> é para o quarto apagado: tudo preto, só o contorno dos textos, e no celular o brilho vai ao mínimo.</p>
     <div class="painel">
       <div class="form" id="form-lock">
         <label>Início<input type="time" id="lock-ini" value="20:30"></label>
         <label>Fim<input type="time" id="lock-fim" value="07:00"></label>
-        <label>Cena<select id="lock-tema"><option value="auto">Automática (pela hora)</option><option value="noite">Noite</option><option value="tarde">Fim de tarde</option><option value="manha">Manhã cedo</option></select></label>
+        <label>Cena<select id="lock-tema"><option value="auto">Automática (pela hora)</option><option value="noite">Noite</option><option value="tarde">Fim de tarde</option><option value="manha">Manhã cedo</option><option value="escuro">Escuro (quarto apagado)</option></select></label>
         <label>Dias<div class="dias-check" id="lock-dias"></div></label>
         <button class="btn p" id="add-lock">Adicionar bloqueio</button>
       </div>
@@ -531,6 +557,7 @@
         <button class="btn" data-previa="noite">🌙 Noite</button>
         <button class="btn" data-previa="tarde">🌇 Fim de tarde</button>
         <button class="btn" data-previa="manha">🌅 Manhã cedo</button>
+        <button class="btn" data-previa="escuro">🌑 Escuro</button>
       </div>
     </div>
 
@@ -725,7 +752,7 @@ function ir(nome){
   document.querySelectorAll('#nav [data-ir]').forEach(b=>b.toggleAttribute('aria-current', b.dataset.ir===nome) || (b.dataset.ir===nome ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current')));
   if(nome!=='player') pararPlayer();
   if(nome!=='foradoar') clearInterval(fdaTimer);
-  if(nome!=='bloqueio') clearInterval(bloqTimer);
+  if(nome!=='bloqueio'){ clearInterval(bloqTimer); quartoEscuro(false); }
   if(nome==='inicio') renderInicio();
   if(nome==='guia') renderGuia();
   if(nome==='favoritos') renderFavoritos();
@@ -1034,7 +1061,7 @@ function renderAjustes(){
   const sd=$('#slot-dias'); if(!sd.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); cb.checked=true; sd.append(el('label',{},cb,DIAS_CURTO[d])); }
   const ld=$('#lock-dias'); if(!ld.children.length) for(let d=0; d<7; d++){ const cb=el('input',{type:'checkbox',value:String(d)}); cb.checked=true; ld.append(el('label',{},cb,DIAS_CURTO[d])); }
   const ll=$('#lista-locks'); ll.innerHTML='';
-  const NOME_TEMA={auto:'cena automática', noite:'noite', tarde:'fim de tarde', manha:'manhã cedo'};
+  const NOME_TEMA={auto:'cena automática', noite:'noite', tarde:'fim de tarde', manha:'manhã cedo', escuro:'escuro'};
   (DB.locks||[]).forEach(l=>{
     ll.append(el('li',{}, el('div',{class:'cresce'}, `${l.start} – ${l.end}`, el('small',{}, `${l.days.map(d=>DIAS_CURTO[d]).join(', ')} · ${NOME_TEMA[l.tema||'auto']}`)),
       el('button',{class:'btn perigo', onclick:()=>{ DB.locks=DB.locks.filter(x=>x!==l); salvar(); renderAjustes(); }},'Remover')));
@@ -1104,21 +1131,29 @@ function temaDoBloqueio(o){
   if(o.slot.tema && o.slot.tema!=='auto') return o.slot.tema;
   const h = o.start.getHours(); if(h>=18 || h<5) return 'noite'; if(h>=11 && h<17) return 'tarde'; return 'manha';
 }
-const CENAS = { noite:'img/dodo-noite.jpg', tarde:'img/dodo-tarde.jpg', manha:'img/dodo-manha.jpg' };
+const CENAS = { noite:'img/dodo-noite.jpg', tarde:'img/dodo-tarde.jpg', manha:'img/dodo-manha.jpg', escuro:'img/dodo-escuro.jpg' };
 for(const u of Object.values(CENAS)){ const i=new Image(); i.src=u; } // pré-carrega
 const FALAS = {
   noite:{t:'Shhh… o detetive está dormindo', p:'A TV também foi dormir. Bons sonhos! Amanhã tem desenho de novo.'},
   tarde:{t:'Hora da soneca', p:'O detetive está tirando um cochilo. A TV volta depois do descanso.'},
-  manha:{t:'Ainda é cedinho…', p:'O detetive acorda com o sol. A TV liga quando ele acordar.'}
+  manha:{t:'Ainda é cedinho…', p:'O detetive acorda com o sol. A TV liga quando ele acordar.'},
+  escuro:{t:'Shhh… luz apagada', p:'O detetive está sonhando no escurinho. Olhinhos fechados: amanhã tem desenho de novo.'}
 };
 let bloqTimer=null, previaBloqueio=false;
+// Cena "Escuro": a página inteira fica preta (body.escuro) e, no app Android, o brilho vai ao mínimo
+function quartoEscuro(on){
+  if(document.body.classList.contains('escuro')===on) return;
+  document.body.classList.toggle('escuro', on);
+  if(window.HoraDoDesenho && typeof HoraDoDesenho.luzMinima==='function'){ try{ HoraDoDesenho.luzMinima(on); }catch(e){} }
+}
 function renderCena(tema, o){
   const t = $('#tela-bloqueio'); t.className = 'tela ativa tema-'+tema;
+  quartoEscuro(tema==='escuro');
   const f = FALAS[tema];
   $('#cena').innerHTML = `<img class="foto" src="${CENAS[tema]}" alt=""><div class="veu"></div><div class="zzz" aria-hidden="true"><span>z</span><span>Z</span><span>Z</span></div><div class="texto"><h2>${f.t}</h2>
     <div class="balao"><div class="volta" id="bloq-volta"></div><div class="conta" id="bloq-conta"></div></div>
     <p>${f.p}</p>
-    <div class="acoes"><button class="btn" id="bloq-liberar">🔓 Pais: liberar com o PIN</button></div></div>`;
+    <div class="acoes"><button class="btn" id="bloq-liberar"><span class="emoji">🔓</span> Pais: liberar com o PIN</button></div></div>`;
   $('#bloq-liberar').onclick = ()=>pedirPin(()=>{ if(o){ DB.lockOverride = o.end.getTime(); salvar(); } ir('inicio'); });
 }
 function mostrarBloqueio(o){

@@ -19,8 +19,8 @@ android {
         applicationId = "br.com.vsa.horadodesenho"
         minSdk = 21
         targetSdk = 34
-        versionCode = 5
-        versionName = "0.4.0"
+        versionCode = 6
+        versionName = "0.5.0"
     }
 
     sourceSets["main"].assets.srcDir(webDir)

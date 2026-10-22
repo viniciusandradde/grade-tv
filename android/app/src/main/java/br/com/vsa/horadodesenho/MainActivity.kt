@@ -235,5 +235,14 @@ class MainActivity : Activity() {
                 else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
+
+        /** Cena "Escuro" do bloqueio: brilho da tela no mínimo enquanto ela aparece; depois volta ao do sistema. */
+        @JavascriptInterface fun luzMinima(ativa: Boolean) {
+            runOnUiThread {
+                window.attributes = window.attributes.apply {
+                    screenBrightness = if (ativa) 0.01f else WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                }
+            }
+        }
     }
 }
