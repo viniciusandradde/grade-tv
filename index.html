@@ -106,6 +106,21 @@
   .canto:hover,.canto:focus-visible,.canto.visivel{opacity:1}
   .setup{width:min(560px,94vw); text-align:center; display:flex; flex-direction:column; gap:12px; align-items:center}
   .setup h2{font-size:26px} .setup p{color:var(--dim); margin:0}
+  .setup-col{display:flex; flex-direction:column; gap:12px; align-items:center; width:100%}
+  .setup-progresso{display:flex; flex-direction:column; align-items:center; gap:6px; font-weight:800; color:var(--dim)}
+  .setup-progresso i{display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--linha); margin:0 3px}
+  .setup-progresso i.on{background:var(--vermelho)}
+  .setup-nav{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:4px}
+  .setup .sugestoes{width:100%; margin-top:0}
+  .setup .sugestoes button[aria-pressed="true"]{background:var(--azul); color:#fff}
+  .setup .sugestoes button[aria-pressed="true"] small,.setup .sugestoes button[aria-pressed="true"] .ok{color:#fff}
+  .setup .passos{text-align:left}
+  .setup .chk{margin:0}
+  .faixa{display:flex; align-items:center; gap:6px 14px; justify-content:center; flex-wrap:wrap; font-weight:700}
+  .faixa-horas{display:flex; align-items:center; gap:8px}
+  .faixa-horas input[type=time]{width:auto}
+  .setup-resumo{list-style:none; padding:0; margin:0; text-align:left; display:flex; flex-direction:column; gap:8px; font-weight:700}
+  .setup-resumo li{display:flex; gap:10px}
   #tela-setup{background:linear-gradient(160deg,#FFF4D6,#FFE1E4 50%,#DCEBFF)}
 
   /* ---------- Player ---------- */
@@ -309,22 +324,26 @@
 <!-- Engrenagem de canto (aparece ao passar o mouse ou tocar) -->
 <button class="icone canto" id="gear" title="Para os pais" aria-label="Para os pais" hidden>⚙️</button>
 
-<!-- ===== Primeiro acesso ===== -->
+<!-- ===== Primeiro acesso: passo a passo de configuração ===== -->
 <section id="tela-setup" class="tela">
   <div class="centro" style="gap:14px">
     <div class="logo" style="font-size:34px">👋 Bem-vindo à Hora do Desenho</div>
-    <div class="painel setup" id="setup-1">
-      <h2>1 de 2 · Crie o PIN dos pais</h2>
+    <div class="setup-progresso" id="setup-progresso"></div>
+
+    <div class="painel setup" id="setup-pin">
+      <h2>Crie o PIN dos pais</h2>
       <p>Quatro números. Ele protege as configurações e a liberação de tempo extra.</p>
+      <p id="setup-pin-manter" hidden><b>Já existe um PIN.</b> Deixe em branco para manter o atual.</p>
       <div class="form" style="justify-content:center">
-        <label>PIN<input type="password" id="setup-pin" inputmode="numeric" maxlength="4" style="min-width:120px;text-align:center;font-size:24px;letter-spacing:.4em"></label>
-        <label>Repita<input type="password" id="setup-pin2" inputmode="numeric" maxlength="4" style="min-width:120px;text-align:center;font-size:24px;letter-spacing:.4em"></label>
+        <label>PIN<input type="password" id="setup-pin-1" inputmode="numeric" maxlength="4" style="min-width:120px;text-align:center;font-size:24px;letter-spacing:.4em"></label>
+        <label>Repita<input type="password" id="setup-pin-2" inputmode="numeric" maxlength="4" style="min-width:120px;text-align:center;font-size:24px;letter-spacing:.4em"></label>
       </div>
-      <div class="msg" id="msg-setup1"></div>
-      <button class="btn p" id="setup-avancar">Continuar</button>
+      <div class="msg" id="msg-setup-pin"></div>
+      <div class="setup-nav"><button class="btn p" id="setup-pin-ok">Continuar</button></div>
     </div>
-    <div class="painel setup" id="setup-2" hidden>
-      <h2>2 de 2 · Quem vai assistir?</h2>
+
+    <div class="painel setup" id="setup-perfil" hidden>
+      <h2>Quem vai assistir?</h2>
       <p>Depois você pode criar mais perfis na área dos pais.</p>
       <div class="form" style="justify-content:center">
         <label>Nome da criança<input type="text" id="setup-nome" placeholder="Ex.: Lia" style="min-width:200px"></label>
@@ -332,8 +351,80 @@
       </div>
       <label style="font-size:14px;font-weight:800;color:var(--dim)">Avatar</label>
       <div class="avatares" id="setup-avatares" style="justify-content:center"></div>
-      <div class="msg" id="msg-setup2"></div>
-      <button class="btn p" id="setup-concluir">Concluir e configurar canais</button>
+      <div class="msg" id="msg-setup-perfil"></div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-perfil-ok">Continuar</button></div>
+    </div>
+
+    <div class="painel setup" id="setup-chave" hidden>
+      <h2>Chave do YouTube</h2>
+      <p>Esta versão não veio com a chave embutida. Ela é gratuita e leva uns 5 minutos:</p>
+      <ol class="passos">
+        <li>Entre no Google Cloud com sua conta Google e crie um projeto (qualquer nome, ex. <em>hora-do-desenho</em>).</li>
+        <li>Ative a API: <a class="btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Ativar YouTube Data API v3</a></li>
+        <li>Crie a chave em <strong>Criar credenciais → Chave de API</strong>: <a class="btn" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Abrir credenciais</a></li>
+        <li>Copie a chave (começa com <em>AIza</em>) e cole abaixo.</li>
+      </ol>
+      <div class="form" style="justify-content:center"><input type="password" id="setup-apikey" placeholder="AIza…" autocomplete="off" style="min-width:280px"></div>
+      <div class="msg" id="msg-setup-chave"></div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-chave-ok">Testar e continuar</button></div>
+    </div>
+
+    <div class="painel setup" id="setup-canais" hidden>
+      <h2>Escolha os canais</h2>
+      <p>Toque nos canais que a criança pode ver. Dá para mudar quando quiser.</p>
+      <div class="sugestoes" id="setup-sugestoes"></div>
+      <div class="form" style="justify-content:center; width:100%"><input type="text" id="setup-canal-extra" placeholder="Outro canal (opcional): youtube.com/@canal" style="min-width:min(380px,80vw)"></div>
+      <div class="msg" id="msg-setup-canais"></div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-canais-ok">Continuar</button></div>
+    </div>
+
+    <div class="painel setup" id="setup-grade" hidden>
+      <h2>Quando a TV pode ficar ligada?</h2>
+      <p>Nesses horários os canais escolhidos ficam no ar. Fora deles, ficam dormindo, com a contagem de quando acordam.</p>
+      <div id="setup-grade-campos" class="setup-col">
+        <div class="faixa"><label class="chk"><input type="checkbox" id="setup-f1"> Manhã</label><span class="faixa-horas"><input type="time" id="setup-f1-ini" value="09:00"> às <input type="time" id="setup-f1-fim" value="10:00"></span></div>
+        <div class="faixa"><label class="chk"><input type="checkbox" id="setup-f2" checked> Fim de tarde</label><span class="faixa-horas"><input type="time" id="setup-f2-ini" value="17:00"> às <input type="time" id="setup-f2-fim" value="19:00"></span></div>
+        <div class="dias-check" id="setup-grade-dias" style="justify-content:center"></div>
+        <div class="form" style="justify-content:center"><label>Como passa<select id="setup-modo"><option value="linear">Como na TV: já está passando, sem pausar</option><option value="livre">Livre: a criança escolhe o vídeo</option></select></label></div>
+      </div>
+      <p id="setup-grade-ja" hidden>Todos os canais já têm horário. Pode continuar — os horários de cada canal se ajustam na área dos pais.</p>
+      <div class="msg" id="msg-setup-grade"></div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-grade-ok">Continuar</button></div>
+    </div>
+
+    <div class="painel setup" id="setup-dormir" hidden>
+      <h2>Hora de dormir</h2>
+      <p>Nesse horário a TV inteira dorme e aparece o detetive dormindo. Só os pais liberam, com o PIN.</p>
+      <label class="chk"><input type="checkbox" id="setup-dormir-on" checked> Ativar a hora de dormir (todos os dias)</label>
+      <div class="form" style="justify-content:center">
+        <label>Início<input type="time" id="setup-dormir-ini" value="20:30"></label>
+        <label>Fim<input type="time" id="setup-dormir-fim" value="07:00"></label>
+        <label>Cena<select id="setup-dormir-tema"><option value="auto">Automática (pela hora)</option><option value="noite">Noite</option><option value="escuro">Escuro (quarto apagado)</option></select></label>
+      </div>
+      <p id="setup-dormir-ja" hidden></p>
+      <div class="msg" id="msg-setup-dormir"></div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-dormir-ok">Continuar</button></div>
+    </div>
+
+    <div class="painel setup" id="setup-aparelho" hidden>
+      <h2>Este aparelho</h2>
+      <div id="setup-ap-tv" class="setup-col" hidden>
+        <label class="chk"><input type="checkbox" id="setup-launcher"> Abrir a Hora do Desenho quando a TV ligar (tela inicial)</label>
+        <p>Depois de concluir, aperte <b>HOME</b> no controle e escolha <b>Hora do Desenho → Sempre</b>. No Google TV e no Fire TV o app abre sozinho quando a TV termina de ligar.</p>
+      </div>
+      <div id="setup-ap-cel" class="setup-col" hidden>
+        <label class="chk"><input type="checkbox" id="setup-kiosk"> Modo criança: fixar o app (a criança não sai dele; só os pais, com o PIN)</label>
+        <p>Na primeira vez o Android pergunta <b>"Fixar este app?"</b> — confirme.</p>
+      </div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-aparelho-ok">Continuar</button></div>
+    </div>
+
+    <div class="painel setup" id="setup-pronto" hidden>
+      <h2>Tudo pronto! 🎉</h2>
+      <ul class="setup-resumo" id="setup-resumo"></ul>
+      <p id="setup-agora-dormir" hidden><b>Agora já é hora de dormir</b>, então a TV vai mostrar o detetive dormindo. Para testar, toque em "Pais: liberar com o PIN".</p>
+      <p>Para mudar qualquer coisa depois, toque na engrenagem ⚙️ no canto e digite o PIN.</p>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-fim">📺 Ligar a TV</button></div>
     </div>
   </div>
 </section>
@@ -479,9 +570,10 @@
     </div>
 
     <h2>Chave da YouTube Data API</h2>
-    <p class="ajuda">A chave é gratuita e fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
+    <p class="ajuda" id="key-ajuda">A chave é gratuita e fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
+    <p class="ajuda" id="key-embutida" hidden>✅ Este aparelho já vem com a chave da Hora do Desenho — não precisa fazer nada. Só preencha abaixo se quiser usar uma chave sua.</p>
     <div class="painel">
-      <ol class="passos">
+      <ol class="passos" id="key-passos">
         <li>Entre no Google Cloud com sua conta Google e crie um projeto (qualquer nome, ex. <em>hora-do-desenho</em>).</li>
         <li>Ative a API no projeto: <a class="btn" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Ativar YouTube Data API v3</a></li>
         <li>Crie a chave em <strong>Criar credenciais → Chave de API</strong>: <a class="btn" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Abrir página de credenciais</a></li>
@@ -559,6 +651,14 @@
         <button class="btn" data-previa="manha">🌅 Manhã cedo</button>
         <button class="btn" data-previa="escuro">🌑 Escuro</button>
       </div>
+    </div>
+
+    <h2>Versão e passo a passo</h2>
+    <div class="painel form">
+      <div style="flex:1; min-width:160px; font-weight:800" id="versao-atual">Versão web</div>
+      <a class="btn" href="https://github.com/viniciusandradde/grade-tv/releases/latest" target="_blank" rel="noopener">⬇️ Baixar a versão mais recente</a>
+      <button class="btn" id="refazer-passos">🧭 Refazer o passo a passo</button>
+      <div class="msg" id="msg-versao" style="width:100%"></div>
     </div>
 
     <h2>Dados</h2>
@@ -664,10 +764,16 @@ function faltaTexto(ms){
 
 // ---------- YouTube Data API ----------
 const API = 'https://www.googleapis.com/youtube/v3/';
+// A chave dos pais (se houver) ou a que vem embutida no APK da fase zero
+function chaveEmbutida(){ try{ return (window.HoraDoDesenho && typeof HoraDoDesenho.chaveEmbutida==='function' && HoraDoDesenho.chaveEmbutida()) || ''; }catch(e){ return ''; } }
+const chaveApi = () => DB.apiKey || chaveEmbutida();
 async function yt(recurso, params){
-  if(!DB.apiKey) throw new Error('Informe a chave da YouTube Data API na área dos pais.');
-  const u = new URL(API+recurso); for(const [k,v] of Object.entries(params)) u.searchParams.set(k,v); u.searchParams.set('key', DB.apiKey);
+  const chave = chaveApi();
+  if(!chave) throw new Error('Informe a chave da YouTube Data API na área dos pais.');
+  const u = new URL(API+recurso); for(const [k,v] of Object.entries(params)) u.searchParams.set(k,v); u.searchParams.set('key', chave);
   const r = await fetch(u.toString()); const j = await r.json();
+  if(j.error?.errors?.some(e=>e.reason==='quotaExceeded' || e.reason==='dailyLimitExceeded'))
+    throw new Error('O limite diário de consultas ao YouTube acabou. Os vídeos já carregados continuam passando; amanhã dá para atualizar de novo.');
   if(!r.ok) throw new Error(j.error?.message || ('Erro '+r.status)); return j;
 }
 function parseISODur(s){ const m=/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s||''); return m ? (+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0) : 0; }
@@ -796,24 +902,138 @@ function entrar(){
   if(DB.profiles.length>1) ir('perfis'); else ir('inicio');
 }
 
-// ----- Primeiro acesso -----
-let setupAvatar = AVATARES[0];
+// ----- Primeiro acesso: passo a passo de configuração -----
+// Cada passo salva na hora; se o app fechar no meio, o passo a passo volta de onde parou.
+let setupAvatar = AVATARES[0], passosSetup = [], passoAtual = 0;
+const setupSugSel = new Set();
 function renderSetup(){
-  $('#setup-1').hidden=false; $('#setup-2').hidden=true;
-  const av=$('#setup-avatares'); av.innerHTML=''; for(const a of AVATARES) av.append(el('button',{type:'button','aria-pressed':String(a===setupAvatar), onclick:e=>{ setupAvatar=a; [...av.children].forEach(b=>b.setAttribute('aria-pressed', String(b.textContent===a))); }}, a));
-  $('#setup-pin').focus();
+  passosSetup = ['pin', 'perfil', ...(chaveApi() ? [] : ['chave']), 'canais', 'grade', 'dormir', ...(window.HoraDoDesenho ? ['aparelho'] : []), 'pronto'];
+  irPasso(Math.max(0, passosSetup.indexOf(DB.setupPasso)));
 }
-$('#setup-avancar').onclick = ()=>{
-  const a=$('#setup-pin').value, b=$('#setup-pin2').value;
-  if(!/^\d{4}$/.test(a)) return msg('#msg-setup1','O PIN precisa ter 4 números.','erro');
-  if(a!==b) return msg('#msg-setup1','Os dois PINs não são iguais.','erro');
-  DB.pin=a; salvar(); $('#setup-1').hidden=true; $('#setup-2').hidden=false; $('#setup-nome').focus();
+function irPasso(i){
+  passoAtual = Math.max(0, Math.min(i, passosSetup.length-1));
+  const id = passosSetup[passoAtual];
+  document.querySelectorAll('#tela-setup > .centro > .setup').forEach(p=>p.hidden = p.id!=='setup-'+id);
+  $('#setup-progresso').replaceChildren(`Passo ${passoAtual+1} de ${passosSetup.length}`, el('div',{}, ...passosSetup.map((_,n)=>el('i',{class:n<=passoAtual?'on':''}))));
+  DB.setupPasso = id; salvar();
+  const m = $('#msg-setup-'+id); if(m) msg('#msg-setup-'+id, '');
+  PREPARA_PASSO[id]?.();
+  $('#tela-setup').scrollTop = 0;
+  $('#setup-'+id).querySelector('button.p')?.focus({preventScroll:true});
+}
+const proximoPasso = () => irPasso(passoAtual+1);
+document.querySelectorAll('[data-setup-voltar]').forEach(b=>b.addEventListener('click', ()=>irPasso(passoAtual-1)));
+const semHorario = () => DB.channels.filter(ch=>!DB.slots.some(s=>s.channelId===ch.id));
+
+const PREPARA_PASSO = {
+  pin(){ $('#setup-pin-1').value=''; $('#setup-pin-2').value=''; $('#setup-pin-manter').hidden=!DB.pin; },
+  perfil(){
+    const p=perfil(); if(p){ $('#setup-nome').value=p.nome; $('#setup-limite').value=p.limite||0; setupAvatar=p.avatar; }
+    const av=$('#setup-avatares'); av.innerHTML=''; for(const a of AVATARES) av.append(el('button',{type:'button','aria-pressed':String(a===setupAvatar), onclick:()=>{ setupAvatar=a; [...av.children].forEach(b=>b.setAttribute('aria-pressed', String(b.textContent===a))); }}, a));
+  },
+  chave(){ $('#setup-apikey').value = DB.apiKey; },
+  canais(){
+    const sg=$('#setup-sugestoes'); sg.innerHTML='';
+    for(const s of SUGESTOES){
+      const ja = DB.channels.some(c=>c.handle===s.h), sel = ja || setupSugSel.has(s.h);
+      const b = el('button',{type:'button', disabled:ja, 'aria-pressed':String(sel), onclick:()=>{
+        setupSugSel.has(s.h) ? setupSugSel.delete(s.h) : setupSugSel.add(s.h);
+        const on = setupSugSel.has(s.h); b.setAttribute('aria-pressed', String(on)); b.querySelector('.ok').textContent = on ? '✓' : '';
+      }}, el('div',{}, s.t, el('small',{}, s.d)), el('span',{class:'ok'}, sel ? '✓' : ''));
+      sg.append(b);
+    }
+  },
+  grade(){
+    const d=$('#setup-grade-dias'); if(!d.children.length) for(let i=0;i<7;i++){ const cb=el('input',{type:'checkbox',value:String(i)}); cb.checked=true; d.append(el('label',{},cb,DIAS_CURTO[i])); }
+    const falta = semHorario().length>0; $('#setup-grade-campos').hidden=!falta; $('#setup-grade-ja').hidden=falta;
+  },
+  dormir(){
+    const n=DB.locks?.length||0; $('#setup-dormir-on').checked=!n; $('#setup-dormir-ja').hidden=!n;
+    $('#setup-dormir-ja').textContent = `Você já tem ${n} horário${n>1?'s':''} de dormir (${(DB.locks||[]).map(l=>`${l.start}–${l.end}`).join(', ')}). Marque acima só se quiser adicionar outro.`;
+  },
+  aparelho(){
+    const tv=ehTv(); $('#setup-ap-tv').hidden=!tv; $('#setup-ap-cel').hidden=tv;
+    try{ $('#setup-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){}
+    $('#setup-kiosk').checked = DB.cfg.kiosk!==false;
+  },
+  pronto(){
+    const p=perfil(), r=$('#setup-resumo'), n=DB.channels.length; r.innerHTML='';
+    const item = (ic, t) => r.append(el('li',{}, el('span',{}, ic), el('span',{}, t)));
+    if(p) item(p.avatar, `${p.nome} · ${p.limite ? p.limite+' min de TV por dia' : 'sem limite diário'}`);
+    item('📺', `${n} ${n===1?'canal':'canais'}: ${DB.channels.map(c=>c.title).join(', ')}`);
+    const janelas=[...new Set(DB.slots.map(s=>`${s.start} às ${s.end}`))];
+    item('🕒', janelas.length ? 'TV no ar: '+janelas.join(' e ') : 'Nenhum horário na grade ainda (os canais ficam dormindo)');
+    if(DB.locks?.length) item('😴', 'Hora de dormir: '+DB.locks.map(l=>`${l.start} às ${l.end}`).join(', '));
+    if(window.HoraDoDesenho && !ehTv() && DB.cfg.kiosk!==false) item('🔒', 'Modo criança ligado: o app fica fixado no celular');
+    $('#setup-agora-dormir').hidden = !emBloqueio();
+  },
 };
-$('#setup-concluir').onclick = ()=>{
-  const nome=$('#setup-nome').value.trim(); if(!nome) return msg('#msg-setup2','Dê um nome para o perfil.','erro');
-  DB.profiles.push({id:uid(), nome, avatar:setupAvatar, limite:+$('#setup-limite').value||0, canais:[]});
-  DB.activeProfile = DB.profiles[DB.profiles.length-1].id; DB.setupDone=true; salvar(); ir('ajustes');
+
+$('#setup-pin-ok').onclick = ()=>{
+  const a=$('#setup-pin-1').value, b=$('#setup-pin-2').value;
+  if(DB.pin && !a && !b) return proximoPasso();
+  if(!/^\d{4}$/.test(a)) return msg('#msg-setup-pin','O PIN precisa ter 4 números.','erro');
+  if(a!==b) return msg('#msg-setup-pin','Os dois PINs não são iguais.','erro');
+  DB.pin=a; salvar(); proximoPasso();
 };
+$('#setup-perfil-ok').onclick = ()=>{
+  const nome=$('#setup-nome').value.trim(); if(!nome) return msg('#msg-setup-perfil','Dê um nome para o perfil.','erro');
+  const limite=+$('#setup-limite').value||0, p=perfil();
+  if(p) Object.assign(p, {nome, avatar:setupAvatar, limite});
+  else { DB.profiles.push({id:uid(), nome, avatar:setupAvatar, limite, canais:[]}); DB.activeProfile = DB.profiles[DB.profiles.length-1].id; }
+  salvar(); proximoPasso();
+};
+$('#setup-chave-ok').onclick = async e=>{
+  const btn=e.currentTarget, v=$('#setup-apikey').value.trim();
+  if(!v) return msg('#msg-setup-chave','Cole a chave (começa com AIza).','erro');
+  DB.apiKey=v; salvar(); btn.disabled=true; msg('#msg-setup-chave','Testando a chave…');
+  try{ const j=await yt('channels',{part:'id', forHandle:'YouTube'}); if(!j.items?.length) throw new Error('O YouTube respondeu algo inesperado. Confira a chave.'); proximoPasso(); }
+  catch(err){ msg('#msg-setup-chave', err.message, 'erro'); }
+  finally{ btn.disabled=false; }
+};
+$('#setup-canais-ok').onclick = async e=>{
+  const btn=e.currentTarget, extra=$('#setup-canal-extra').value.trim();
+  const fila = SUGESTOES.filter(s=>setupSugSel.has(s.h)).map(s=>({entrada:s.h, handle:s.h, nome:s.t}));
+  if(extra) fila.push({entrada:extra, handle:(/@([\w.-]+)/.exec(extra)||[])[0], nome:extra});
+  if(!fila.length && !DB.channels.length) return msg('#msg-setup-canais','Escolha pelo menos um canal.','erro');
+  btn.disabled=true; const erros=[];
+  for(const [n,c] of fila.entries()){
+    msg('#msg-setup-canais', `Carregando ${c.nome}… (${n+1} de ${fila.length})`);
+    try{ await adicionarCanal(c.entrada, c.handle, false); }
+    catch(err){ if(!/já está na lista/.test(err.message)) erros.push(`${c.nome}: ${err.message}`); continue; }
+    setupSugSel.delete(c.handle); if(c.entrada===extra) $('#setup-canal-extra').value='';
+  }
+  btn.disabled=false;
+  if(erros.length){ PREPARA_PASSO.canais(); return msg('#msg-setup-canais', erros.join(' · '), 'erro'); }
+  proximoPasso();
+};
+$('#setup-grade-ok').onclick = ()=>{
+  const sem = semHorario();
+  if(sem.length){
+    const faixas = [1,2].filter(n=>$('#setup-f'+n).checked).map(n=>({start:$(`#setup-f${n}-ini`).value, end:$(`#setup-f${n}-fim`).value}));
+    const days = [...$('#setup-grade-dias').querySelectorAll('input:checked')].map(i=>+i.value), mode = $('#setup-modo').value;
+    if(!faixas.length) return msg('#msg-setup-grade','Marque pelo menos um horário.','erro');
+    if(faixas.some(f=>!f.start || !f.end || f.start===f.end)) return msg('#msg-setup-grade','Cada horário precisa de início e fim diferentes.','erro');
+    if(!days.length) return msg('#msg-setup-grade','Marque pelo menos um dia.','erro');
+    for(const ch of sem) for(const f of faixas) DB.slots.push({id:uid(), channelId:ch.id, days, start:f.start, end:f.end, mode});
+    salvar();
+  }
+  proximoPasso();
+};
+$('#setup-dormir-ok').onclick = ()=>{
+  if($('#setup-dormir-on').checked){
+    const start=$('#setup-dormir-ini').value, end=$('#setup-dormir-fim').value, tema=$('#setup-dormir-tema').value;
+    if(!start || !end || start===end) return msg('#msg-setup-dormir','Informe início e fim diferentes.','erro');
+    (DB.locks ||= []).push({id:uid(), days:[0,1,2,3,4,5,6], start, end, tema}); salvar();
+  }
+  proximoPasso();
+};
+$('#setup-aparelho-ok').onclick = ()=>{
+  if(ehTv()){ try{ HoraDoDesenho.definirLauncher($('#setup-launcher').checked); }catch(e){} }
+  else { DB.cfg.kiosk = $('#setup-kiosk').checked; salvar(); }
+  proximoPasso();
+};
+$('#setup-fim').onclick = ()=>{ DB.setupDone=true; delete DB.setupPasso; salvar(); entrar(); };
 
 // ----- Início -----
 function cardCanal(ch, o, agora){
@@ -1024,6 +1244,8 @@ function msg(id, texto, tipo=''){ const m=$(id); m.textContent=texto; m.classNam
 let avatarSel = AVATARES[0];
 function renderAjustes(){
   $('#apikey').value = DB.apiKey;
+  verificarVersao();
+  { const emb=!!chaveEmbutida(); $('#key-embutida').hidden=!emb; $('#key-ajuda').hidden=emb; $('#key-passos').hidden=emb; }
   $('#cfg-strict').checked = DB.cfg.strict; $('#cfg-shorts').checked = DB.cfg.shorts; $('#cfg-auto').checked = DB.cfg.auto;
   if(window.HoraDoDesenho){ $('#sec-aparelho').hidden=false; try{ $('#cfg-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){} $('#cfg-kiosk').checked = DB.cfg.kiosk!==false; const tv=ehTv(); $('#linha-kiosk').hidden=tv; $('#ajuda-kiosk').hidden=tv; }
   // avatares
@@ -1074,12 +1296,13 @@ function renderAjustes(){
       el('button',{class:'btn perigo', onclick:()=>{ DB.slots=DB.slots.filter(x=>x!==s); salvar(); renderAjustes(); }},'Remover')));
   });
 }
-async function adicionarCanal(entrada, handle){
+async function adicionarCanal(entrada, handle, mostrar=true){
   const ch = await resolverCanal(entrada);
   if(DB.channels.some(c=>c.id===ch.id)) throw new Error('Esse canal já está na lista.');
   if(handle) ch.handle = handle;
-  DB.channels.push(ch); salvar(); renderAjustes(); msg('#msg-canal',`${ch.title} adicionado. Carregando vídeos…`);
-  await atualizarVideos(ch, true); renderAjustes(); msg('#msg-canal',`${ch.title} pronto: ${DB.cache[ch.id].videos.length} vídeos.`,'ok');
+  DB.channels.push(ch); salvar(); if(mostrar){ renderAjustes(); msg('#msg-canal',`${ch.title} adicionado. Carregando vídeos…`); }
+  await atualizarVideos(ch, true); if(mostrar){ renderAjustes(); msg('#msg-canal',`${ch.title} pronto: ${DB.cache[ch.id].videos.length} vídeos.`,'ok'); }
+  return ch;
 }
 $('#add-perfil').onclick = ()=>{
   const nome=$('#perfil-nome').value.trim(); if(!nome) return msg('#msg-perfil','Dê um nome ao perfil.','erro');
@@ -1108,6 +1331,21 @@ $('#add-lock').onclick = ()=>{
 $('#cfg-strict').onchange = e=>{ DB.cfg.strict=e.target.checked; salvar(); };
 $('#cfg-shorts').onchange = e=>{ DB.cfg.shorts=e.target.checked; salvar(); };
 $('#cfg-auto').onchange = e=>{ DB.cfg.auto=e.target.checked; salvar(); };
+$('#refazer-passos').onclick = ()=>{ DB.setupPasso='pin'; salvar(); ir('setup'); };
+
+// ----- Versão (fase zero: o APK é distribuído pelo GitHub Releases) -----
+const versaoApp = () => { try{ return window.HoraDoDesenho ? HoraDoDesenho.version() : ''; }catch(e){ return ''; } };
+const partesVersao = v => (v||'').replace(/^v/,'').split(/[.-]/).slice(0,3).map(n=>parseInt(n,10)||0);
+function versaoMaisNova(a, b){ const x=partesVersao(a), y=partesVersao(b); for(let i=0;i<3;i++) if(x[i]!==y[i]) return x[i]>y[i]; return false; }
+let ultimaVersao = null;
+async function verificarVersao(){
+  const atual = versaoApp(); if(!atual) return;
+  $('#versao-atual').textContent = 'Versão ' + atual;
+  try{
+    if(ultimaVersao===null){ ultimaVersao=''; const r=await fetch('https://api.github.com/repos/viniciusandradde/grade-tv/releases/latest'); if(r.ok) ultimaVersao=(await r.json()).tag_name||''; }
+    if(ultimaVersao && versaoMaisNova(ultimaVersao, atual)) msg('#msg-versao', `Nova versão ${ultimaVersao} disponível! Baixe e instale por cima: a configuração continua.`, 'ok');
+  }catch(e){}
+}
 $('#cfg-kiosk').onchange = e=>{ DB.cfg.kiosk=e.target.checked; salvar(); };
 $('#cfg-launcher').onchange = e=>{ try{ HoraDoDesenho.definirLauncher(e.target.checked); }catch(err){ alert('Não foi possível alterar: '+err); } };
 $('#exportar').onclick = ()=>{ const {cache, ...resto} = DB; const b=new Blob([JSON.stringify(resto,null,2)],{type:'application/json'}); const a=el('a',{href:URL.createObjectURL(b), download:'hora-do-desenho.json'}); a.click(); msg('#msg-dados','Configuração exportada (sem o cache de vídeos).','ok'); };
@@ -1193,9 +1431,10 @@ setInterval(()=>{
 document.addEventListener('keydown', e=>{
   if(telaAtual==='ligar') return;
   if($('#pin').classList.contains('ativa')){ if(/^\d$/.test(e.key)) teclaPin(e.key); if(e.key==='Backspace') teclaPin('⌫'); if(e.key==='Enter') teclaPin('OK'); if(e.key==='Escape') $('#pin-cancelar').click(); return; }
-  const emCampo = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName);
-  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='bloqueio'){ if(previaBloqueio) ir('ajustes'); } else if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else if(telaAtual==='ajustes') ir('inicio'); else if(telaAtual!=='inicio') ir('inicio'); return; }
+  const emCampo = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName) && document.activeElement.type!=='checkbox';
+  if(e.key==='Escape'){ e.preventDefault(); if(telaAtual==='bloqueio'){ if(previaBloqueio) ir('ajustes'); } else if(telaAtual==='player' && $('#livre-lista').classList.contains('aberta')) $('#livre-lista').classList.remove('aberta'); else if(telaAtual==='setup'){ if(passoAtual>0) irPasso(passoAtual-1); } else if(telaAtual==='ajustes') ir('inicio'); else if(telaAtual!=='inicio') ir('inicio'); return; }
   if(emCampo) return;
+  if(telaAtual==='setup' && !e.key.startsWith('Arrow')) return; // no passo a passo, só as setas navegam
   const k=e.key.toLowerCase();
   if(telaAtual==='bloqueio' && !previaBloqueio && k!=='a') return;
   if(k==='g') return ir('guia');
@@ -1207,7 +1446,7 @@ document.addEventListener('keydown', e=>{
     return;
   }
   if(['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key)){
-    const foc=[...document.querySelectorAll('.tela.ativa button:not([hidden]), #nav button')].filter(b=>b.offsetParent);
+    const foc=[...document.querySelectorAll('.tela.ativa button:not([hidden]), .tela.ativa .chk input, #nav button')].filter(b=>b.offsetParent);
     const i=foc.indexOf(document.activeElement); const dir=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;
     const n=foc[(i+dir+foc.length)%foc.length]; if(n){ n.focus(); e.preventDefault(); }
   }

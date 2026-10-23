@@ -42,6 +42,8 @@ Tudo roda com o player oficial do YouTube e a API oficial do YouTube. A Hora do 
 
 ## Como instalar
 
+> **Fase zero (teste com famílias parceiras):** o APK já vem com a chave do YouTube e, na primeira abertura, um **passo a passo** guia PIN, perfil, canais, horários, hora de dormir e modo criança. Guia completo para o parceiro (e para quem publica) em [FASE-ZERO.md](FASE-ZERO.md). Link direto: [hora-do-desenho.apk](https://github.com/viniciusandradde/grade-tv/releases/latest/download/hora-do-desenho.apk).
+
 ### Na TV (Android TV, Google TV, Fire TV, TV Box)
 
 1. Baixe o `hora-do-desenho.apk` na página de [**Releases**](../../releases) (ou no artefato da última build em [**Actions**](../../actions)).
@@ -67,7 +69,7 @@ Abra o `index.html` direto no Chrome, ou use a versão hospedada (GitHub Pages).
 
 ## A chave da YouTube Data API (5 minutos, gratuita)
 
-A Hora do Desenho precisa de uma chave para listar os vídeos dos canais. Ela é sua, fica salva só no seu aparelho, e a cota gratuita (10.000 unidades por dia) dá para dezenas de canais.
+A Hora do Desenho precisa de uma chave para listar os vídeos dos canais. **No APK da fase zero ela já vem embutida** — esta seção vale para a versão do navegador ou para quem prefere usar a própria chave. Ela é sua, fica salva só no seu aparelho, e a cota gratuita (10.000 unidades por dia) dá para dezenas de canais.
 
 1. Entre no [Google Cloud](https://console.cloud.google.com/) com sua conta Google e crie um projeto (qualquer nome, ex. `grade-tv`).
 2. [Ative a YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) nesse projeto.
@@ -110,6 +112,7 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 - [x] Fase 2 — app Android TV como tela inicial, APK automático; celular em retrato
 - [x] Fase 2.5 — tela de bloqueio com o detetive dormindo e horários de bloqueio
 - [x] Fase 2.6 — cena Escuro (quarto apagado): só o contorno dos textos e brilho mínimo no celular
+- [x] Fase zero — APK para parceiros: chave do YouTube embutida, assinatura fixa (atualiza por cima), passo a passo de configuração e aviso de versão nova
 - [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
 - [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
 

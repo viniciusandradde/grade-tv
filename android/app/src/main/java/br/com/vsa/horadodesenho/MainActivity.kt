@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -69,6 +70,14 @@ class MainActivity : Activity() {
         web.webViewClient = object : WebViewClientCompat() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 loader.shouldInterceptRequest(request.url)
+
+            // A tela nunca sai do app: links do guia e da página de download (GitHub/Google) abrem
+            // no navegador do aparelho; qualquer outro (ex.: logo do YouTube no player) é ignorado.
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                if (!request.isForMainFrame || request.url.host == Uri.parse(view.url ?: "").host) return false
+                if (linkExterno(request.url)) abrirNoNavegador(request.url)
+                return true
+            }
         }
 
         // Tela cheia pedida pelo player (quando o modo livre usa os controles do YouTube)
@@ -152,6 +161,15 @@ class MainActivity : Activity() {
         intent?.getStringExtra("url")?.let { salvarUrl(it); web.loadUrl(it) }
     }
 
+    private fun linkExterno(uri: Uri): Boolean {
+        val host = uri.host ?: return false
+        return uri.scheme == "https" && listOf("github.com", "github.io", "google.com").any { host == it || host.endsWith(".$it") }
+    }
+
+    private fun abrirNoNavegador(uri: Uri) {
+        try { startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
+    }
+
     private fun urlAtual(): String =
         getSharedPreferences("horadodesenho", MODE_PRIVATE).getString("url", null)
             ?: "https://appassets.androidplatform.net/assets/index.html"
@@ -215,6 +233,9 @@ class MainActivity : Activity() {
         @JavascriptInterface fun version(): String = BuildConfig.VERSION_NAME
         @JavascriptInterface fun isTv(): Boolean = ehTv()
         @JavascriptInterface fun sdk(): Int = Build.VERSION.SDK_INT
+
+        /** Chave da YouTube Data API embutida no build (fase zero); vazia quando o APK foi gerado sem ela. */
+        @JavascriptInterface fun chaveEmbutida(): String = BuildConfig.YOUTUBE_API_KEY
 
         /** Tela inicial (launcher) ligada/desligada — controlado na área dos pais. */
         @JavascriptInterface fun launcherAtivo(): Boolean = this@MainActivity.launcherAtivo()

@@ -29,7 +29,27 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      # Fase zero (APK para parceiros): a chave do YouTube e a assinatura fixa vêm dos secrets
+      # do repositório. Sem eles o build continua funcionando, como antes, e só avisa.
+      - name: Preparar chave do YouTube e assinatura
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$YOUTUBE_API_KEY" ]; then
+            echo "::warning::Sem o secret YOUTUBE_API_KEY: o APK vai pedir a chave do YouTube no passo a passo."
+          fi
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/hora-do-desenho.keystore"
+            echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/hora-do-desenho.keystore" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Sem o secret ANDROID_KEYSTORE_BASE64: o APK sai com assinatura de debug aleatória e, para atualizar, é preciso desinstalar a versão anterior."
+          fi
+
       - name: Build debug APK
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: gradle -p android assembleDebug --no-daemon
 
       - name: Rename APK
@@ -45,6 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           name: Hora do Desenho ${{ inputs.release_tag || github.ref_name }}
           files: hora-do-desenho.apk
           generate_release_notes: true
