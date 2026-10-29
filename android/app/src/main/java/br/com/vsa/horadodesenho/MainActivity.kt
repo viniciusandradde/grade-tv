@@ -196,6 +196,22 @@ class MainActivity : Activity() {
         (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
     } catch (_: Exception) { emptySet() }
 
+    /** Allowlist parental independente para cada perfil infantil. */
+    private fun appsPorPerfilNativos(): JSONObject = try {
+        JSONObject(appsPrefs.getString("profile_allowed", "{}") ?: "{}")
+    } catch (_: Exception) { JSONObject() }
+
+    private fun appsPermitidosPerfilNativo(profileId: String): Set<String> = try {
+        if (profileId.isBlank()) return emptySet()
+        val arr = appsPorPerfilNativos().optJSONArray(profileId) ?: return emptySet()
+        (0 until arr.length())
+            .mapNotNull { arr.optString(it).takeIf { pkg -> pkg.isNotBlank() } }
+            .toSet()
+    } catch (_: Exception) { emptySet() }
+
+    private fun perfilAtivoNativo(): String =
+        appsPrefs.getString("active_profile_id", "") ?: ""
+
     private fun appsAtivosNativos(): Set<String> = try {
         val json = JSONArray(appsPrefs.getString("active_allowed", "[]") ?: "[]")
         (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
@@ -320,21 +336,49 @@ class MainActivity : Activity() {
             return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
         }
 
-        /** Define a lista do perfil infantil ativo; limita tanto a abertura via ponte quanto o Lock Task. */
-        @JavascriptInterface fun definirAppsAtivos(json: String): String {
+        /** Persiste as allowlists parentais por perfil; não aceita pacotes arbitrários. */
+        @JavascriptInterface fun definirAppsPorPerfil(json: String): String {
             if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
-            // Defesa nativa: um perfil infantil nunca pode ativar apps fora da allowlist
-            // aprovada pelos responsáveis, mesmo se a interface enviar pacotes arbitrários.
-            val parentAllowed = appsPermitidosNativos()
+            val requested = try { JSONObject(json) } catch (_: Exception) { JSONObject() }
+            val sanitized = JSONObject()
+            val keys = requested.keys()
+            while (keys.hasNext()) {
+                val profileId = keys.next()
+                if (profileId.isBlank()) continue
+                val arr = requested.optJSONArray(profileId) ?: continue
+                val allowed = (0 until arr.length())
+                    .mapNotNull { arr.optString(it).takeIf { pkg -> appPodeAbrir(pkg) } }
+                    .toSet()
+                val clean = JSONArray()
+                allowed.sorted().forEach { clean.put(it) }
+                sanitized.put(profileId, clean)
+            }
+            appsPrefs.edit().putString("profile_allowed", sanitized.toString()).apply()
+            val activeProfile = perfilAtivoNativo()
+            val activeAllowed = appsPermitidosPerfilNativo(activeProfile)
+            val activeJson = JSONArray()
+            activeAllowed.sorted().forEach { activeJson.put(it) }
+            appsPrefs.edit().putString("active_allowed", activeJson.toString()).apply()
+            val kioskReady = sincronizarPacotesQuiosque(activeAllowed)
+            return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
+        }
+
+        /** Ativa apenas apps aprovados nativamente para o perfil informado. */
+        @JavascriptInterface fun definirAppsAtivos(profileId: String, json: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            val parentAllowed = appsPermitidosPerfilNativo(profileId)
             val requested = try {
                 val arr = JSONArray(json)
                 (0 until arr.length())
-                    .mapNotNull { arr.optString(it).takeIf { p -> p in parentAllowed && appPodeAbrir(p) } }
+                    .mapNotNull { arr.optString(it).takeIf { pkg -> pkg in parentAllowed && appPodeAbrir(pkg) } }
                     .toSet()
             } catch (_: Exception) { emptySet() }
             val saved = JSONArray()
             requested.sorted().forEach { saved.put(it) }
-            appsPrefs.edit().putString("active_allowed", saved.toString()).apply()
+            appsPrefs.edit()
+                .putString("active_profile_id", profileId)
+                .putString("active_allowed", saved.toString())
+                .apply()
             val kioskReady = sincronizarPacotesQuiosque(requested)
             return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
         }
@@ -353,7 +397,8 @@ class MainActivity : Activity() {
         /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
         @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
             if (!uiDeConfianca()) return JSONObject().put("ok", false).put("reason", "Origem da interface não confiável.").toString()
-            if (pkg !in appsAtivosNativos() || pkg !in appsPermitidosNativos() || !appPodeAbrir(pkg)) {
+            val activeProfile = perfilAtivoNativo()
+            if (pkg !in appsAtivosNativos() || pkg !in appsPermitidosPerfilNativo(activeProfile) || !appPodeAbrir(pkg)) {
                 return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
             }
             if (travado() && !ehDeviceOwner()) {
