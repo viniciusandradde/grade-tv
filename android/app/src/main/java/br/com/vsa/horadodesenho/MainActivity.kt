@@ -188,7 +188,7 @@ class MainActivity : Activity() {
     } catch (_: Exception) { emptySet() }
 
     private fun sincronizarPacotesQuiosque(permitidos: Set<String>): Boolean {
-        if (!ehDeviceOwner()) return false
+        if (!ehDeviceOwner() || Build.VERSION.SDK_INT < 23) return false
         return try {
             val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
             dpm.setLockTaskPackages(adminComponent, (permitidos + packageName).filter { appPodeAbrir(it) || it == packageName }.toTypedArray())
@@ -267,6 +267,7 @@ class MainActivity : Activity() {
 
         /** Catálogo de apps instalados que podem ser iniciados; nenhum é liberado por padrão. */
         @JavascriptInterface fun listarAppsInstalados(): String {
+            if (!uiDeConfianca()) return "[]"
             val arr = JSONArray()
             appsDeInicializacao().forEach { item ->
                 val info = item.activityInfo
@@ -280,6 +281,7 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun appsPermitidos(): String {
+            if (!uiDeConfianca()) return "[]"
             val arr = JSONArray()
             appsPermitidosNativos().sorted().forEach { arr.put(it) }
             return arr.toString()
@@ -287,6 +289,7 @@ class MainActivity : Activity() {
 
         /** Persiste somente pacotes instalados e com launcher. O catálogo nativo é a autoridade para abrir apps. */
         @JavascriptInterface fun definirAppsPermitidos(json: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
             val requested = try {
                 val arr = JSONArray(json)
                 (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { p -> appPodeAbrir(p) } }.toSet()
@@ -313,6 +316,7 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun statusControleDispositivo(): String {
+            if (!uiDeConfianca()) return JSONObject().put("deviceOwner", false).put("lockTaskAllowed", false).toString()
             val owner = ehDeviceOwner()
             val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
             return JSONObject()
@@ -324,6 +328,7 @@ class MainActivity : Activity() {
 
         /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
         @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("ok", false).put("reason", "Origem da interface não confiável.").toString()
             if (pkg !in appsAtivosNativos() || !appPodeAbrir(pkg)) {
                 return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
             }
@@ -331,7 +336,7 @@ class MainActivity : Activity() {
                 return JSONObject().put("ok", false).put("reason", "Para trocar entre aplicativos mantendo o celular bloqueado, é necessário configurar o modo quiosque gerenciado neste dispositivo.").toString()
             }
             return try {
-                if (ehDeviceOwner()) sincronizarPacotesQuiosque(appsPermitidosNativos())
+                if (ehDeviceOwner()) sincronizarPacotesQuiosque(appsAtivosNativos())
                 val launch = packageManager.getLaunchIntentForPackage(pkg) ?: throw IllegalStateException("Aplicativo sem tela inicial.")
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(launch)
