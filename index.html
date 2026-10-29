@@ -771,7 +771,7 @@ function ir(nome){
   $('#gear').classList.toggle('visivel', nome!=='player');
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(nome==='player'); }catch(e){} }
   if(window.HoraDoDesenho && ['inicio','apps','guia','favoritos','player','foradoar','descanso','bloqueio'].includes(nome)){
-    try{ HoraDoDesenho.definirAppsAtivos(JSON.stringify(perfil()?.apps||[])); }catch(e){}
+    try{ HoraDoDesenho.definirAppsAtivos(perfil()?.id||'', JSON.stringify(perfil()?.apps||[])); }catch(e){}
   }
   aplicarModoCrianca(nome);
   const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
@@ -1147,11 +1147,12 @@ function salvarAppsPermitidos(){
   const p=DB.profiles.find(x=>x.id===appsAdminProfileId);
   if(!p) return msg('#msg-apps','Crie ou selecione um perfil infantil primeiro.','erro');
   p.apps=[...$('#lista-apps-disponiveis').querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.dataset.package).filter(pkg=>apps.some(a=>a.packageName===pkg));
-  const union=[...new Set(DB.profiles.flatMap(x=>x.apps||[]))];
+  const perProfile={};
+  DB.profiles.forEach(profile=>{ perProfile[profile.id]=Array.isArray(profile.apps)?profile.apps:[]; });
   salvar();
   try{
-    const result=JSON.parse(HoraDoDesenho.definirAppsPermitidos(JSON.stringify(union)));
-    if(!result.saved) throw new Error('Não foi possível salvar a lista nativa.');
+    const result=JSON.parse(HoraDoDesenho.definirAppsPorPerfil(JSON.stringify(perProfile)));
+    if(!result.saved) throw new Error('Não foi possível salvar as permissões nativas por perfil.');
     msg('#msg-apps','Lista salva para '+p.nome+': '+p.apps.length+' aplicativo(s).'+(result.deviceOwner?' Modo gerenciado detectado.':' Para alternar entre apps com bloqueio forte, ainda falta configurar Device Owner.'), 'ok');
   }catch(e){ msg('#msg-apps','A configuração foi salva neste perfil, mas não foi possível sincronizar o controle Android: '+e.message,'erro'); }
   renderAppsAdmin();
