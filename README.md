@@ -111,6 +111,18 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 - [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
 - [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
 
+## VSA Crescer+ Digital — plataforma familiar
+
+A Hora do Desenho faz parte da metodologia **VSA Crescer+ Digital**: uma plataforma familiar com produtos mantidos em repositórios independentes. A proposta é usar a Hora do Desenho como experiência principal no Android e permitir que os responsáveis selecionem quais outros aplicativos a criança pode abrir, sem liberar automaticamente tudo o que estiver instalado.
+
+- [Arquitetura do agregador de aplicativos e plano de implementação](docs/VSA_CRESCER_DIGITAL_APP_HUB.md)
+- [Repositório Tomb Mask Kids](https://github.com/viniciusandradde/tomb-of-the-mask) — jogo VSA planejado como app opcional; desenvolvimento pausado enquanto o Hora do Desenho e o hub são priorizados.
+- Aplicativos externos como **GCompris** serão avaliados para compatibilidade, instalação e possibilidade real de controle.
+
+**Importante:** a lista de apps permitidos e a interface do hub ainda são trabalho de implementação. O modo de fixação de tela (*screen pinning*) não garante, sozinho, bloqueio absoluto do Android. Controle mais forte entre apps exige avaliar o modo quiosque do Android (*Lock Task Mode*) e provisionamento como Device Owner em aparelhos compatíveis.
+
+---
+
 ## Tempo em Família (app irmão, para os pais)
 
 Em `apps/tempo-em-familia/` há um segundo app, bem pequeno, para o celular **dos pais**: nos horários marcados ele trava o telefone numa tela com as fotos da família (carrossel) e só libera com senha. Serve para o jantar, a hora de dormir das crianças ou qualquer momento em que o celular deva ficar de lado. As fotos ficam apenas no aparelho. APK na página de Releases (`tempo-em-familia.apk`).
