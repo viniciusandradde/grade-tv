@@ -182,6 +182,11 @@ class MainActivity : Activity() {
         (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
     } catch (_: Exception) { emptySet() }
 
+    private fun appsAtivosNativos(): Set<String> = try {
+        val json = JSONArray(appsPrefs.getString("active_allowed", "[]") ?: "[]")
+        (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
+    } catch (_: Exception) { emptySet() }
+
     private fun sincronizarPacotesQuiosque(permitidos: Set<String>): Boolean {
         if (!ehDeviceOwner()) return false
         return try {
@@ -293,6 +298,20 @@ class MainActivity : Activity() {
             return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
         }
 
+        /** Define a lista do perfil infantil ativo; limita tanto a abertura via ponte quanto o Lock Task. */
+        @JavascriptInterface fun definirAppsAtivos(json: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            val requested = try {
+                val arr = JSONArray(json)
+                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { p -> appPodeAbrir(p) } }.toSet()
+            } catch (_: Exception) { emptySet() }
+            val saved = JSONArray()
+            requested.sorted().forEach { saved.put(it) }
+            appsPrefs.edit().putString("active_allowed", saved.toString()).apply()
+            val kioskReady = sincronizarPacotesQuiosque(requested)
+            return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
+        }
+
         @JavascriptInterface fun statusControleDispositivo(): String {
             val owner = ehDeviceOwner()
             val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -305,7 +324,7 @@ class MainActivity : Activity() {
 
         /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
         @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
-            if (pkg !in appsPermitidosNativos() || !appPodeAbrir(pkg)) {
+            if (pkg !in appsAtivosNativos() || !appPodeAbrir(pkg)) {
                 return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
             }
             if (travado() && !ehDeviceOwner()) {
