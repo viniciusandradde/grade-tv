@@ -65,7 +65,7 @@ A interface HTML atual roda dentro de WebView. Para descobrir e abrir aplicativo
 - `getAppVersion(packageName)`
 - `getKioskCapability()`
 
-A ponte deve validar no lado nativo que o pacote solicitado está na lista autorizada; não basta confiar em uma verificação JavaScript. Não expor métodos genéricos de execução, intents arbitrários ou acesso a arquivos.
+A ponte deve validar no lado nativo que o pacote solicitado está na lista autorizada; não basta confiar em uma verificação JavaScript. Não expor métodos genéricos de execução, intents arbitrários ou acesso a arquivos. A interface também exclui uma lista inicial de apps que podem contornar a experiência infantil (configurações do sistema, instaladores/lojas, navegadores e o app nativo do YouTube); essa lista precisa ser revista por fabricante e não substitui os controles do Device Owner.
 
 A visibilidade de apps instalados depende das regras de visibilidade de pacotes do Android. Antes de usar `QUERY_ALL_PACKAGES`, avaliar a política de distribuição e a necessidade real; preferir visibilidade limitada a pacotes conhecidos quando possível. Em instalação por sideload, a viabilidade técnica pode ser diferente da distribuição pela Play Store.
 
