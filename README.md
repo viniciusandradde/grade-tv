@@ -123,6 +123,19 @@ A Hora do Desenho faz parte da metodologia **VSA Crescer+ Digital**: uma platafo
 
 ---
 
+## VSA Crescer+ Digital — plataforma familiar
+
+A Hora do Desenho é o primeiro hub da metodologia **VSA Crescer+ Digital**. Na versão Android, a área dos pais inclui uma primeira versão da seleção de aplicativos instalados por perfil infantil; a tela infantil apresenta apenas os apps selecionados naquele perfil.
+
+- [Arquitetura do agregador e plano de implementação](docs/VSA_CRESCER_DIGITAL_APP_HUB.md)
+- [Configuração do modo quiosque gerenciado](docs/ANDROID_KIOSK_SETUP.md)
+- [Repositório Tomb Mask Kids](https://github.com/viniciusandradde/tomb-of-the-mask) — jogo VSA independente, com desenvolvimento pausado enquanto concluímos este hub.
+- GCompris e outros apps Android podem ser selecionados se estiverem instalados e expuserem uma atividade de inicialização.
+
+**Estado:** a interface e a ponte nativa foram adicionadas nesta branch, mas ainda precisam passar pelo build e por testes em dispositivo real. O modo de fixação comum não mantém necessariamente a criança dentro de vários apps. O bloqueio gerenciado exige provisionamento como Device Owner em dispositivo dedicado e validação de compatibilidade. Não use este protótipo como garantia de bloqueio absoluto.
+
+---
+
 ## Tempo em Família (app irmão, para os pais)
 
 Em `apps/tempo-em-familia/` há um segundo app, bem pequeno, para o celular **dos pais**: nos horários marcados ele trava o telefone numa tela com as fotos da família (carrossel) e só libera com senha. Serve para o jantar, a hora de dormir das crianças ou qualquer momento em que o celular deva ficar de lado. As fotos ficam apenas no aparelho. APK na página de Releases (`tempo-em-familia.apk`).
