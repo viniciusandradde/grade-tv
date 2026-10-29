@@ -3,10 +3,12 @@ package br.com.vsa.horadodesenho
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -21,6 +23,8 @@ import android.widget.FrameLayout
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import java.io.File
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.Executors
 
 /**
@@ -147,6 +151,41 @@ class MainActivity : Activity() {
     }
     private fun carregarDados(): String = try { if (arquivoDados.exists()) arquivoDados.readText() else "" } catch (_: Exception) { "" }
 
+    // ----- Agregador de aplicativos infantis -----
+    private val appsPrefs get() = getSharedPreferences("crescer_apps", MODE_PRIVATE)
+    private val adminComponent get() = ComponentName(this, VsaDeviceAdminReceiver::class.java)
+
+    private fun ehDeviceOwner(): Boolean = try {
+        (getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager).isDeviceOwnerApp(packageName)
+    } catch (_: Exception) { false }
+
+    private fun appsDeInicializacao(): List<ResolveInfo> {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        return try {
+            packageManager.queryIntentActivities(intent, 0)
+                .filter { it.activityInfo?.packageName != packageName }
+                .distinctBy { it.activityInfo.packageName }
+                .sortedBy { it.loadLabel(packageManager).toString().lowercase() }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    private fun appPodeAbrir(pkg: String): Boolean =
+        pkg.isNotBlank() && pkg != packageName && packageManager.getLaunchIntentForPackage(pkg) != null
+
+    private fun appsPermitidosNativos(): Set<String> = try {
+        val json = JSONArray(appsPrefs.getString("allowed", "[]") ?: "[]")
+        (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
+    } catch (_: Exception) { emptySet() }
+
+    private fun sincronizarPacotesQuiosque(permitidos: Set<String>): Boolean {
+        if (!ehDeviceOwner()) return false
+        return try {
+            val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            dpm.setLockTaskPackages(adminComponent, (permitidos + packageName).filter { appPodeAbrir(it) || it == packageName }.toTypedArray())
+            true
+        } catch (_: Exception) { false }
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.getStringExtra("url")?.let { salvarUrl(it); web.loadUrl(it) }
@@ -215,6 +254,68 @@ class MainActivity : Activity() {
         @JavascriptInterface fun version(): String = BuildConfig.VERSION_NAME
         @JavascriptInterface fun isTv(): Boolean = ehTv()
         @JavascriptInterface fun sdk(): Int = Build.VERSION.SDK_INT
+
+        /** Catálogo de apps instalados que podem ser iniciados; nenhum é liberado por padrão. */
+        @JavascriptInterface fun listarAppsInstalados(): String {
+            val arr = JSONArray()
+            appsDeInicializacao().forEach { item ->
+                val info = item.activityInfo
+                val obj = JSONObject()
+                obj.put("packageName", info.packageName)
+                obj.put("name", item.loadLabel(packageManager).toString())
+                obj.put("system", (info.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0)
+                arr.put(obj)
+            }
+            return arr.toString()
+        }
+
+        @JavascriptInterface fun appsPermitidos(): String {
+            val arr = JSONArray()
+            appsPermitidosNativos().sorted().forEach { arr.put(it) }
+            return arr.toString()
+        }
+
+        /** Persiste somente pacotes instalados e com launcher. O catálogo nativo é a autoridade para abrir apps. */
+        @JavascriptInterface fun definirAppsPermitidos(json: String): String {
+            val requested = try {
+                val arr = JSONArray(json)
+                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { p -> appPodeAbrir(p) } }.toSet()
+            } catch (_: Exception) { emptySet() }
+            val saved = JSONArray()
+            requested.sorted().forEach { saved.put(it) }
+            appsPrefs.edit().putString("allowed", saved.toString()).apply()
+            val kioskReady = sincronizarPacotesQuiosque(requested)
+            return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
+        }
+
+        @JavascriptInterface fun statusControleDispositivo(): String {
+            val owner = ehDeviceOwner()
+            val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            return JSONObject()
+                .put("deviceOwner", owner)
+                .put("lockTaskAllowed", try { dpm.isLockTaskPermitted(packageName) } catch (_: Exception) { false })
+                .put("sdk", Build.VERSION.SDK_INT)
+                .toString()
+        }
+
+        /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
+        @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
+            if (pkg !in appsPermitidosNativos() || !appPodeAbrir(pkg)) {
+                return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
+            }
+            if (travado() && !ehDeviceOwner()) {
+                return JSONObject().put("ok", false).put("reason", "Para trocar entre aplicativos mantendo o celular bloqueado, é necessário configurar o modo quiosque gerenciado neste dispositivo.").toString()
+            }
+            return try {
+                if (ehDeviceOwner()) sincronizarPacotesQuiosque(appsPermitidosNativos())
+                val launch = packageManager.getLaunchIntentForPackage(pkg) ?: throw IllegalStateException("Aplicativo sem tela inicial.")
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(launch)
+                JSONObject().put("ok", true).toString()
+            } catch (e: Exception) {
+                JSONObject().put("ok", false).put("reason", e.message ?: "Não foi possível abrir o aplicativo.").toString()
+            }
+        }
 
         /** Tela inicial (launcher) ligada/desligada — controlado na área dos pais. */
         @JavascriptInterface fun launcherAtivo(): Boolean = this@MainActivity.launcherAtivo()
