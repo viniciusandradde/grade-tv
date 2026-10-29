@@ -311,6 +311,11 @@ class MainActivity : Activity() {
             val saved = JSONArray()
             requested.sorted().forEach { saved.put(it) }
             appsPrefs.edit().putString("allowed", saved.toString()).apply()
+            // Revoga imediatamente permissões ativas que os responsáveis removeram.
+            val active = appsAtivosNativos().intersect(requested)
+            val activeJson = JSONArray()
+            active.sorted().forEach { activeJson.put(it) }
+            appsPrefs.edit().putString("active_allowed", activeJson.toString()).apply()
             val kioskReady = sincronizarPacotesQuiosque(requested)
             return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
         }
@@ -318,9 +323,14 @@ class MainActivity : Activity() {
         /** Define a lista do perfil infantil ativo; limita tanto a abertura via ponte quanto o Lock Task. */
         @JavascriptInterface fun definirAppsAtivos(json: String): String {
             if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            // Defesa nativa: um perfil infantil nunca pode ativar apps fora da allowlist
+            // aprovada pelos responsáveis, mesmo se a interface enviar pacotes arbitrários.
+            val parentAllowed = appsPermitidosNativos()
             val requested = try {
                 val arr = JSONArray(json)
-                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { p -> appPodeAbrir(p) } }.toSet()
+                (0 until arr.length())
+                    .mapNotNull { arr.optString(it).takeIf { p -> p in parentAllowed && appPodeAbrir(p) } }
+                    .toSet()
             } catch (_: Exception) { emptySet() }
             val saved = JSONArray()
             requested.sorted().forEach { saved.put(it) }
@@ -343,7 +353,7 @@ class MainActivity : Activity() {
         /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
         @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
             if (!uiDeConfianca()) return JSONObject().put("ok", false).put("reason", "Origem da interface não confiável.").toString()
-            if (pkg !in appsAtivosNativos() || !appPodeAbrir(pkg)) {
+            if (pkg !in appsAtivosNativos() || pkg !in appsPermitidosNativos() || !appPodeAbrir(pkg)) {
                 return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
             }
             if (travado() && !ehDeviceOwner()) {
