@@ -47,7 +47,7 @@ Remover Device Owner não é equivalente a desinstalar um app comum e pode exigi
 - O catálogo de apps e a lista de permitidos são uma primeira implementação e precisam de build e teste físico.
 - A seleção por perfil é aplicada na interface; o endurecimento de todas as fronteiras de segurança e a validação por perfil ainda exigem revisão.
 - A compatibilidade de cada app externo varia. Conseguir iniciá-lo não significa que o Hora do Desenho consiga limitar seu uso interno.
-- QUERY_ALL_PACKAGES amplia a visibilidade de pacotes. Antes de publicar na Google Play, avalie a política de visibilidade de apps e a declaração de uso. Para distribuição privada/sideload, mantenha o acesso limitado ao necessário.
+- A visibilidade de pacotes é declarada para atividades com categoria LAUNCHER, evitando solicitar acesso indiscriminado a todos os pacotes. Revise as políticas de distribuição e valide em cada versão/fabricante.
 - Não prometa bloqueio total antes de validar o aparelho e a versão do Android.
 
 ## Referências oficiais
