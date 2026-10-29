@@ -164,18 +164,32 @@ class MainActivity : Activity() {
         (getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager).isDeviceOwnerApp(packageName)
     } catch (_: Exception) { false }
 
+    private val pacotesBloqueados = setOf(
+        "com.android.settings", "com.android.systemui", "com.android.packageinstaller",
+        "com.google.android.packageinstaller", "com.google.android.permissioncontroller",
+        "com.android.permissioncontroller", "com.google.android.apps.nexuslauncher",
+        "com.android.vending", "com.google.android.vending", "com.android.chrome",
+        "com.google.android.chrome", "com.google.android.apps.chrome", "org.mozilla.firefox",
+        "com.microsoft.emmx", "com.opera.browser", "com.google.android.youtube",
+        "com.google.android.youtube.tv", "com.android.browser"
+    )
+
+    private fun pacoteBloqueado(pkg: String): Boolean =
+        pacotesBloqueados.any { pkg == it || pkg.startsWith("$it.") }
+
     private fun appsDeInicializacao(): List<ResolveInfo> {
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         return try {
             packageManager.queryIntentActivities(intent, 0)
-                .filter { it.activityInfo?.packageName != packageName }
+                .filter { it.activityInfo?.packageName != packageName && !pacoteBloqueado(it.activityInfo.packageName) }
                 .distinctBy { it.activityInfo.packageName }
                 .sortedBy { it.loadLabel(packageManager).toString().lowercase() }
         } catch (_: Exception) { emptyList() }
     }
 
     private fun appPodeAbrir(pkg: String): Boolean =
-        pkg.isNotBlank() && pkg != packageName && packageManager.getLaunchIntentForPackage(pkg) != null
+        pkg.isNotBlank() && pkg != packageName && !pacoteBloqueado(pkg) &&
+            packageManager.getLaunchIntentForPackage(pkg) != null
 
     private fun appsPermitidosNativos(): Set<String> = try {
         val json = JSONArray(appsPrefs.getString("allowed", "[]") ?: "[]")
