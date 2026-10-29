@@ -158,7 +158,7 @@
   .legenda i{display:inline-block; width:16px; height:16px; border-radius:5px; background:var(--azul); vertical-align:-3px; margin-right:6px}
   .legenda i.livre{background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.3) 0 4px, transparent 4px 8px)}
 
-  .app-item{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:18px;box-shadow:var(--sombra);margin:10px 0}
+  .app-item{display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:18px;box-shadow:var(--sombra);margin:10px 0;text-align:left;width:100%}
   .app-item .app-emoji{width:52px;height:52px;display:grid;place-items:center;border-radius:15px;background:var(--bg2);font-size:28px;flex:none}
   .app-item .app-meta{flex:1;min-width:0}
   .app-item .app-meta strong{display:block;overflow-wrap:anywhere}
@@ -770,6 +770,9 @@ function ir(nome){
   $('#gear').hidden = ['ligar','setup','ajustes'].includes(nome);
   $('#gear').classList.toggle('visivel', nome!=='player');
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(nome==='player'); }catch(e){} }
+  if(window.HoraDoDesenho && ['inicio','apps','guia','favoritos','player','foradoar','descanso','bloqueio'].includes(nome)){
+    try{ HoraDoDesenho.definirAppsAtivos(JSON.stringify(perfil()?.apps||[])); }catch(e){}
+  }
   aplicarModoCrianca(nome);
   const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
 }
