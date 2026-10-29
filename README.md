@@ -91,7 +91,7 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 
 ## Privacidade, de verdade
 
-- Nenhum dado sai do seu aparelho. Não existe servidor da Hora do Desenho, conta, cadastro ou rastreamento.
+- Perfis, grade, preferências e chave da API são armazenados localmente; não existe servidor próprio, conta, cadastro ou rastreamento da Hora do Desenho. As consultas de canais e a reprodução de vídeos se comunicam com os serviços do Google/YouTube e seguem os termos e políticas desses serviços.
 - A chave da API e as configurações ficam no armazenamento local do navegador ou do app.
 - O YouTube continua sendo o YouTube: anúncios e restrições de incorporação dos canais valem normalmente (uma conta Premium logada no aparelho remove os anúncios).
 
@@ -111,13 +111,26 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 - [ ] Fase 3 — sincronização entre aparelhos (configurar no celular, assistir na TV)
 - [ ] Fase 4 — "boletim" de vídeos novos, bloqueio por palavras-chave, relatórios de uso para os pais
 
+## VSA Crescer+ Digital — plataforma familiar
+
+A Hora do Desenho é o primeiro hub da metodologia **VSA Crescer+ Digital**. Na versão Android, a área dos pais inclui uma primeira versão da seleção de aplicativos instalados por perfil infantil; a tela infantil apresenta apenas os apps selecionados naquele perfil.
+
+- [Arquitetura do agregador e plano de implementação](docs/VSA_CRESCER_DIGITAL_APP_HUB.md)
+- [Configuração do modo quiosque gerenciado](docs/ANDROID_KIOSK_SETUP.md)
+- [Repositório Tomb Mask Kids](https://github.com/viniciusandradde/tomb-of-the-mask) — jogo VSA independente, com desenvolvimento pausado enquanto concluímos este hub.
+- GCompris e outros apps Android podem ser selecionados se estiverem instalados e expuserem uma atividade de inicialização.
+
+**Estado:** a interface e a ponte nativa foram adicionadas nesta branch, mas ainda precisam passar pelo build e por testes em dispositivo real. O modo de fixação comum não mantém necessariamente a criança dentro de vários apps. O bloqueio gerenciado exige provisionamento como Device Owner em dispositivo dedicado e validação de compatibilidade. Não use este protótipo como garantia de bloqueio absoluto.
+
+---
+
 ## Tempo em Família (app irmão, para os pais)
 
 Em `apps/tempo-em-familia/` há um segundo app, bem pequeno, para o celular **dos pais**: nos horários marcados ele trava o telefone numa tela com as fotos da família (carrossel) e só libera com senha. Serve para o jantar, a hora de dormir das crianças ou qualquer momento em que o celular deva ficar de lado. As fotos ficam apenas no aparelho. APK na página de Releases (`tempo-em-familia.apk`).
 
 ## Quem faz
 
-A Hora do Desenho é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Hora do Desenho nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com o mesmo cuidado profissional dos nossos produtos: código aberto, sem coleta de dados e com suporte pelas issues do repositório.
+A Hora do Desenho é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Hora do Desenho nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com código aberto e suporte pelas issues do repositório. As configurações são locais; consultas e reprodução usam serviços do Google/YouTube.
 
 ## Contribuir
 

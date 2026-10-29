@@ -158,6 +158,13 @@
   .legenda i{display:inline-block; width:16px; height:16px; border-radius:5px; background:var(--azul); vertical-align:-3px; margin-right:6px}
   .legenda i.livre{background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.3) 0 4px, transparent 4px 8px)}
 
+  .app-item{display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:18px;box-shadow:var(--sombra);margin:10px 0;text-align:left;width:100%}
+  .app-item .app-emoji{width:52px;height:52px;display:grid;place-items:center;border-radius:15px;background:var(--bg2);font-size:28px;flex:none}
+  .app-item .app-meta{flex:1;min-width:0}
+  .app-item .app-meta strong{display:block;overflow-wrap:anywhere}
+  .app-item .app-meta small{display:block;color:var(--dim);overflow-wrap:anywhere}
+  .app-item input[type=checkbox]{width:24px;height:24px;accent-color:var(--verde);flex:none}
+  .app-open{min-width:100px;justify-content:center}
   /* ---------- PIN ---------- */
   #pin{display:none; position:fixed; inset:0; z-index:60; background:rgba(31,35,64,.55); align-items:center; justify-content:center; padding:20px}
   #pin.ativa{display:flex}
@@ -343,6 +350,19 @@
   <div class="conteudo"><div class="grade" id="lista-favoritos"></div></div>
 </section>
 
+<!-- ===== Aplicativos liberados ===== -->
+<section id="tela-apps" class="tela">
+  <div class="topo"><div class="logo">🧩 Meus aplicativos</div><div class="espaco"></div><div class="perfil-chip"><span class="avatar" id="apps-avatar">🙂</span><span id="apps-nome"></span></div></div>
+  <div class="conteudo">
+    <div class="secao"><h2><i>🌟</i> O que posso usar?</h2></div>
+    <p class="ajuda">Aqui aparecem somente os aplicativos que os responsáveis liberaram para este perfil.</p>
+    <div class="grade" id="apps-crianca"></div>
+    <div class="vazio" id="apps-vazio" hidden>Nenhum aplicativo extra foi liberado para este perfil. Você ainda pode assistir aos desenhos pela tela inicial.</div>
+    <div class="painel" id="apps-sem-android" hidden>Para abrir outros aplicativos, use a versão Android da Hora do Desenho.</div>
+    <div class="painel" id="apps-status-quiosque" hidden></div>
+  </div>
+</section>
+
 <!-- ===== Guia ===== -->
 <section id="tela-guia" class="tela">
   <div class="topo"><div class="logo">🗓️ Hoje na TV</div><div class="espaco"></div><div class="relogio" id="relogio3">--:--</div></div>
@@ -358,6 +378,7 @@
   <button data-ir="inicio" aria-current="page"><i>🏠</i>Início</button>
   <button data-ir="guia"><i>🗓️</i>Hoje</button>
   <button data-ir="favoritos"><i>💖</i>Favoritos</button>
+  <button data-ir="apps"><i>🧩</i>Apps</button>
   <button id="btn-pais"><i>⚙️</i>Pais</button>
 </nav>
 
@@ -452,6 +473,19 @@
       <div class="msg" id="msg-pin" style="width:100%"></div>
     </div>
 
+    <h2>VSA Crescer+ Digital · Aplicativos permitidos</h2>
+    <p class="ajuda">Escolha, por perfil infantil, quais aplicativos instalados podem ser abertos a partir da Hora do Desenho. Apps novos ficam bloqueados até você liberá-los. A lista só pode ser descoberta na versão Android.</p>
+    <div class="painel">
+      <div class="form">
+        <label>Perfil da criança<select id="apps-perfil"></select></label>
+        <button class="btn" id="apps-atualizar">Atualizar lista</button>
+        <button class="btn p" id="apps-salvar">Salvar aplicativos liberados</button>
+      </div>
+      <div class="msg" id="msg-apps"></div>
+      <ul class="lista" id="lista-apps-disponiveis"></ul>
+      <div class="ajuda" id="apps-device-owner" style="margin-top:12px"></div>
+    </div>
+
     <h2>Chave da YouTube Data API</h2>
     <p class="ajuda">A chave é gratuita e fica salva só neste navegador. Cota diária de 10.000 unidades; cada atualização de canal gasta cerca de 3 a 5.</p>
     <div class="painel">
@@ -508,8 +542,8 @@
       <p class="ajuda">Na TV, a Hora do Desenho pode ser a tela inicial: a criança liga a TV e já cai nela. No celular, deixe desligado.</p>
       <div class="painel">
         <label class="chk"><input type="checkbox" id="cfg-launcher"> Usar como tela inicial (launcher) deste aparelho</label>
-        <label class="chk" id="linha-kiosk"><input type="checkbox" id="cfg-kiosk"> Modo criança no celular: fixar o app (Home e apps recentes ficam bloqueados; só sai pela área dos pais, com o PIN)</label>
-        <p class="ajuda" id="ajuda-kiosk" style="margin:6px 0 0">Na primeira vez o Android pergunta "Fixar este app?" — confirme. Se o celular tiver bloqueio de tela, desfixar fora do app exige a senha do aparelho.</p>
+        <label class="chk" id="linha-kiosk"><input type="checkbox" id="cfg-kiosk"> Modo criança básico: solicitar fixação de tela (não garante bloqueio total nem alternância segura entre vários apps)</label>
+        <p class="ajuda" id="ajuda-kiosk" style="margin:6px 0 0">A fixação de tela é uma proteção básica. Para manter a criança restrita a vários aplicativos autorizados, configure o modo quiosque gerenciado (Device Owner) em um aparelho dedicado e valide o funcionamento.</p>
         <p class="ajuda" style="margin:6px 0 0">Depois de ligar, aperte o botão HOME do controle e escolha "Hora do Desenho" → "Sempre". Para desfazer, desligue aqui ou use Configurações → Apps → Hora do Desenho → Limpar padrões.</p>
       </div>
     </div>
@@ -721,7 +755,7 @@ let telaAtual = 'ligar';
 function ir(nome){
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));
   $('#tela-'+nome).classList.add('ativa'); telaAtual = nome;
-  $('#nav').hidden = !['inicio','guia','favoritos'].includes(nome);
+  $('#nav').hidden = !['inicio','guia','favoritos','apps'].includes(nome);
   document.querySelectorAll('#nav [data-ir]').forEach(b=>b.toggleAttribute('aria-current', b.dataset.ir===nome) || (b.dataset.ir===nome ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current')));
   if(nome!=='player') pararPlayer();
   if(nome!=='foradoar') clearInterval(fdaTimer);
@@ -729,12 +763,16 @@ function ir(nome){
   if(nome==='inicio') renderInicio();
   if(nome==='guia') renderGuia();
   if(nome==='favoritos') renderFavoritos();
+  if(nome==='apps') renderApps();
   if(nome==='ajustes') renderAjustes();
   if(nome==='perfis') renderPerfis();
   if(nome==='setup') renderSetup();
   $('#gear').hidden = ['ligar','setup','ajustes'].includes(nome);
   $('#gear').classList.toggle('visivel', nome!=='player');
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(nome==='player'); }catch(e){} }
+  if(window.HoraDoDesenho && ['inicio','apps','guia','favoritos','player','foradoar','descanso','bloqueio'].includes(nome)){
+    try{ HoraDoDesenho.definirAppsAtivos(JSON.stringify(perfil()?.apps||[])); }catch(e){}
+  }
   aplicarModoCrianca(nome);
   const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
 }
@@ -996,6 +1034,7 @@ $('#btn-pais').onclick = abrirPais; $('#btn-pais-perfis').onclick = abrirPais; $
 function msg(id, texto, tipo=''){ const m=$(id); m.textContent=texto; m.className='msg '+tipo; }
 let avatarSel = AVATARES[0];
 function renderAjustes(){
+  renderAppsAdmin();
   $('#apikey').value = DB.apiKey;
   $('#cfg-strict').checked = DB.cfg.strict; $('#cfg-shorts').checked = DB.cfg.shorts; $('#cfg-auto').checked = DB.cfg.auto;
   if(window.HoraDoDesenho){ $('#sec-aparelho').hidden=false; try{ $('#cfg-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){} $('#cfg-kiosk').checked = DB.cfg.kiosk!==false; const tv=ehTv(); $('#linha-kiosk').hidden=tv; $('#ajuda-kiosk').hidden=tv; }
@@ -1047,6 +1086,108 @@ function renderAjustes(){
       el('button',{class:'btn perigo', onclick:()=>{ DB.slots=DB.slots.filter(x=>x!==s); salvar(); renderAjustes(); }},'Remover')));
   });
 }
+// ----- Hub de aplicativos VSA Crescer+ Digital -----
+let appsAdminProfileId = null;
+const APPS_BLOQUEADOS_POR_SEGURANCA = [
+  'com.android.settings','com.android.systemui','com.android.packageinstaller',
+  'com.google.android.packageinstaller','com.google.android.permissioncontroller',
+  'com.android.permissioncontroller','com.google.android.apps.nexuslauncher',
+  'com.android.vending','com.google.android.vending','com.android.chrome','com.google.android.chrome',
+  'com.google.android.apps.chrome','org.mozilla.firefox','com.microsoft.emmx','com.opera.browser',
+  'com.google.android.youtube','com.google.android.youtube.tv','com.android.browser'
+];
+function pacoteSeguroParaCatalogo(pkg){
+  return !!pkg && !APPS_BLOQUEADOS_POR_SEGURANCA.some(x=>pkg===x || pkg.startsWith(x+'.'));
+}
+function appsInstaladosAndroid(){
+  try{
+    if(!window.HoraDoDesenho || typeof HoraDoDesenho.listarAppsInstalados!=='function') return null;
+    const a=JSON.parse(HoraDoDesenho.listarAppsInstalados());
+    return Array.isArray(a) ? a.filter(x=>pacoteSeguroParaCatalogo(x.packageName)) : [];
+  }catch(e){ return null; }
+}
+function statusDispositivo(){
+  try{ return window.HoraDoDesenho?.statusControleDispositivo ? JSON.parse(HoraDoDesenho.statusControleDispositivo()) : null; }
+  catch(e){ return null; }
+}
+function renderAppsAdmin(){
+  const sel=$('#apps-perfil'); if(!sel) return;
+  sel.innerHTML='';
+  DB.profiles.forEach(p=>sel.append(el('option',{value:p.id},p.nome)));
+  if(!DB.profiles.some(p=>p.id===appsAdminProfileId)) appsAdminProfileId=DB.activeProfile||DB.profiles[0]?.id||null;
+  if(appsAdminProfileId) sel.value=appsAdminProfileId;
+  const list=$('#lista-apps-disponiveis'); list.innerHTML='';
+  const apps=appsInstaladosAndroid();
+  const status=statusDispositivo();
+  const info=$('#apps-device-owner');
+  if(!apps){
+    msg('#msg-apps','A seleção de aplicativos instalados funciona na versão Android da Hora do Desenho.','erro');
+    info.textContent='No celular, a versão Android pode listar os apps instalados. Para alternar entre apps mantendo o aparelho em modo quiosque, é necessário provisionamento gerenciado (Device Owner) em um dispositivo dedicado.';
+    return;
+  }
+  if(!apps.length) list.append(el('li',{},'Não foram encontrados aplicativos compatíveis para adicionar.'));
+  const p=DB.profiles.find(x=>x.id===appsAdminProfileId);
+  const allowed=new Set(p?.apps||[]);
+  apps.forEach(app=>{
+    const cb=el('input',{type:'checkbox',checked:allowed.has(app.packageName),'aria-label':'Liberar '+app.name});
+    cb.dataset.package=app.packageName;
+    const li=el('li',{class:'app-item'},el('div',{class:'app-emoji'},app.system?'📱':'🧩'),
+      el('div',{class:'app-meta'},el('strong',{},app.name),el('small',{},app.packageName)),
+      el('label',{style:'display:flex;align-items:center;gap:8px;font-weight:800'},cb,'Liberar'));
+    list.append(li);
+  });
+  msg('#msg-apps',apps.length+' aplicativo(s) encontrados. Nenhum app novo é liberado automaticamente.', 'ok');
+  info.textContent=status?.deviceOwner
+    ? 'Este aparelho está configurado como Device Owner. O modo quiosque gerenciado pode manter a lista de apps autorizados, após validar os pacotes e os testes.'
+    : 'Este aparelho ainda não está configurado como Device Owner. A seleção será salva, mas o bloqueio atual do Android não garante que a criança permaneça dentro dos apps autorizados ao alternar entre eles. Use apenas um dispositivo dedicado e siga o guia de provisionamento antes de prometer bloqueio completo.';
+}
+function salvarAppsPermitidos(){
+  const apps=appsInstaladosAndroid();
+  if(!apps) return msg('#msg-apps','Abra esta área na versão Android para listar e liberar aplicativos.','erro');
+  const p=DB.profiles.find(x=>x.id===appsAdminProfileId);
+  if(!p) return msg('#msg-apps','Crie ou selecione um perfil infantil primeiro.','erro');
+  p.apps=[...$('#lista-apps-disponiveis').querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.dataset.package).filter(pkg=>apps.some(a=>a.packageName===pkg));
+  const union=[...new Set(DB.profiles.flatMap(x=>x.apps||[]))];
+  salvar();
+  try{
+    const result=JSON.parse(HoraDoDesenho.definirAppsPermitidos(JSON.stringify(union)));
+    if(!result.saved) throw new Error('Não foi possível salvar a lista nativa.');
+    msg('#msg-apps','Lista salva para '+p.nome+': '+p.apps.length+' aplicativo(s).'+(result.deviceOwner?' Modo gerenciado detectado.':' Para alternar entre apps com bloqueio forte, ainda falta configurar Device Owner.'), 'ok');
+  }catch(e){ msg('#msg-apps','A configuração foi salva neste perfil, mas não foi possível sincronizar o controle Android: '+e.message,'erro'); }
+  renderAppsAdmin();
+}
+function renderApps(){
+  const p=perfil();
+  $('#apps-nome').textContent=p?.nome||'';
+  $('#apps-avatar').textContent=p?.avatar||'🙂';
+  const box=$('#apps-crianca'); box.innerHTML='';
+  const empty=$('#apps-vazio'); const noAndroid=$('#apps-sem-android'); const statusBox=$('#apps-status-quiosque');
+  const installed=appsInstaladosAndroid();
+  if(!installed){
+    noAndroid.hidden=false; empty.hidden=true; statusBox.hidden=true;
+    return;
+  }
+  noAndroid.hidden=true;
+  const allowed=new Set(p?.apps||[]);
+  const available=installed.filter(a=>allowed.has(a.packageName));
+  empty.hidden=available.length>0;
+  available.forEach(app=>{
+    const b=el('button',{class:'card app-item app-open',onclick:()=>{
+      try{
+        const r=JSON.parse(HoraDoDesenho.abrirAppPermitido(app.packageName));
+        if(!r.ok) alert(r.reason||'Não foi possível abrir o aplicativo.');
+      }catch(e){ alert('Não foi possível abrir o aplicativo: '+e.message); }
+    }},el('div',{class:'app-emoji'},'🧩'),el('div',{class:'app-meta'},el('strong',{},app.name),el('small',{},'Aplicativo liberado pelos responsáveis')));
+    box.append(b);
+  });
+  const status=statusDispositivo();
+  statusBox.hidden=!!status?.deviceOwner;
+  if(!status?.deviceOwner) statusBox.textContent='Aviso aos responsáveis: este aparelho ainda não está em modo quiosque gerenciado. Abrir um aplicativo externo pode sair da proteção atual. Configure e teste Device Owner em um dispositivo dedicado antes de usar este hub como bloqueio total.';
+}
+$('#apps-perfil').onchange=e=>{ appsAdminProfileId=e.target.value; renderAppsAdmin(); };
+$('#apps-atualizar').onclick=renderAppsAdmin;
+$('#apps-salvar').onclick=salvarAppsPermitidos;
+
 async function adicionarCanal(entrada, handle){
   const ch = await resolverCanal(entrada);
   if(DB.channels.some(c=>c.id===ch.id)) throw new Error('Esse canal já está na lista.');

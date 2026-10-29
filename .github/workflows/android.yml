@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_tag:
@@ -28,6 +30,18 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.9"
+
+      - name: Validate embedded JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path("index.html").read_text(encoding="utf-8")
+          if "<script>" not in source or "</script>" not in source:
+              raise SystemExit("Embedded application script not found")
+          script = source.split("<script>", 1)[1].split("</script>", 1)[0]
+          Path("/tmp/hora-do-desenho.js").write_text(script, encoding="utf-8")
+          PY
+          node --check /tmp/hora-do-desenho.js
 
       - name: Build debug APK
         run: gradle -p android assembleDebug --no-daemon
