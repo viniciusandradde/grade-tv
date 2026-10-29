@@ -201,13 +201,15 @@ class MainActivity : Activity() {
         JSONObject(appsPrefs.getString("profile_allowed", "{}") ?: "{}")
     } catch (_: Exception) { JSONObject() }
 
-    private fun appsPermitidosPerfilNativo(profileId: String): Set<String> = try {
+    private fun appsPermitidosPerfilNativo(profileId: String): Set<String> {
         if (profileId.isBlank()) return emptySet()
-        val arr = appsPorPerfilNativos().optJSONArray(profileId) ?: return emptySet()
-        (0 until arr.length())
-            .mapNotNull { arr.optString(it).takeIf { pkg -> pkg.isNotBlank() } }
-            .toSet()
-    } catch (_: Exception) { emptySet() }
+        return try {
+            val arr = appsPorPerfilNativos().optJSONArray(profileId) ?: return emptySet()
+            (0 until arr.length())
+                .mapNotNull { arr.optString(it).takeIf { pkg -> pkg.isNotBlank() } }
+                .toSet()
+        } catch (_: Exception) { emptySet() }
+    }
 
     private fun perfilAtivoNativo(): String =
         appsPrefs.getString("active_profile_id", "") ?: ""
