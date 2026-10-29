@@ -4,7 +4,7 @@
 
 ## Estado da implementação nesta branch
 
-Já foram adicionados ao protótipo Android a ponte nativa para listar apps com tela inicial, a lista nativa de pacotes permitidos, uma primeira interface parental de seleção por perfil e uma tela infantil para abrir apps liberados. A branch também declara o receiver de administração do dispositivo e inclui instruções de provisionamento. **Ainda não há confirmação de build nem teste em aparelho físico**; a segurança por perfil e o comportamento real do modo quiosque precisam ser validados antes de uso como bloqueio parental forte.
+Já foram adicionados ao protótipo Android a ponte nativa para listar apps com tela inicial, a lista nativa de pacotes permitidos, uma primeira interface parental de seleção por perfil e uma tela infantil para abrir apps liberados. A branch também declara o receiver de administração do dispositivo e inclui instruções de provisionamento. Os métodos nativos de controle do launcher, modo criança, dados persistidos e orientação da tela agora verificam a origem confiável da WebView (commit `4ab2c9c0d9551b2eaff5315d98190c69c15a7160`). **A nova correção ainda precisa de CI e teste em aparelho físico**; a segurança por perfil e o comportamento real do modo quiosque precisam ser validados antes de uso como bloqueio parental forte.
 
 ## Decisão de produto
 
