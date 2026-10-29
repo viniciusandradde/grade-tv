@@ -155,7 +155,12 @@ class MainActivity : Activity() {
     private val appsPrefs get() = getSharedPreferences("crescer_apps", MODE_PRIVATE)
     private val adminComponent get() = ComponentName(this, VsaDeviceAdminReceiver::class.java)
 
-    private fun uiDeConfianca(): Boolean {\n        val atual = web.url ?: return false\n        return atual.startsWith("https://appassets.androidplatform.net/assets/") || atual.startsWith("https://viniciusandradde.github.io/grade-tv/")\n    }\n\n    private fun ehDeviceOwner(): Boolean = try {
+    private fun uiDeConfianca(): Boolean {
+        val atual = web.url ?: return false
+        return atual.startsWith("https://appassets.androidplatform.net/assets/") || atual.startsWith("https://viniciusandradde.github.io/grade-tv/")
+    }
+
+    private fun ehDeviceOwner(): Boolean = try {
         (getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager).isDeviceOwnerApp(packageName)
     } catch (_: Exception) { false }
 
