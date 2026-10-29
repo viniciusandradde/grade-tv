@@ -155,7 +155,7 @@ class MainActivity : Activity() {
     private val appsPrefs get() = getSharedPreferences("crescer_apps", MODE_PRIVATE)
     private val adminComponent get() = ComponentName(this, VsaDeviceAdminReceiver::class.java)
 
-    private fun ehDeviceOwner(): Boolean = try {
+    private fun uiDeConfianca(): Boolean {\n        val atual = web.url ?: return false\n        return atual.startsWith("https://appassets.androidplatform.net/assets/") || atual.startsWith("https://viniciusandradde.github.io/grade-tv/")\n    }\n\n    private fun ehDeviceOwner(): Boolean = try {
         (getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager).isDeviceOwnerApp(packageName)
     } catch (_: Exception) { false }
 
@@ -293,7 +293,7 @@ class MainActivity : Activity() {
             val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
             return JSONObject()
                 .put("deviceOwner", owner)
-                .put("lockTaskAllowed", try { dpm.isLockTaskPermitted(packageName) } catch (_: Exception) { false })
+                .put("lockTaskAllowed", try { Build.VERSION.SDK_INT >= 23 && dpm.isLockTaskPermitted(packageName) } catch (_: Exception) { false })
                 .put("sdk", Build.VERSION.SDK_INT)
                 .toString()
         }
