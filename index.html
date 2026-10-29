@@ -1091,7 +1091,10 @@ let appsAdminProfileId = null;
 const APPS_BLOQUEADOS_POR_SEGURANCA = [
   'com.android.settings','com.android.systemui','com.android.packageinstaller',
   'com.google.android.packageinstaller','com.google.android.permissioncontroller',
-  'com.android.permissioncontroller','com.google.android.apps.nexuslauncher'
+  'com.android.permissioncontroller','com.google.android.apps.nexuslauncher',
+  'com.android.vending','com.google.android.vending','com.android.chrome','com.google.android.chrome',
+  'com.google.android.apps.chrome','org.mozilla.firefox','com.microsoft.emmx','com.opera.browser',
+  'com.google.android.youtube','com.google.android.youtube.tv','com.android.browser'
 ];
 function pacoteSeguroParaCatalogo(pkg){
   return !!pkg && !APPS_BLOQUEADOS_POR_SEGURANCA.some(x=>pkg===x || pkg.startsWith(x+'.'));
@@ -1162,14 +1165,12 @@ function renderApps(){
   const installed=appsInstaladosAndroid();
   if(!installed){
     noAndroid.hidden=false; empty.hidden=true; statusBox.hidden=true;
-    box.append(el('div',{class:'vazio'},'Abra a Hora do Desenho no Android para acessar os aplicativos liberados.'));
     return;
   }
   noAndroid.hidden=true;
   const allowed=new Set(p?.apps||[]);
   const available=installed.filter(a=>allowed.has(a.packageName));
   empty.hidden=available.length>0;
-  if(!available.length) box.append(el('div',{class:'vazio'},'Seus responsáveis ainda não liberaram outros aplicativos para este perfil.'));
   available.forEach(app=>{
     const b=el('button',{class:'card app-item app-open',onclick:()=>{
       try{
