@@ -91,7 +91,7 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 
 ## Privacidade, de verdade
 
-- Nenhum dado sai do seu aparelho. Não existe servidor da Hora do Desenho, conta, cadastro ou rastreamento.
+- Perfis, grade, preferências e chave da API são armazenados localmente; não existe servidor próprio, conta, cadastro ou rastreamento da Hora do Desenho. As consultas de canais e a reprodução de vídeos se comunicam com os serviços do Google/YouTube e seguem os termos e políticas desses serviços.
 - A chave da API e as configurações ficam no armazenamento local do navegador ou do app.
 - O YouTube continua sendo o YouTube: anúncios e restrições de incorporação dos canais valem normalmente (uma conta Premium logada no aparelho remove os anúncios).
 
@@ -113,18 +113,6 @@ Todos estão na lista de **canais sugeridos** dentro do app: um toque e pronto.
 
 ## VSA Crescer+ Digital — plataforma familiar
 
-A Hora do Desenho faz parte da metodologia **VSA Crescer+ Digital**: uma plataforma familiar com produtos mantidos em repositórios independentes. A proposta é usar a Hora do Desenho como experiência principal no Android e permitir que os responsáveis selecionem quais outros aplicativos a criança pode abrir, sem liberar automaticamente tudo o que estiver instalado.
-
-- [Arquitetura do agregador de aplicativos e plano de implementação](docs/VSA_CRESCER_DIGITAL_APP_HUB.md)
-- [Repositório Tomb Mask Kids](https://github.com/viniciusandradde/tomb-of-the-mask) — jogo VSA planejado como app opcional; desenvolvimento pausado enquanto o Hora do Desenho e o hub são priorizados.
-- Aplicativos externos como **GCompris** serão avaliados para compatibilidade, instalação e possibilidade real de controle.
-
-**Importante:** a lista de apps permitidos e a interface do hub ainda são trabalho de implementação. O modo de fixação de tela (*screen pinning*) não garante, sozinho, bloqueio absoluto do Android. Controle mais forte entre apps exige avaliar o modo quiosque do Android (*Lock Task Mode*) e provisionamento como Device Owner em aparelhos compatíveis.
-
----
-
-## VSA Crescer+ Digital — plataforma familiar
-
 A Hora do Desenho é o primeiro hub da metodologia **VSA Crescer+ Digital**. Na versão Android, a área dos pais inclui uma primeira versão da seleção de aplicativos instalados por perfil infantil; a tela infantil apresenta apenas os apps selecionados naquele perfil.
 
 - [Arquitetura do agregador e plano de implementação](docs/VSA_CRESCER_DIGITAL_APP_HUB.md)
@@ -142,7 +130,7 @@ Em `apps/tempo-em-familia/` há um segundo app, bem pequeno, para o celular **do
 
 ## Quem faz
 
-A Hora do Desenho é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Hora do Desenho nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com o mesmo cuidado profissional dos nossos produtos: código aberto, sem coleta de dados e com suporte pelas issues do repositório.
+A Hora do Desenho é um projeto da **[VSA Tecnologia](https://github.com/viniciusandradde)**, empresa de tecnologia de Dourados (MS) que desenvolve automação, inteligência artificial e integração de sistemas — principalmente para hospitais. A Hora do Desenho nasceu em casa, da vontade de devolver às crianças a TV com hora marcada, e é oferecida à comunidade de graça, com código aberto e suporte pelas issues do repositório. As configurações são locais; consultas e reprodução usam serviços do Google/YouTube.
 
 ## Contribuir
 
