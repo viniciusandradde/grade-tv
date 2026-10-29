@@ -158,6 +158,13 @@
   .legenda i{display:inline-block; width:16px; height:16px; border-radius:5px; background:var(--azul); vertical-align:-3px; margin-right:6px}
   .legenda i.livre{background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.3) 0 4px, transparent 4px 8px)}
 
+  .app-item{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:18px;box-shadow:var(--sombra);margin:10px 0}
+  .app-item .app-emoji{width:52px;height:52px;display:grid;place-items:center;border-radius:15px;background:var(--bg2);font-size:28px;flex:none}
+  .app-item .app-meta{flex:1;min-width:0}
+  .app-item .app-meta strong{display:block;overflow-wrap:anywhere}
+  .app-item .app-meta small{display:block;color:var(--dim);overflow-wrap:anywhere}
+  .app-item input[type=checkbox]{width:24px;height:24px;accent-color:var(--verde);flex:none}
+  .app-open{min-width:100px;justify-content:center}
   /* ---------- PIN ---------- */
   #pin{display:none; position:fixed; inset:0; z-index:60; background:rgba(31,35,64,.55); align-items:center; justify-content:center; padding:20px}
   #pin.ativa{display:flex}
@@ -343,6 +350,19 @@
   <div class="conteudo"><div class="grade" id="lista-favoritos"></div></div>
 </section>
 
+<!-- ===== Aplicativos liberados ===== -->
+<section id="tela-apps" class="tela">
+  <div class="topo"><div class="logo">🧩 Meus aplicativos</div><div class="espaco"></div><div class="perfil-chip"><span class="avatar" id="apps-avatar">🙂</span><span id="apps-nome"></span></div></div>
+  <div class="conteudo">
+    <div class="secao"><h2><i>🌟</i> O que posso usar?</h2></div>
+    <p class="ajuda">Aqui aparecem somente os aplicativos que os responsáveis liberaram para este perfil.</p>
+    <div class="grade" id="apps-crianca"></div>
+    <div class="vazio" id="apps-vazio" hidden>Nenhum aplicativo extra foi liberado para este perfil. Você ainda pode assistir aos desenhos pela tela inicial.</div>
+    <div class="painel" id="apps-sem-android" hidden>Para abrir outros aplicativos, use a versão Android da Hora do Desenho.</div>
+    <div class="painel" id="apps-status-quiosque" hidden></div>
+  </div>
+</section>
+
 <!-- ===== Guia ===== -->
 <section id="tela-guia" class="tela">
   <div class="topo"><div class="logo">🗓️ Hoje na TV</div><div class="espaco"></div><div class="relogio" id="relogio3">--:--</div></div>
@@ -358,6 +378,7 @@
   <button data-ir="inicio" aria-current="page"><i>🏠</i>Início</button>
   <button data-ir="guia"><i>🗓️</i>Hoje</button>
   <button data-ir="favoritos"><i>💖</i>Favoritos</button>
+  <button data-ir="apps"><i>🧩</i>Apps</button>
   <button id="btn-pais"><i>⚙️</i>Pais</button>
 </nav>
 
@@ -450,6 +471,19 @@
       <button class="btn p" id="salvar-pin">Salvar PIN</button>
       <button class="btn perigo" id="remover-pin">Remover PIN</button>
       <div class="msg" id="msg-pin" style="width:100%"></div>
+    </div>
+
+    <h2>VSA Crescer+ Digital · Aplicativos permitidos</h2>
+    <p class="ajuda">Escolha, por perfil infantil, quais aplicativos instalados podem ser abertos a partir da Hora do Desenho. Apps novos ficam bloqueados até você liberá-los. A lista só pode ser descoberta na versão Android.</p>
+    <div class="painel">
+      <div class="form">
+        <label>Perfil da criança<select id="apps-perfil"></select></label>
+        <button class="btn" id="apps-atualizar">Atualizar lista</button>
+        <button class="btn p" id="apps-salvar">Salvar aplicativos liberados</button>
+      </div>
+      <div class="msg" id="msg-apps"></div>
+      <ul class="lista" id="lista-apps-disponiveis"></ul>
+      <div class="ajuda" id="apps-device-owner" style="margin-top:12px"></div>
     </div>
 
     <h2>Chave da YouTube Data API</h2>
