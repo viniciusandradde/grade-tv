@@ -2,6 +2,10 @@
 
 **Slogan:** Tecnologia com limites. Infância com mais vida.
 
+## Estado da implementação nesta branch
+
+Já foram adicionados ao protótipo Android a ponte nativa para listar apps com tela inicial, a lista nativa de pacotes permitidos, uma primeira interface parental de seleção por perfil e uma tela infantil para abrir apps liberados. A branch também declara o receiver de administração do dispositivo e inclui instruções de provisionamento. **Ainda não há confirmação de build nem teste em aparelho físico**; a segurança por perfil e o comportamento real do modo quiosque precisam ser validados antes de uso como bloqueio parental forte.
+
 ## Decisão de produto
 
 A VSA Crescer+ Digital será a camada familiar comum para uma coleção de aplicativos infantis mantidos em repositórios independentes. O Hora do Desenho passa a ser o primeiro produto hospedeiro e a interface principal no Android; os demais produtos serão integrados progressivamente, sem fundir seus repositórios ou duplicar regras parentais.
@@ -69,7 +73,7 @@ A visibilidade de apps instalados depende das regras de visibilidade de pacotes 
 
 O modo de fixação de tela (*screen pinning*) não equivale a um bloqueio parental inviolável do dispositivo. Um launcher ou WebView comum não consegue garantir, em todos os aparelhos, que a criança jamais acesse a interface do sistema.
 
-Para controle realmente gerenciado entre aplicativos, avaliar **Android Lock Task Mode com o app provisionado como Device Owner**, em dispositivos dedicados/configurados pelo responsável. Isso exige processo de provisionamento, testes por fabricante/versão e instruções claras de saída e recuperação. Não prometer bloqueio total em aparelhos pessoais não gerenciados.
+Para controle realmente gerenciado entre aplicativos, usar **Android Lock Task Mode com o app provisionado como Device Owner**, em dispositivos dedicados/configurados pelo responsável. O código inicial sincroniza os pacotes liberados com a política de Lock Task quando detecta Device Owner. Isso exige processo de provisionamento, testes por fabricante/versão e instruções claras de saída e recuperação. Não prometer bloqueio total em aparelhos pessoais não gerenciados. Consulte [ANDROID_KIOSK_SETUP.md](ANDROID_KIOSK_SETUP.md).
 
 Enquanto o modo gerenciado não estiver configurado, apresentar o recurso como proteção de navegação/experiência, não como bloqueio absoluto.
 
@@ -136,4 +140,4 @@ Para apps externos, a VSA deve distinguir “instalado”, “compatível para i
 - AAP 5 Cs: https://www.aap.org/5Cs
 - LGPD (Lei nº 13.709/2018): https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm
 
-> Este documento é uma especificação de arquitetura e plano de entrega, não uma afirmação de que o hub multiaplicativo ou o bloqueio Device Owner já estão implementados.
+> Esta branch contém uma primeira implementação do catálogo, da interface de seleção e da ponte nativa. Isso não significa que o hub esteja validado: build, testes de segurança e testes em aparelho real ainda são necessários.
