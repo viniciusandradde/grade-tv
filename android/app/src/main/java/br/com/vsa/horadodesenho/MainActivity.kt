@@ -361,19 +361,35 @@ class MainActivity : Activity() {
         }
 
         /** Tela inicial (launcher) ligada/desligada — controlado na área dos pais. */
-        @JavascriptInterface fun launcherAtivo(): Boolean = this@MainActivity.launcherAtivo()
-        @JavascriptInterface fun definirLauncher(ativo: Boolean) = this@MainActivity.definirLauncher(ativo)
+        @JavascriptInterface fun launcherAtivo(): Boolean =
+            uiDeConfianca() && this@MainActivity.launcherAtivo()
+
+        @JavascriptInterface fun definirLauncher(ativo: Boolean) {
+            if (!uiDeConfianca()) return
+            this@MainActivity.definirLauncher(ativo)
+        }
 
         /** Modo criança: fixa o app (só sai pela área dos pais). */
-        @JavascriptInterface fun modoCrianca(ativo: Boolean) { runOnUiThread { if (ativo) travar() else destravar() } }
-        @JavascriptInterface fun modoCriancaAtivo(): Boolean = this@MainActivity.travado()
+        @JavascriptInterface fun modoCrianca(ativo: Boolean) {
+            if (!uiDeConfianca()) return
+            runOnUiThread { if (ativo) travar() else destravar() }
+        }
+
+        @JavascriptInterface fun modoCriancaAtivo(): Boolean =
+            uiDeConfianca() && this@MainActivity.travado()
 
         /** Dados persistidos em arquivo do app (além do localStorage). */
-        @JavascriptInterface fun salvarDados(json: String) = this@MainActivity.salvarDados(json)
-        @JavascriptInterface fun carregarDados(): String = this@MainActivity.carregarDados()
+        @JavascriptInterface fun salvarDados(json: String) {
+            if (!uiDeConfianca()) return
+            this@MainActivity.salvarDados(json)
+        }
+
+        @JavascriptInterface fun carregarDados(): String =
+            if (uiDeConfianca()) this@MainActivity.carregarDados() else ""
 
         /** Celular: trava em paisagem só enquanto o vídeo está aberto. */
         @JavascriptInterface fun travarPaisagem(travar: Boolean) {
+            if (!uiDeConfianca()) return
             runOnUiThread {
                 requestedOrientation = if (travar && !ehTv()) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
