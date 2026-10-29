@@ -318,9 +318,14 @@ class MainActivity : Activity() {
         /** Define a lista do perfil infantil ativo; limita tanto a abertura via ponte quanto o Lock Task. */
         @JavascriptInterface fun definirAppsAtivos(json: String): String {
             if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            // Defesa nativa: um perfil infantil nunca pode ativar apps fora da allowlist
+            // aprovada pelos responsáveis, mesmo se a interface enviar pacotes arbitrários.
+            val parentAllowed = appsPermitidosNativos()
             val requested = try {
                 val arr = JSONArray(json)
-                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { p -> appPodeAbrir(p) } }.toSet()
+                (0 until arr.length())
+                    .mapNotNull { arr.optString(it).takeIf { p -> p in parentAllowed && appPodeAbrir(p) } }
+                    .toSet()
             } catch (_: Exception) { emptySet() }
             val saved = JSONArray()
             requested.sorted().forEach { saved.put(it) }
