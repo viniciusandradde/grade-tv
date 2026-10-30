@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -75,6 +76,16 @@ class MainActivity : Activity() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 loader.shouldInterceptRequest(request.url)
 
+            override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+                urlPagina = url ?: ""
+                super.onPageStarted(view, url, favicon)
+            }
+
+            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
+                urlPagina = url ?: ""
+                super.doUpdateVisitedHistory(view, url, isReload)
+            }
+
             // A tela nunca sai do app: links do guia e da página de download (GitHub/Google) abrem
             // no navegador do aparelho; qualquer outro (ex.: logo do YouTube no player) é ignorado.
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -115,7 +126,7 @@ class MainActivity : Activity() {
             prefs.edit().putBoolean("launcher", tv).apply()
         }
 
-        web.loadUrl(urlAtual())
+        carregarPagina(urlAtual())
     }
 
     private fun ehTv(): Boolean = packageManager.hasSystemFeature("android.software.leanback")
@@ -164,8 +175,20 @@ class MainActivity : Activity() {
     private val appsPrefs get() = getSharedPreferences("crescer_apps", MODE_PRIVATE)
     private val adminComponent get() = ComponentName(this, VsaDeviceAdminReceiver::class.java)
 
+    /**
+     * Página principal carregada no WebView. A ponte roda na thread do JavaBridge, onde o WebView
+     * não pode ser consultado (web.url lança exceção fora da thread principal); por isso o endereço
+     * é guardado aqui pelo WebViewClient e por quem chama loadUrl.
+     */
+    @Volatile private var urlPagina: String = ""
+
+    private fun carregarPagina(url: String) {
+        urlPagina = url
+        web.loadUrl(url)
+    }
+
     private fun uiDeConfianca(): Boolean {
-        val atual = web.url ?: return false
+        val atual = urlPagina
         return atual.startsWith("https://appassets.androidplatform.net/assets/") || atual.startsWith("https://viniciusandradde.github.io/grade-tv/")
     }
 
@@ -186,19 +209,22 @@ class MainActivity : Activity() {
     private fun pacoteBloqueado(pkg: String): Boolean =
         pacotesBloqueados.any { pkg == it || pkg.startsWith("$it.") }
 
+    /** Apps com ícone no celular (LAUNCHER) ou só no menu da TV (LEANBACK_LAUNCHER). */
     private fun appsDeInicializacao(): List<ResolveInfo> {
-        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        val categorias = listOf(Intent.CATEGORY_LAUNCHER, Intent.CATEGORY_LEANBACK_LAUNCHER)
         return try {
-            packageManager.queryIntentActivities(intent, 0)
+            categorias.flatMap { packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(it), 0) }
                 .filter { it.activityInfo?.packageName != packageName && !pacoteBloqueado(it.activityInfo.packageName) }
                 .distinctBy { it.activityInfo.packageName }
                 .sortedBy { it.loadLabel(packageManager).toString().lowercase() }
         } catch (_: Exception) { emptyList() }
     }
 
+    private fun intentDeAbertura(pkg: String): Intent? =
+        packageManager.getLaunchIntentForPackage(pkg) ?: packageManager.getLeanbackLaunchIntentForPackage(pkg)
+
     private fun appPodeAbrir(pkg: String): Boolean =
-        pkg.isNotBlank() && pkg != packageName && !pacoteBloqueado(pkg) &&
-            packageManager.getLaunchIntentForPackage(pkg) != null
+        pkg.isNotBlank() && pkg != packageName && !pacoteBloqueado(pkg) && intentDeAbertura(pkg) != null
 
     private fun appsPermitidosNativos(): Set<String> = try {
         val json = JSONArray(appsPrefs.getString("allowed", "[]") ?: "[]")
@@ -239,7 +265,7 @@ class MainActivity : Activity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intent?.getStringExtra("url")?.let { salvarUrl(it); web.loadUrl(it) }
+        intent?.getStringExtra("url")?.let { salvarUrl(it); carregarPagina(it) }
     }
 
     private fun linkExterno(uri: Uri): Boolean {
@@ -316,7 +342,8 @@ class MainActivity : Activity() {
         @JavascriptInterface fun sdk(): Int = Build.VERSION.SDK_INT
 
         /** Chave da YouTube Data API embutida no build (fase zero); vazia quando o APK foi gerado sem ela. */
-        @JavascriptInterface fun chaveEmbutida(): String = BuildConfig.YOUTUBE_API_KEY
+        @JavascriptInterface fun chaveEmbutida(): String =
+            if (uiDeConfianca()) BuildConfig.YOUTUBE_API_KEY else ""
 
         /** Catálogo de apps instalados que podem ser iniciados; nenhum é liberado por padrão. */
         @JavascriptInterface fun listarAppsInstalados(): String {
@@ -429,7 +456,7 @@ class MainActivity : Activity() {
             }
             return try {
                 if (ehDeviceOwner()) sincronizarPacotesQuiosque(appsAtivosNativos())
-                val launch = packageManager.getLaunchIntentForPackage(pkg) ?: throw IllegalStateException("Aplicativo sem tela inicial.")
+                val launch = intentDeAbertura(pkg) ?: throw IllegalStateException("Aplicativo sem tela inicial.")
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(launch)
                 JSONObject().put("ok", true).toString()
@@ -476,6 +503,7 @@ class MainActivity : Activity() {
 
         /** Cena "Escuro" do bloqueio: brilho da tela no mínimo enquanto ela aparece; depois volta ao do sistema. */
         @JavascriptInterface fun luzMinima(ativa: Boolean) {
+            if (!uiDeConfianca()) return
             runOnUiThread {
                 window.attributes = window.attributes.apply {
                     screenBrightness = if (ativa) 0.01f else WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
