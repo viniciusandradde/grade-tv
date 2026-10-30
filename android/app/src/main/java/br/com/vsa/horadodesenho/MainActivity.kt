@@ -3,10 +3,12 @@ package br.com.vsa.horadodesenho
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +24,8 @@ import android.widget.FrameLayout
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import java.io.File
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.Executors
 
 /**
@@ -156,6 +160,83 @@ class MainActivity : Activity() {
     }
     private fun carregarDados(): String = try { if (arquivoDados.exists()) arquivoDados.readText() else "" } catch (_: Exception) { "" }
 
+    // ----- Agregador de aplicativos infantis -----
+    private val appsPrefs get() = getSharedPreferences("crescer_apps", MODE_PRIVATE)
+    private val adminComponent get() = ComponentName(this, VsaDeviceAdminReceiver::class.java)
+
+    private fun uiDeConfianca(): Boolean {
+        val atual = web.url ?: return false
+        return atual.startsWith("https://appassets.androidplatform.net/assets/") || atual.startsWith("https://viniciusandradde.github.io/grade-tv/")
+    }
+
+    private fun ehDeviceOwner(): Boolean = try {
+        (getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager).isDeviceOwnerApp(packageName)
+    } catch (_: Exception) { false }
+
+    private val pacotesBloqueados = setOf(
+        "com.android.settings", "com.android.systemui", "com.android.packageinstaller",
+        "com.google.android.packageinstaller", "com.google.android.permissioncontroller",
+        "com.android.permissioncontroller", "com.google.android.apps.nexuslauncher",
+        "com.android.vending", "com.google.android.vending", "com.android.chrome",
+        "com.google.android.chrome", "com.google.android.apps.chrome", "org.mozilla.firefox",
+        "com.microsoft.emmx", "com.opera.browser", "com.google.android.youtube",
+        "com.google.android.youtube.tv", "com.android.browser"
+    )
+
+    private fun pacoteBloqueado(pkg: String): Boolean =
+        pacotesBloqueados.any { pkg == it || pkg.startsWith("$it.") }
+
+    private fun appsDeInicializacao(): List<ResolveInfo> {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        return try {
+            packageManager.queryIntentActivities(intent, 0)
+                .filter { it.activityInfo?.packageName != packageName && !pacoteBloqueado(it.activityInfo.packageName) }
+                .distinctBy { it.activityInfo.packageName }
+                .sortedBy { it.loadLabel(packageManager).toString().lowercase() }
+        } catch (_: Exception) { emptyList() }
+    }
+
+    private fun appPodeAbrir(pkg: String): Boolean =
+        pkg.isNotBlank() && pkg != packageName && !pacoteBloqueado(pkg) &&
+            packageManager.getLaunchIntentForPackage(pkg) != null
+
+    private fun appsPermitidosNativos(): Set<String> = try {
+        val json = JSONArray(appsPrefs.getString("allowed", "[]") ?: "[]")
+        (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
+    } catch (_: Exception) { emptySet() }
+
+    /** Allowlist parental independente para cada perfil infantil. */
+    private fun appsPorPerfilNativos(): JSONObject = try {
+        JSONObject(appsPrefs.getString("profile_allowed", "{}") ?: "{}")
+    } catch (_: Exception) { JSONObject() }
+
+    private fun appsPermitidosPerfilNativo(profileId: String): Set<String> {
+        if (profileId.isBlank()) return emptySet()
+        return try {
+            val arr = appsPorPerfilNativos().optJSONArray(profileId) ?: return emptySet()
+            (0 until arr.length())
+                .mapNotNull { arr.optString(it).takeIf { pkg -> pkg.isNotBlank() } }
+                .toSet()
+        } catch (_: Exception) { emptySet() }
+    }
+
+    private fun perfilAtivoNativo(): String =
+        appsPrefs.getString("active_profile_id", "") ?: ""
+
+    private fun appsAtivosNativos(): Set<String> = try {
+        val json = JSONArray(appsPrefs.getString("active_allowed", "[]") ?: "[]")
+        (0 until json.length()).mapNotNull { json.optString(it).takeIf { p -> p.isNotBlank() } }.toSet()
+    } catch (_: Exception) { emptySet() }
+
+    private fun sincronizarPacotesQuiosque(permitidos: Set<String>): Boolean {
+        if (!ehDeviceOwner() || Build.VERSION.SDK_INT < 23) return false
+        return try {
+            val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            dpm.setLockTaskPackages(adminComponent, (permitidos + packageName).filter { appPodeAbrir(it) || it == packageName }.toTypedArray())
+            true
+        } catch (_: Exception) { false }
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.getStringExtra("url")?.let { salvarUrl(it); web.loadUrl(it) }
@@ -237,20 +318,156 @@ class MainActivity : Activity() {
         /** Chave da YouTube Data API embutida no build (fase zero); vazia quando o APK foi gerado sem ela. */
         @JavascriptInterface fun chaveEmbutida(): String = BuildConfig.YOUTUBE_API_KEY
 
+        /** Catálogo de apps instalados que podem ser iniciados; nenhum é liberado por padrão. */
+        @JavascriptInterface fun listarAppsInstalados(): String {
+            if (!uiDeConfianca()) return "[]"
+            val arr = JSONArray()
+            appsDeInicializacao().forEach { item ->
+                val info = item.activityInfo
+                val obj = JSONObject()
+                obj.put("packageName", info.packageName)
+                obj.put("name", item.loadLabel(packageManager).toString())
+                obj.put("system", (info.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0)
+                arr.put(obj)
+            }
+            return arr.toString()
+        }
+
+        @JavascriptInterface fun appsPermitidos(): String {
+            if (!uiDeConfianca()) return "[]"
+            val arr = JSONArray()
+            appsPermitidosNativos().sorted().forEach { arr.put(it) }
+            return arr.toString()
+        }
+
+        /** Persiste somente pacotes instalados e com launcher. O catálogo nativo é a autoridade para abrir apps. */
+        @JavascriptInterface fun definirAppsPermitidos(json: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            val requested = try {
+                val arr = JSONArray(json)
+                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf { p -> appPodeAbrir(p) } }.toSet()
+            } catch (_: Exception) { emptySet() }
+            val saved = JSONArray()
+            requested.sorted().forEach { saved.put(it) }
+            appsPrefs.edit().putString("allowed", saved.toString()).apply()
+            // Revoga imediatamente permissões ativas que os responsáveis removeram.
+            val active = appsAtivosNativos().intersect(requested)
+            val activeJson = JSONArray()
+            active.sorted().forEach { activeJson.put(it) }
+            appsPrefs.edit().putString("active_allowed", activeJson.toString()).apply()
+            val kioskReady = sincronizarPacotesQuiosque(requested)
+            return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
+        }
+
+        /** Persiste as allowlists parentais por perfil; não aceita pacotes arbitrários. */
+        @JavascriptInterface fun definirAppsPorPerfil(json: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            val requested = try { JSONObject(json) } catch (_: Exception) { JSONObject() }
+            val sanitized = JSONObject()
+            val keys = requested.keys()
+            while (keys.hasNext()) {
+                val profileId = keys.next()
+                if (profileId.isBlank()) continue
+                val arr = requested.optJSONArray(profileId) ?: continue
+                val allowed = (0 until arr.length())
+                    .mapNotNull { arr.optString(it).takeIf { pkg -> appPodeAbrir(pkg) } }
+                    .toSet()
+                val clean = JSONArray()
+                allowed.sorted().forEach { clean.put(it) }
+                sanitized.put(profileId, clean)
+            }
+            appsPrefs.edit().putString("profile_allowed", sanitized.toString()).apply()
+            val activeProfile = perfilAtivoNativo()
+            val activeAllowed = appsPermitidosPerfilNativo(activeProfile)
+            val activeJson = JSONArray()
+            activeAllowed.sorted().forEach { activeJson.put(it) }
+            appsPrefs.edit().putString("active_allowed", activeJson.toString()).apply()
+            val kioskReady = sincronizarPacotesQuiosque(activeAllowed)
+            return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
+        }
+
+        /** Ativa apenas apps aprovados nativamente para o perfil informado. */
+        @JavascriptInterface fun definirAppsAtivos(profileId: String, json: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("saved", false).put("reason", "Origem da interface não confiável.").toString()
+            val parentAllowed = appsPermitidosPerfilNativo(profileId)
+            val requested = try {
+                val arr = JSONArray(json)
+                (0 until arr.length())
+                    .mapNotNull { arr.optString(it).takeIf { pkg -> pkg in parentAllowed && appPodeAbrir(pkg) } }
+                    .toSet()
+            } catch (_: Exception) { emptySet() }
+            val saved = JSONArray()
+            requested.sorted().forEach { saved.put(it) }
+            appsPrefs.edit()
+                .putString("active_profile_id", profileId)
+                .putString("active_allowed", saved.toString())
+                .apply()
+            val kioskReady = sincronizarPacotesQuiosque(requested)
+            return JSONObject().put("saved", true).put("deviceOwner", ehDeviceOwner()).put("kioskReady", kioskReady).toString()
+        }
+
+        @JavascriptInterface fun statusControleDispositivo(): String {
+            if (!uiDeConfianca()) return JSONObject().put("deviceOwner", false).put("lockTaskAllowed", false).toString()
+            val owner = ehDeviceOwner()
+            val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            return JSONObject()
+                .put("deviceOwner", owner)
+                .put("lockTaskAllowed", try { Build.VERSION.SDK_INT >= 23 && dpm.isLockTaskPermitted(packageName) } catch (_: Exception) { false })
+                .put("sdk", Build.VERSION.SDK_INT)
+                .toString()
+        }
+
+        /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
+        @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
+            if (!uiDeConfianca()) return JSONObject().put("ok", false).put("reason", "Origem da interface não confiável.").toString()
+            val activeProfile = perfilAtivoNativo()
+            if (pkg !in appsAtivosNativos() || pkg !in appsPermitidosPerfilNativo(activeProfile) || !appPodeAbrir(pkg)) {
+                return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
+            }
+            if (travado() && !ehDeviceOwner()) {
+                return JSONObject().put("ok", false).put("reason", "Para trocar entre aplicativos mantendo o celular bloqueado, é necessário configurar o modo quiosque gerenciado neste dispositivo.").toString()
+            }
+            return try {
+                if (ehDeviceOwner()) sincronizarPacotesQuiosque(appsAtivosNativos())
+                val launch = packageManager.getLaunchIntentForPackage(pkg) ?: throw IllegalStateException("Aplicativo sem tela inicial.")
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(launch)
+                JSONObject().put("ok", true).toString()
+            } catch (e: Exception) {
+                JSONObject().put("ok", false).put("reason", e.message ?: "Não foi possível abrir o aplicativo.").toString()
+            }
+        }
+
         /** Tela inicial (launcher) ligada/desligada — controlado na área dos pais. */
-        @JavascriptInterface fun launcherAtivo(): Boolean = this@MainActivity.launcherAtivo()
-        @JavascriptInterface fun definirLauncher(ativo: Boolean) = this@MainActivity.definirLauncher(ativo)
+        @JavascriptInterface fun launcherAtivo(): Boolean =
+            uiDeConfianca() && this@MainActivity.launcherAtivo()
+
+        @JavascriptInterface fun definirLauncher(ativo: Boolean) {
+            if (!uiDeConfianca()) return
+            this@MainActivity.definirLauncher(ativo)
+        }
 
         /** Modo criança: fixa o app (só sai pela área dos pais). */
-        @JavascriptInterface fun modoCrianca(ativo: Boolean) { runOnUiThread { if (ativo) travar() else destravar() } }
-        @JavascriptInterface fun modoCriancaAtivo(): Boolean = this@MainActivity.travado()
+        @JavascriptInterface fun modoCrianca(ativo: Boolean) {
+            if (!uiDeConfianca()) return
+            runOnUiThread { if (ativo) travar() else destravar() }
+        }
+
+        @JavascriptInterface fun modoCriancaAtivo(): Boolean =
+            uiDeConfianca() && this@MainActivity.travado()
 
         /** Dados persistidos em arquivo do app (além do localStorage). */
-        @JavascriptInterface fun salvarDados(json: String) = this@MainActivity.salvarDados(json)
-        @JavascriptInterface fun carregarDados(): String = this@MainActivity.carregarDados()
+        @JavascriptInterface fun salvarDados(json: String) {
+            if (!uiDeConfianca()) return
+            this@MainActivity.salvarDados(json)
+        }
+
+        @JavascriptInterface fun carregarDados(): String =
+            if (uiDeConfianca()) this@MainActivity.carregarDados() else ""
 
         /** Celular: trava em paisagem só enquanto o vídeo está aberto. */
         @JavascriptInterface fun travarPaisagem(travar: Boolean) {
+            if (!uiDeConfianca()) return
             runOnUiThread {
                 requestedOrientation = if (travar && !ehTv()) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
