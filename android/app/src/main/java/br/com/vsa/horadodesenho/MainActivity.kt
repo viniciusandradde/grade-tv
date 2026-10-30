@@ -7,9 +7,11 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +26,8 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
@@ -70,6 +74,9 @@ class MainActivity : Activity() {
 
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/icones/", object : WebViewAssetLoader.PathHandler {
+                override fun handle(path: String): WebResourceResponse? = iconeDoApp(path.removeSuffix(".png"))
+            })
             .build()
 
         web.webViewClient = object : WebViewClientCompat() {
@@ -212,9 +219,11 @@ class MainActivity : Activity() {
     /** Apps com ícone no celular (LAUNCHER) ou só no menu da TV (LEANBACK_LAUNCHER). */
     private fun appsDeInicializacao(): List<ResolveInfo> {
         val categorias = listOf(Intent.CATEGORY_LAUNCHER, Intent.CATEGORY_LEANBACK_LAUNCHER)
+        val liberados = todosLiberadosNativos()
         return try {
             categorias.flatMap { packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(it), 0) }
                 .filter { it.activityInfo?.packageName != packageName && !pacoteBloqueado(it.activityInfo.packageName) }
+                .filter { !appDoSistema(it.activityInfo.packageName, liberados) }
                 .distinctBy { it.activityInfo.packageName }
                 .sortedBy { it.loadLabel(packageManager).toString().lowercase() }
         } catch (_: Exception) { emptyList() }
@@ -223,8 +232,51 @@ class MainActivity : Activity() {
     private fun intentDeAbertura(pkg: String): Intent? =
         packageManager.getLaunchIntentForPackage(pkg) ?: packageManager.getLeanbackLaunchIntentForPackage(pkg)
 
+    /**
+     * Apps que vieram com o aparelho (câmera, relógio, Chrome, Gmail…) ficam fora do hub: só entram os
+     * instalados pelo usuário. Os que os pais já tinham liberado antes desta regra continuam valendo.
+     */
+    private fun appDoSistema(pkg: String, liberados: Set<String> = todosLiberadosNativos()): Boolean {
+        val sistema = try {
+            (packageManager.getApplicationInfo(pkg, 0).flags and ApplicationInfo.FLAG_SYSTEM) != 0
+        } catch (_: Exception) { true }
+        return sistema && pkg !in liberados
+    }
+
+    private fun todosLiberadosNativos(): Set<String> {
+        val porPerfil = appsPorPerfilNativos()
+        return porPerfil.keys().asSequence()
+            .flatMap { id -> porPerfil.optJSONArray(id)?.let { arr -> (0 until arr.length()).map { arr.optString(it) } }.orEmpty().asSequence() }
+            .filter { it.isNotBlank() }
+            .toSet()
+    }
+
+    /**
+     * Com o app fixado (modo criança) e sem Device Owner, o Android não deixa abrir outro app. Por padrão a
+     * fixação é solta para abrir um app liberado e refeita quando a criança volta; os pais podem desligar isso.
+     */
+    private fun soltarFixacaoParaApps(): Boolean = appsPrefs.getBoolean("unpin_for_apps", true)
+    @Volatile private var voltandoDeApp = false
+
     private fun appPodeAbrir(pkg: String): Boolean =
-        pkg.isNotBlank() && pkg != packageName && !pacoteBloqueado(pkg) && intentDeAbertura(pkg) != null
+        pkg.isNotBlank() && pkg != packageName && !pacoteBloqueado(pkg) && !appDoSistema(pkg) && intentDeAbertura(pkg) != null
+
+    /**
+     * Ícone oficial de um app do hub, em PNG, servido em https://appassets.androidplatform.net/icones/<pacote>.png
+     * para as listas da interface. Só responde por apps que o hub pode mostrar.
+     */
+    private fun iconeDoApp(pkg: String): WebResourceResponse? {
+        if (!Regex("[A-Za-z0-9_.]+").matches(pkg) || pkg == packageName || pacoteBloqueado(pkg) || appDoSistema(pkg)) return null
+        return try {
+            val icone = packageManager.getApplicationIcon(pkg).mutate()
+            val lado = 144
+            val bitmap = Bitmap.createBitmap(lado, lado, Bitmap.Config.ARGB_8888)
+            icone.setBounds(0, 0, lado, lado)
+            icone.draw(Canvas(bitmap))
+            val png = ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+            WebResourceResponse("image/png", null, ByteArrayInputStream(png))
+        } catch (_: Exception) { null }
+    }
 
     private fun appsPermitidosNativos(): Set<String> = try {
         val json = JSONArray(appsPrefs.getString("allowed", "[]") ?: "[]")
@@ -290,6 +342,10 @@ class MainActivity : Activity() {
         esconderBarras()
         web.onResume()
         web.requestFocus()
+        if (voltandoDeApp) {
+            voltandoDeApp = false
+            web.evaluateJavascript("window.aplicarModoCrianca && aplicarModoCrianca(telaAtual)", null)
+        }
     }
 
     override fun onPause() {
@@ -444,21 +500,31 @@ class MainActivity : Activity() {
                 .toString()
         }
 
-        /** Só abre pacotes liberados nativamente; no modo fixado comum, bloqueia a troca de app. */
+        /** Escolha dos pais: com o modo criança ligado, soltar a fixação para abrir um app liberado. */
+        @JavascriptInterface fun definirSoltarFixacaoParaApps(ativo: Boolean) {
+            if (!uiDeConfianca()) return
+            appsPrefs.edit().putBoolean("unpin_for_apps", ativo).apply()
+        }
+
+        /** Só abre pacotes liberados nativamente; com o app fixado sem Device Owner, solta a fixação se os pais permitirem. */
         @JavascriptInterface fun abrirAppPermitido(pkg: String): String {
             if (!uiDeConfianca()) return JSONObject().put("ok", false).put("reason", "Origem da interface não confiável.").toString()
             val activeProfile = perfilAtivoNativo()
             if (pkg !in appsAtivosNativos() || pkg !in appsPermitidosPerfilNativo(activeProfile) || !appPodeAbrir(pkg)) {
                 return JSONObject().put("ok", false).put("reason", "Este aplicativo não está liberado pelos responsáveis ou não está instalado.").toString()
             }
-            if (travado() && !ehDeviceOwner()) {
-                return JSONObject().put("ok", false).put("reason", "Para trocar entre aplicativos mantendo o celular bloqueado, é necessário configurar o modo quiosque gerenciado neste dispositivo.").toString()
+            val fixadoSemGerencia = travado() && !ehDeviceOwner()
+            if (fixadoSemGerencia && !soltarFixacaoParaApps()) {
+                return JSONObject().put("ok", false).put("reason", "Com o modo criança ligado, os apps liberados só abrem se os responsáveis permitirem na área dos pais.").toString()
             }
             return try {
                 if (ehDeviceOwner()) sincronizarPacotesQuiosque(appsAtivosNativos())
                 val launch = intentDeAbertura(pkg) ?: throw IllegalStateException("Aplicativo sem tela inicial.")
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(launch)
+                runOnUiThread {
+                    if (fixadoSemGerencia) { voltandoDeApp = true; destravar() }
+                    try { startActivity(launch) } catch (_: Exception) {}
+                }
                 JSONObject().put("ok", true).toString()
             } catch (e: Exception) {
                 JSONObject().put("ok", false).put("reason", e.message ?: "Não foi possível abrir o aplicativo.").toString()

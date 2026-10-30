@@ -28,13 +28,13 @@ O app guia cada etapa e salva na hora — se fechar no meio, ele volta de onde p
 | 1. PIN dos pais | Crie 4 números. Eles protegem as configurações e liberam o app quando estiver bloqueado. |
 | 2. Quem vai assistir | Nome da criança, avatar e quantos minutos de TV por dia (0 = sem limite). |
 | 3. Canais | Toque nos canais que a criança pode ver (Detetive Labrador, Bluey, Mundo Bita…). Dá para colar o link de outro canal. |
-| 4. Outros aplicativos (opcional) | Marque os apps que a criança pode abrir pela Hora do Desenho (ex.: GCompris). Nenhum vem marcado; configurações, lojas e navegadores nem aparecem. A criança encontra os apps liberados no botão **🧩 Apps**. |
+| 4. Outros aplicativos (opcional) | Marque os apps que a criança pode abrir pela Hora do Desenho (ex.: GCompris, YouTube Kids). Use a **busca** para achar pelo nome. Aparecem só os apps que você instalou, com o ícone de cada um; apps do sistema, lojas e navegadores ficam de fora e nenhum vem marcado. A criança encontra os apps liberados no botão **🧩 Apps**. |
 | 5. Quando a TV pode ficar ligada | Marque os horários (ex.: fim de tarde, 17:00 às 19:00) e os dias. Fora deles, os canais ficam "dormindo". |
 | 6. Hora de dormir | Ex.: 20:30 às 07:00. Nesse horário aparece o detetive dormindo. Escolha a cena **Escuro** se a criança dorme com o celular por perto: a tela fica preta, só com o contorno das letras, e o brilho vai ao mínimo. |
-| 7. Este aparelho | **Celular:** deixe o *Modo criança* ligado — o app fica fixado e a criança não sai dele. Na primeira vez o Android pergunta **"Fixar este app?"**: confirme. Atenção: com o modo criança ligado, os apps do passo 4 **não abrem** no celular comum (o Android só permite trocar de app fixado em aparelho com modo quiosque gerenciado); se a criança precisa deles, desligue o modo criança. **TV:** deixe marcado "abrir quando a TV ligar" e, no fim, aperte HOME no controle e escolha *Hora do Desenho → Sempre*. |
+| 7. Este aparelho | **Celular:** deixe o *Modo criança* ligado — o app fica fixado e a criança não sai dele. Na primeira vez o Android pergunta **"Fixar este app?"**: confirme. Com o modo criança ligado, quando a criança abre um app do passo 4 o celular fica livre enquanto esse app estiver aberto; ao voltar, a Hora do Desenho pede para fixar de novo. Se preferir que os apps não abram com o modo criança, desmarque a opção em ⚙️ Pais → Aplicativos permitidos. **TV:** deixe marcado "abrir quando a TV ligar" e, no fim, aperte HOME no controle e escolha *Hora do Desenho → Sempre*. |
 | 8. Pronto | Confira o resumo e toque em **Ligar a TV**. |
 
-Para mudar qualquer coisa depois: toque na engrenagem ⚙️ no canto e digite o PIN. Lá também tem **Refazer o passo a passo**.
+Para mudar qualquer coisa depois: toque em **⚙️ Pais** na barra de baixo e digite o PIN. Nas telas sem a barra (vídeo, hora de dormir, fim do tempo), **deslize o dedo ou segure por 1 segundo no canto superior direito**: a engrenagem aparece por alguns segundos. Na área dos pais também tem **Refazer o passo a passo**.
 
 ### 3. Atualizar
 

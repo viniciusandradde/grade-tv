@@ -102,8 +102,10 @@
   .perfil-card{display:flex; flex-direction:column; align-items:center; gap:10px; width:150px; padding:18px 10px; background:var(--card); border-radius:var(--raio); box-shadow:var(--sombra); font-weight:800; font-size:18px}
   .perfil-card .avatar{width:90px; height:90px; font-size:50px}
   .pais{position:fixed; right:22px; top:16px}
-  .canto{position:fixed; right:18px; top:14px; z-index:45; background:rgba(255,255,255,.92); box-shadow:var(--sombra); opacity:.35; transition:opacity .25s}
-  .canto:hover,.canto:focus-visible,.canto.visivel{opacity:1}
+  /* Engrenagem dos pais: escondida; aparece ao deslizar o dedo (ou segurar) no canto superior direito */
+  .canto{position:fixed; right:18px; top:14px; z-index:45; background:rgba(255,255,255,.92); box-shadow:var(--sombra); opacity:0; pointer-events:none; transform:translateX(90px); transition:opacity .25s, transform .25s}
+  .canto:focus-visible,.canto.visivel{opacity:1; pointer-events:auto; transform:none}
+  #canto-pais{position:fixed; right:0; top:0; width:76px; height:76px; z-index:44; touch-action:none}
   .setup{width:min(560px,94vw); text-align:center; display:flex; flex-direction:column; gap:12px; align-items:center}
   .setup h2{font-size:26px} .setup p{color:var(--dim); margin:0}
   .setup-col{display:flex; flex-direction:column; gap:12px; align-items:center; width:100%}
@@ -177,6 +179,9 @@
 
   .app-item{display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:18px;box-shadow:var(--sombra);margin:10px 0;text-align:left;width:100%}
   .app-item .app-emoji{width:52px;height:52px;display:grid;place-items:center;border-radius:15px;background:var(--bg2);font-size:28px;flex:none}
+  .app-item .app-icone{width:52px;height:52px;border-radius:14px;flex:none;object-fit:contain}
+  .busca-apps{width:100%; margin:12px 0 4px}
+  .toast{position:fixed; left:50%; bottom:110px; transform:translateX(-50%); z-index:70; background:var(--ink); color:#fff; padding:12px 18px; border-radius:16px; font-weight:800; width:max-content; max-width:min(90vw,460px); text-align:center; box-shadow:var(--sombra)}
   .app-item .app-meta{flex:1;min-width:0}
   .app-item .app-meta strong{display:block;overflow-wrap:anywhere}
   .app-item .app-meta small{display:block;color:var(--dim);overflow-wrap:anywhere}
@@ -301,7 +306,8 @@
   #tela-bloqueio.tema-escuro h2, #tela-bloqueio.tema-escuro .balao div, #tela-bloqueio.tema-escuro p{color:var(--contorno)}
   #tela-bloqueio.tema-escuro p{font-size:16px; font-weight:800}
   body.escuro .btn{background:none; color:var(--contorno); border:1px solid rgba(150,160,190,.22)}
-  body.escuro .canto{background:none; box-shadow:none; filter:grayscale(1) brightness(.45); opacity:.35}
+  body.escuro .canto{background:none; box-shadow:none; filter:grayscale(1) brightness(.45)}
+  body.escuro .canto.visivel{opacity:.5}
   body.escuro .emoji{filter:grayscale(1) brightness(.45)}
   body.escuro :focus-visible{outline:2px solid rgba(150,160,190,.3)}
   body.escuro #pin{background:rgba(0,0,0,.9)}
@@ -332,6 +338,8 @@
 
 <!-- Engrenagem de canto (aparece ao passar o mouse ou tocar) -->
 <button class="icone canto" id="gear" title="Para os pais" aria-label="Para os pais" hidden>⚙️</button>
+<div id="canto-pais" aria-hidden="true" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <!-- ===== Primeiro acesso: passo a passo de configuração ===== -->
 <section id="tela-setup" class="tela">
@@ -390,7 +398,9 @@
     <div class="painel setup" id="setup-apps" hidden>
       <h2>Outros aplicativos</h2>
       <p>Além dos desenhos, a criança pode abrir apps que você liberar — jogos educativos, por exemplo. É opcional, e nenhum app é liberado sozinho.</p>
+      <input type="search" class="busca-apps" id="setup-apps-busca" placeholder="🔍 Buscar app pelo nome" autocomplete="off">
       <ul class="setup-apps-lista" id="setup-apps-lista"></ul>
+      <p id="setup-apps-busca-vazia" hidden>Nenhum app com esse nome.</p>
       <div class="msg" id="msg-setup-apps"></div>
       <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-apps-ok">Continuar</button></div>
     </div>
@@ -610,7 +620,10 @@
         <button class="btn p" id="apps-salvar">Salvar aplicativos liberados</button>
       </div>
       <div class="msg" id="msg-apps"></div>
+      <input type="search" class="busca-apps" id="apps-busca" placeholder="🔍 Buscar app pelo nome" autocomplete="off">
       <ul class="lista" id="lista-apps-disponiveis"></ul>
+      <p class="ajuda" id="apps-busca-vazia" hidden>Nenhum app com esse nome.</p>
+      <label class="chk" id="linha-apps-soltar"><input type="checkbox" id="cfg-apps-soltar"> Com o modo criança ligado, deixar a criança abrir os apps liberados (o celular fica livre enquanto o app estiver aberto; ao voltar, a Hora do Desenho pede para fixar de novo)</label>
       <div class="ajuda" id="apps-device-owner" style="margin-top:12px"></div>
     </div>
 
@@ -743,7 +756,7 @@ const SUGESTOES = [
 let DB = carregar();
 function lerJSON(txt){ try{ return txt ? JSON.parse(txt) : null; }catch(e){ return null; } }
 function carregar(){
-  const base = { apiKey:'', pin:'', profiles:[], activeProfile:null, channels:[], slots:[], locks:[], watched:{}, cache:{}, occ:{}, uso:{}, favs:{}, ts:0, cfg:{strict:true, shorts:true, auto:true, kiosk:true} };
+  const base = { apiKey:'', pin:'', profiles:[], activeProfile:null, channels:[], slots:[], locks:[], watched:{}, cache:{}, occ:{}, uso:{}, favs:{}, ts:0, cfg:{strict:true, shorts:true, auto:true, kiosk:true, appsSoltar:true} };
   let local=null, nativo=null;
   try{ local = lerJSON(localStorage.getItem(CHAVE_DB)) || lerJSON(localStorage.getItem('gradetv.v1')); }catch(e){}
   try{ if(window.HoraDoDesenho) nativo = lerJSON(HoraDoDesenho.carregarDados()); }catch(e){}
@@ -911,11 +924,14 @@ function ir(nome){
   if(nome==='ajustes') renderAjustes();
   if(nome==='perfis') renderPerfis();
   if(nome==='setup') renderSetup();
-  $('#gear').hidden = ['ligar','setup','ajustes'].includes(nome);
-  $('#gear').classList.toggle('visivel', nome!=='player');
+  // Telas com a barra de baixo já têm o botão "Pais"; nas telas cheias a engrenagem fica escondida no canto
+  $('#gear').hidden = ['ligar','setup','ajustes','perfis','inicio','guia','favoritos','apps'].includes(nome);
+  $('#gear').classList.remove('visivel');
+  $('#toast').hidden = true;
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(nome==='player'); }catch(e){} }
   if(window.HoraDoDesenho && ['inicio','apps','guia','favoritos','player','foradoar','descanso','bloqueio'].includes(nome)){
     try{ HoraDoDesenho.definirAppsAtivos(perfil()?.id||'', JSON.stringify(perfil()?.apps||[])); }catch(e){}
+    try{ if(typeof HoraDoDesenho.definirSoltarFixacaoParaApps==='function') HoraDoDesenho.definirSoltarFixacaoParaApps(DB.cfg.appsSoltar!==false); }catch(e){}
   }
   aplicarModoCrianca(nome);
   const f = $('#tela-'+nome).querySelector('.bolha, .card, .perfil-card, button'); if(f && nome!=='player') f.focus({preventScroll:true});
@@ -995,12 +1011,14 @@ const PREPARA_PASSO = {
   },
   apps(){
     const lista=$('#setup-apps-lista'), apps=appsInstaladosAndroid()||[], liberados=new Set(perfil()?.apps||[]); lista.innerHTML='';
+    $('#setup-apps-busca').hidden=apps.length<2;
     if(!apps.length) lista.append(el('li',{}, 'Nenhum outro aplicativo compatível foi encontrado neste aparelho. Pode continuar.'));
     for(const app of apps){
       const cb=el('input',{type:'checkbox','aria-label':'Liberar '+app.name}); cb.checked=liberados.has(app.packageName); cb.dataset.package=app.packageName;
-      lista.append(el('li',{class:'app-item'}, el('div',{class:'app-emoji'}, app.system?'📱':'🧩'),
+      lista.append(el('li',{class:'app-item', 'data-busca':textoBusca(app)}, iconeApp(app),
         el('div',{class:'app-meta'}, el('strong',{}, app.name), el('small',{}, app.packageName)), el('label',{class:'chk'}, cb, 'Liberar')));
     }
+    filtrarApps('#setup-apps-lista', '#setup-apps-busca', '#setup-apps-busca-vazia');
   },
   grade(){
     const d=$('#setup-grade-dias'); if(!d.children.length) for(let i=0;i<7;i++){ const cb=el('input',{type:'checkbox',value:String(i)}); cb.checked=true; d.append(el('label',{},cb,DIAS_CURTO[i])); }
@@ -1081,7 +1099,9 @@ $('#setup-apps-ok').onclick = ()=>{
 function avisoAppsComModoCrianca(){
   const n=perfil()?.apps?.length||0, aviso=$('#setup-ap-aviso-apps');
   aviso.hidden = !(n && $('#setup-kiosk').checked && !statusDispositivo()?.deviceOwner);
-  aviso.innerHTML = `⚠️ Você liberou <b>${n} ${n===1?'app':'apps'}</b>. Com o modo criança ligado, o Android não deixa abrir outros apps neste celular (isso exige o modo quiosque gerenciado). Para a criança usar esses apps, desligue o modo criança — aí ela também consegue sair da Hora do Desenho.`;
+  aviso.innerHTML = DB.cfg.appsSoltar!==false
+    ? `ℹ️ Você liberou <b>${n} ${n===1?'app':'apps'}</b>. Quando a criança abrir um deles, o celular fica livre enquanto o app estiver aberto; ao voltar, a Hora do Desenho pede para fixar de novo (<b>"Fixar este app?"</b>). Para os apps não abrirem com o modo criança, desligue essa opção em ⚙️ Pais → Aplicativos permitidos.`
+    : `⚠️ Você liberou <b>${n} ${n===1?'app':'apps'}</b>, mas com o modo criança ligado eles não abrem (opção desligada em ⚙️ Pais → Aplicativos permitidos).`;
 }
 $('#setup-kiosk').addEventListener('change', avisoAppsComModoCrianca);
 $('#setup-grade-ok').onclick = ()=>{
@@ -1315,6 +1335,20 @@ function teclaPin(k){
 $('#pin-cancelar').onclick = ()=>{ $('#pin').classList.remove('ativa'); pinCallback=null; };
 const abrirPais = ()=>pedirPin(()=>ir('ajustes'));
 $('#btn-pais').onclick = abrirPais; $('#btn-pais-perfis').onclick = abrirPais; $('#gear').onclick = abrirPais;
+// Nas telas cheias (vídeo, bloqueio, descanso), a engrenagem só aparece quando os pais deslizam o dedo
+// no canto superior direito ou o seguram ali por 1 segundo; some sozinha depois de 5 segundos.
+(function(){
+  const gear=$('#gear'), canto=$('#canto-pais'); let inicio=null, segurando=null, escondendo=null;
+  new MutationObserver(()=>{ canto.hidden=gear.hidden; }).observe(gear, {attributes:true, attributeFilter:['hidden']});
+  function revelar(){
+    gear.classList.add('visivel'); clearTimeout(escondendo);
+    escondendo=setTimeout(()=>{ if(document.activeElement!==gear) gear.classList.remove('visivel'); }, 5000);
+  }
+  canto.addEventListener('pointerdown', e=>{ inicio={x:e.clientX, y:e.clientY}; canto.setPointerCapture(e.pointerId); segurando=setTimeout(revelar, 1000); });
+  canto.addEventListener('pointermove', e=>{ if(inicio && Math.hypot(e.clientX-inicio.x, e.clientY-inicio.y)>20){ inicio=null; clearTimeout(segurando); revelar(); } });
+  const soltar=()=>{ inicio=null; clearTimeout(segurando); };
+  canto.addEventListener('pointerup', soltar); canto.addEventListener('pointercancel', soltar);
+})();
 
 // ----- Ajustes -----
 function msg(id, texto, tipo=''){ const m=$(id); m.textContent=texto; m.className='msg '+tipo; }
@@ -1419,11 +1453,14 @@ function renderAppsAdmin(){
   apps.forEach(app=>{
     const cb=el('input',{type:'checkbox',checked:allowed.has(app.packageName),'aria-label':'Liberar '+app.name});
     cb.dataset.package=app.packageName;
-    const li=el('li',{class:'app-item'},el('div',{class:'app-emoji'},app.system?'📱':'🧩'),
+    const li=el('li',{class:'app-item','data-busca':textoBusca(app)},iconeApp(app),
       el('div',{class:'app-meta'},el('strong',{},app.name),el('small',{},app.packageName)),
       el('label',{style:'display:flex;align-items:center;gap:8px;font-weight:800'},cb,'Liberar'));
     list.append(li);
   });
+  filtrarApps('#lista-apps-disponiveis', '#apps-busca', '#apps-busca-vazia');
+  $('#apps-busca').hidden=apps.length<2;
+  $('#cfg-apps-soltar').checked=DB.cfg.appsSoltar!==false; $('#linha-apps-soltar').hidden=ehTv();
   msg('#msg-apps',apps.length+' aplicativo(s) encontrados. Nenhum app novo é liberado automaticamente.', 'ok');
   info.textContent=status?.deviceOwner
     ? 'Este aparelho está configurado como Device Owner. O modo quiosque gerenciado pode manter a lista de apps autorizados, após validar os pacotes e os testes.'
@@ -1466,15 +1503,38 @@ function renderApps(){
     const b=el('button',{class:'card app-item app-open',onclick:()=>{
       try{
         const r=JSON.parse(HoraDoDesenho.abrirAppPermitido(app.packageName));
-        if(!r.ok) alert(r.reason||'Não foi possível abrir o aplicativo.');
-      }catch(e){ alert('Não foi possível abrir o aplicativo: '+e.message); }
-    }},el('div',{class:'app-emoji'},'🧩'),el('div',{class:'app-meta'},el('strong',{},app.name),el('small',{},'Aplicativo liberado pelos responsáveis')));
+        if(!r.ok) avisar(r.reason||'Não foi possível abrir o aplicativo.');
+      }catch(e){ avisar('Não foi possível abrir o aplicativo: '+e.message); }
+    }},iconeApp(app),el('div',{class:'app-meta'},el('strong',{},app.name),el('small',{},'Aplicativo liberado pelos responsáveis')));
     box.append(b);
   });
   const status=statusDispositivo();
   statusBox.hidden=!!status?.deviceOwner;
   if(!status?.deviceOwner) statusBox.textContent='Aviso aos responsáveis: este aparelho ainda não está em modo quiosque gerenciado. Abrir um aplicativo externo pode sair da proteção atual. Configure e teste Device Owner em um dispositivo dedicado antes de usar este hub como bloqueio total.';
 }
+// Ícone oficial do app, servido pela versão Android; se não carregar, fica a peça de quebra-cabeça
+const ICONES_APPS = 'https://appassets.androidplatform.net/icones/';
+function iconeApp(app){
+  return el('img',{class:'app-icone', src:ICONES_APPS+encodeURIComponent(app.packageName)+'.png', alt:'', loading:'lazy',
+    onerror:e=>e.target.replaceWith(el('div',{class:'app-emoji'},'🧩'))});
+}
+// Busca nas listas de apps: só esconde itens (o que já está marcado continua marcado)
+const semAcento = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const textoBusca = app => semAcento(app.name+' '+app.packageName);
+function filtrarApps(lista, campo, vazio){
+  const termo=semAcento($(campo).value.trim()), itens=[...$(lista).querySelectorAll('li[data-busca]')];
+  for(const li of itens) li.hidden = !!termo && !li.dataset.busca.includes(termo);
+  $(vazio).hidden = !termo || itens.some(li=>!li.hidden);
+}
+$('#apps-busca').addEventListener('input', ()=>filtrarApps('#lista-apps-disponiveis', '#apps-busca', '#apps-busca-vazia'));
+$('#setup-apps-busca').addEventListener('input', ()=>filtrarApps('#setup-apps-lista', '#setup-apps-busca', '#setup-apps-busca-vazia'));
+$('#cfg-apps-soltar').onchange=e=>{
+  DB.cfg.appsSoltar=e.target.checked; salvar();
+  try{ HoraDoDesenho.definirSoltarFixacaoParaApps(e.target.checked); }catch(err){}
+};
+// Aviso curto dentro do app (no lugar do alerta do navegador)
+let avisoTimer=null;
+function avisar(texto){ const t=$('#toast'); t.textContent=texto; t.hidden=false; clearTimeout(avisoTimer); avisoTimer=setTimeout(()=>{ t.hidden=true; }, 4500); }
 $('#apps-perfil').onchange=e=>{ appsAdminProfileId=e.target.value; renderAppsAdmin(); };
 $('#apps-atualizar').onclick=renderAppsAdmin;
 $('#apps-salvar').onclick=salvarAppsPermitidos;
@@ -1580,7 +1640,7 @@ function renderCena(tema, o){
 function mostrarBloqueio(o){
   clearInterval(bloqTimer); previaBloqueio=false; pararPlayer();
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); telaAtual='bloqueio';
-  $('#nav').hidden = true; $('#gear').hidden=false; $('#gear').classList.add('visivel'); $('#bloqueio-voltar').hidden = true;
+  $('#nav').hidden = true; $('#gear').hidden=false; $('#gear').classList.remove('visivel'); $('#bloqueio-voltar').hidden = true;
   if(window.HoraDoDesenho){ try{ HoraDoDesenho.travarPaisagem(false); }catch(e){} }
   aplicarModoCrianca('bloqueio');
   renderCena(temaDoBloqueio(o), o);
