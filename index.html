@@ -119,6 +119,8 @@
   .faixa{display:flex; align-items:center; gap:6px 14px; justify-content:center; flex-wrap:wrap; font-weight:700}
   .faixa-horas{display:flex; align-items:center; gap:8px}
   .faixa-horas input[type=time]{width:auto}
+  .setup-apps-lista{list-style:none; padding:0; margin:0; width:100%; max-height:52vh; overflow:auto}
+  .setup-apps-lista .chk{margin:0; flex:none}
   .setup-resumo{list-style:none; padding:0; margin:0; text-align:left; display:flex; flex-direction:column; gap:8px; font-weight:700}
   .setup-resumo li{display:flex; gap:10px}
   #tela-setup{background:linear-gradient(160deg,#FFF4D6,#FFE1E4 50%,#DCEBFF)}
@@ -385,6 +387,14 @@
       <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-canais-ok">Continuar</button></div>
     </div>
 
+    <div class="painel setup" id="setup-apps" hidden>
+      <h2>Outros aplicativos</h2>
+      <p>Além dos desenhos, a criança pode abrir apps que você liberar — jogos educativos, por exemplo. É opcional, e nenhum app é liberado sozinho.</p>
+      <ul class="setup-apps-lista" id="setup-apps-lista"></ul>
+      <div class="msg" id="msg-setup-apps"></div>
+      <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-apps-ok">Continuar</button></div>
+    </div>
+
     <div class="painel setup" id="setup-grade" hidden>
       <h2>Quando a TV pode ficar ligada?</h2>
       <p>Nesses horários os canais escolhidos ficam no ar. Fora deles, ficam dormindo, com a contagem de quando acordam.</p>
@@ -422,6 +432,7 @@
       <div id="setup-ap-cel" class="setup-col" hidden>
         <label class="chk"><input type="checkbox" id="setup-kiosk"> Modo criança: fixar o app (a criança não sai dele; só os pais, com o PIN)</label>
         <p>Na primeira vez o Android pergunta <b>"Fixar este app?"</b> — confirme.</p>
+        <p id="setup-ap-aviso-apps" hidden></p>
       </div>
       <div class="setup-nav"><button class="btn" data-setup-voltar>← Voltar</button><button class="btn p" id="setup-aparelho-ok">Continuar</button></div>
     </div>
@@ -945,7 +956,8 @@ function entrar(){
 let setupAvatar = AVATARES[0], passosSetup = [], passoAtual = 0;
 const setupSugSel = new Set();
 function renderSetup(){
-  passosSetup = ['pin', 'perfil', ...(chaveApi() ? [] : ['chave']), 'canais', 'grade', 'dormir', ...(window.HoraDoDesenho ? ['aparelho'] : []), 'pronto'];
+  const hubApps = !!window.HoraDoDesenho && typeof HoraDoDesenho.listarAppsInstalados==='function';
+  passosSetup = ['pin', 'perfil', ...(chaveApi() ? [] : ['chave']), 'canais', ...(hubApps ? ['apps'] : []), 'grade', 'dormir', ...(window.HoraDoDesenho ? ['aparelho'] : []), 'pronto'];
   irPasso(Math.max(0, passosSetup.indexOf(DB.setupPasso)));
 }
 function irPasso(i){
@@ -981,6 +993,15 @@ const PREPARA_PASSO = {
       sg.append(b);
     }
   },
+  apps(){
+    const lista=$('#setup-apps-lista'), apps=appsInstaladosAndroid()||[], liberados=new Set(perfil()?.apps||[]); lista.innerHTML='';
+    if(!apps.length) lista.append(el('li',{}, 'Nenhum outro aplicativo compatível foi encontrado neste aparelho. Pode continuar.'));
+    for(const app of apps){
+      const cb=el('input',{type:'checkbox','aria-label':'Liberar '+app.name}); cb.checked=liberados.has(app.packageName); cb.dataset.package=app.packageName;
+      lista.append(el('li',{class:'app-item'}, el('div',{class:'app-emoji'}, app.system?'📱':'🧩'),
+        el('div',{class:'app-meta'}, el('strong',{}, app.name), el('small',{}, app.packageName)), el('label',{class:'chk'}, cb, 'Liberar')));
+    }
+  },
   grade(){
     const d=$('#setup-grade-dias'); if(!d.children.length) for(let i=0;i<7;i++){ const cb=el('input',{type:'checkbox',value:String(i)}); cb.checked=true; d.append(el('label',{},cb,DIAS_CURTO[i])); }
     const falta = semHorario().length>0; $('#setup-grade-campos').hidden=!falta; $('#setup-grade-ja').hidden=falta;
@@ -993,6 +1014,7 @@ const PREPARA_PASSO = {
     const tv=ehTv(); $('#setup-ap-tv').hidden=!tv; $('#setup-ap-cel').hidden=tv;
     try{ $('#setup-launcher').checked = HoraDoDesenho.launcherAtivo(); }catch(e){}
     $('#setup-kiosk').checked = DB.cfg.kiosk!==false;
+    avisoAppsComModoCrianca();
   },
   pronto(){
     const p=perfil(), r=$('#setup-resumo'), n=DB.channels.length; r.innerHTML='';
@@ -1001,6 +1023,7 @@ const PREPARA_PASSO = {
     item('📺', `${n} ${n===1?'canal':'canais'}: ${DB.channels.map(c=>c.title).join(', ')}`);
     const janelas=[...new Set(DB.slots.map(s=>`${s.start} às ${s.end}`))];
     item('🕒', janelas.length ? 'TV no ar: '+janelas.join(' e ') : 'Nenhum horário na grade ainda (os canais ficam dormindo)');
+    const apps=p?.apps||[]; if(apps.length){ const nomes=new Map((appsInstaladosAndroid()||[]).map(a=>[a.packageName, a.name])); item('🧩', 'Apps liberados: '+apps.map(pkg=>nomes.get(pkg)||pkg).join(', ')); }
     if(DB.locks?.length) item('😴', 'Hora de dormir: '+DB.locks.map(l=>`${l.start} às ${l.end}`).join(', '));
     if(window.HoraDoDesenho && !ehTv() && DB.cfg.kiosk!==false) item('🔒', 'Modo criança ligado: o app fica fixado no celular');
     $('#setup-agora-dormir').hidden = !emBloqueio();
@@ -1045,6 +1068,22 @@ $('#setup-canais-ok').onclick = async e=>{
   if(erros.length){ PREPARA_PASSO.canais(); return msg('#msg-setup-canais', erros.join(' · '), 'erro'); }
   proximoPasso();
 };
+$('#setup-apps-ok').onclick = ()=>{
+  const p=perfil(); if(!p) return proximoPasso();
+  const instalados=new Set((appsInstaladosAndroid()||[]).map(a=>a.packageName));
+  p.apps=[...$('#setup-apps-lista').querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.dataset.package).filter(pkg=>instalados.has(pkg));
+  salvar();
+  const r=sincronizarAppsNativos();
+  if(!r.saved) return msg('#msg-setup-apps','Não foi possível salvar a lista no Android: '+(r.reason||'tente de novo.'),'erro');
+  proximoPasso();
+};
+// Sem Device Owner, o app fixado (modo criança) não deixa abrir outro app: avisa quem liberou apps
+function avisoAppsComModoCrianca(){
+  const n=perfil()?.apps?.length||0, aviso=$('#setup-ap-aviso-apps');
+  aviso.hidden = !(n && $('#setup-kiosk').checked && !statusDispositivo()?.deviceOwner);
+  aviso.innerHTML = `⚠️ Você liberou <b>${n} ${n===1?'app':'apps'}</b>. Com o modo criança ligado, o Android não deixa abrir outros apps neste celular (isso exige o modo quiosque gerenciado). Para a criança usar esses apps, desligue o modo criança — aí ela também consegue sair da Hora do Desenho.`;
+}
+$('#setup-kiosk').addEventListener('change', avisoAppsComModoCrianca);
 $('#setup-grade-ok').onclick = ()=>{
   const sem = semHorario();
   if(sem.length){
@@ -1396,15 +1435,17 @@ function salvarAppsPermitidos(){
   const p=DB.profiles.find(x=>x.id===appsAdminProfileId);
   if(!p) return msg('#msg-apps','Crie ou selecione um perfil infantil primeiro.','erro');
   p.apps=[...$('#lista-apps-disponiveis').querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.dataset.package).filter(pkg=>apps.some(a=>a.packageName===pkg));
-  const perProfile={};
-  DB.profiles.forEach(profile=>{ perProfile[profile.id]=Array.isArray(profile.apps)?profile.apps:[]; });
   salvar();
-  try{
-    const result=JSON.parse(HoraDoDesenho.definirAppsPorPerfil(JSON.stringify(perProfile)));
-    if(!result.saved) throw new Error('Não foi possível salvar as permissões nativas por perfil.');
-    msg('#msg-apps','Lista salva para '+p.nome+': '+p.apps.length+' aplicativo(s).'+(result.deviceOwner?' Modo gerenciado detectado.':' Para alternar entre apps com bloqueio forte, ainda falta configurar Device Owner.'), 'ok');
-  }catch(e){ msg('#msg-apps','A configuração foi salva neste perfil, mas não foi possível sincronizar o controle Android: '+e.message,'erro'); }
+  const result=sincronizarAppsNativos();
+  if(result.saved) msg('#msg-apps','Lista salva para '+p.nome+': '+p.apps.length+' aplicativo(s).'+(result.deviceOwner?' Modo gerenciado detectado.':' Para alternar entre apps com bloqueio forte, ainda falta configurar Device Owner.'), 'ok');
+  else msg('#msg-apps','A configuração foi salva neste perfil, mas não foi possível sincronizar o controle Android: '+(result.reason||'erro desconhecido.'),'erro');
   renderAppsAdmin();
+}
+// Envia ao Android a lista de apps liberados de cada perfil; a ponte só aceita pacotes instalados e permitidos
+function sincronizarAppsNativos(){
+  const porPerfil={}; DB.profiles.forEach(p=>{ porPerfil[p.id]=Array.isArray(p.apps)?p.apps:[]; });
+  try{ return JSON.parse(HoraDoDesenho.definirAppsPorPerfil(JSON.stringify(porPerfil))); }
+  catch(e){ return {saved:false, reason:e.message}; }
 }
 function renderApps(){
   const p=perfil();
